@@ -1,0 +1,291 @@
+/* body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  } */
+  
+  /* code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+      monospace;
+  } */
+  
+
+/* .App {
+    text-align: center;
+  }
+  
+  .App-logo {
+    height: 40vmin;
+    pointer-events: none;
+  }
+  
+  @media (prefers-reduced-motion: no-preference) {
+    .App-logo {
+      animation: App-logo-spin infinite 20s linear;
+    }
+  }
+  
+  .App-header {
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+  }
+  
+  .App-link {
+    color: #61dafb;
+  }
+  
+  @keyframes App-logo-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  } */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200&display=swap');
+body {
+	font-family: 'Nunito', sans-serif !important;
+}
+
+.FlexIcon {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+.backGrourdHead {
+    background-color: #283fea;
+    color: white;
+    padding: 10px;
+    justify-content: end;
+    position: relative;
+    margin-left: 0px !important;
+}
+
+.FlexIconHead {
+    display: flex;
+    align-items: center;
+}
+
+.MuiOutlinedInput-root {
+    background-color: white;
+    margin-top: 4px;
+}
+
+.positionSideBar {
+    position: fixed;
+    background-color: white;
+    top: 0px;
+    height: -webkit-fill-available;
+    width: 18%;
+    left: 0px;
+    box-shadow: 0 0 20px 0 rgba(0,0,0,0.31), 0 24px 36px -8px rgba(0,0,0,0.25);
+}
+
+.WidthContent {
+    width: 18%;
+}
+
+.padingText {
+    padding: 15px;
+}
+
+.padingTextLeft {
+    padding-left: 15px;
+    padding-bottom: 15px;
+}
+
+.MarginSideBar {
+    margin-left: 15px !important;
+    /* margin-bottom: 10px !important; */
+}
+
+h6 {
+    font-size: 18px !important;
+}
+
+.FlexCard {
+    display: flex;
+    justify-content: space-between;
+}
+
+.MarginCard {
+    margin-top: 15px !important;
+}
+
+.FlexRowCard {
+    justify-content: space-around;
+}
+
+.textCenter {
+    text-align: center;
+}
+
+.MaxWidth {
+    max-width: fit-content !important;
+}
+
+.btnColor {
+    background-color: #4bc1c1 !important;
+    color: #000 !important;
+}
+
+.btnWidth {
+    width: 130px !important;
+}
+
+.LinkColor {
+    display: flex;
+    text-decoration: none;
+    color: #000;
+}
+
+.active {
+    color: #9028ea;
+}
+
+.activeIcon {
+    color: #ae84d3;
+}
+
+.textEnd {
+    text-align: end;
+}
+
+.MaxWidthSideBar {
+    max-width: 20% !important;
+}
+
+.ColorAccondion {
+    background-color: #59d0d369;
+}
+
+.paddingLeftAccondion {
+    padding-left: 35px !important;
+}
+
+.paddingLeftPower {
+    padding-left: 50px !important;
+}
+
+.backGrourdCard {
+    background-color:  #f7f7f7;
+    border: 1px solid #e0e0e0;
+}
+
+.marginCardCalendar {
+    margin-left: 4%;
+}
+
+.disPlayFlexRow {
+    display: flex;
+}
+
+.marginRight {
+    margin-left: 5px !important;
+}
+
+.btnIconWidth {
+    width: -webkit-fill-available;
+    justify-content: end !important;
+}
+
+.frontSizeBtn {
+    font-size: 12px !important;
+}
+
+.marginBtn {
+    margin-left: 10px;
+}
+
+.activeBar {
+    text-decoration: underline;
+}
+
+.colorTextLink {
+    color: #000 !important;
+}
+
+.positionImg {
+    position: relative;
+    z-index: -1;
+}
+
+.positionBixImg {
+    position: absolute;
+    top: 40%;
+    left: 60%;
+}
+
+.positionBixImgTwo {
+    position: absolute;
+    top: 50%;
+    left: 45%;
+}
+
+.positionBixImgThree {
+    position: absolute;
+    top: 75%;
+    left: 65%;
+}
+
+.paddindCardContent {
+    padding: 5px !important;
+}
+
+.borderCard {
+    background-color: #e1a863;
+    border: 1px solid #ea6406;
+}
+
+.positionBixImgInfo {
+    position: absolute;
+    top: 70%;
+    left: 60%;
+}
+
+.borderCardInfo {
+    background-color: #4be3e194;
+    border: 1px solid #a7b7b694;
+}
+
+.positionBixImgInfoTwo {
+    position: absolute;
+    top: 70%;
+    left: 53%;
+}
+
+.positionBixImgInfoThree {
+    position: absolute;
+    top: 70%;
+    left: 47%;
+}
+
+.positionBixImgInfoFour {
+    position: absolute;
+    top: 70%;
+    left: 41%;
+}
+
+.positionBixImgInfoFive {
+    position: absolute;
+    top: 70%;
+    left: 35%;
+}
+
+.positionBixImgInfoSix {
+    position: absolute;
+    top: 70%;
+    left: 29%;
+}
+  
