@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Grid,
   Container,
@@ -10,15 +11,15 @@ import {
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
+import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 
+function Header({ type }) {
+  const user = useSelector((state) => state.user);
+  const [select, setSelect] = useState("none");
 
-function Header({type}) {
-    const [select, setSelect] = useState('none');
-
-    const hideOccModal = (e) => {
-        setSelect(e.target.value);
-    };
+  const hideOccModal = (e) => {
+    setSelect(e.target.value);
+  };
 
   return (
     <>
@@ -26,7 +27,7 @@ function Header({type}) {
         <Grid item md={2} className="FlexIconHead">
           <CheckBoxOutlineBlankIcon sx={{ mr: 3, ml: 3 }} />
           <Typography variant="h6" component="div">
-            {type ? type : 'Dashboard'}
+            {type ? type : "Dashboard"}
           </Typography>
         </Grid>
         <Grid item md={4}>
@@ -37,27 +38,27 @@ function Header({type}) {
               value={select}
               onChange={(e) => hideOccModal(e)}
             >
-              <MenuItem value={"none"} disabled>
+              <MenuItem value={"none"}>
                 WHA Mega Logistics Center เทพารักษ์ กม. 21
               </MenuItem>
-              <MenuItem value={10}>Ten</MenuItem>
+              {/* <MenuItem value={10}>Ten</MenuItem>
               <MenuItem value={20}>Twenty</MenuItem>
-              <MenuItem value={30}>Thirty</MenuItem>
+              <MenuItem value={30}>Thirty</MenuItem> */}
             </Select>
           </FormControl>
         </Grid>
         <Grid item md={4} className="FlexIcon">
-            <AccountCircleOutlinedIcon sx={{ mr: 3 }}/>
-            <Typography variant="h5">Admin HypeTex</Typography>
-            <IconButton
-                size="large"
-                edge="start"
-                color="inherit"
-                aria-label="menu"
-                sx={{ ml: 2 }}
-            >
-                <MenuIcon />
-            </IconButton>
+          <AccountCircleOutlinedIcon sx={{ mr: 3 }} />
+          <Typography variant="h5">{user}</Typography>
+          <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            sx={{ ml: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
         </Grid>
       </Grid>
     </>

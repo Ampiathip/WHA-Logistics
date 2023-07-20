@@ -1,6 +1,7 @@
 import { actionTypes } from './actions'
 const initialState = {
-    user: 'no',
+    user: 'Admin HypeTex',
+    sidebar: '',
   };
   
   function rootReducer(state = initialState, action) {
@@ -10,6 +11,13 @@ const initialState = {
         user: action.payload
       });
     }
+
+    if (action.type === actionTypes.SIDE_BAR) {
+      return Object.assign({}, state, {
+        sidebar: action.payload
+      });
+    }
+
 
     return state;
   };

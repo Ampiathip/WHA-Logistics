@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Grid,
   Container,
@@ -6,6 +8,8 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
+
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -17,40 +21,65 @@ import CalendarViewWeekOutlinedIcon from "@mui/icons-material/CalendarViewWeekOu
 import CookieOutlinedIcon from "@mui/icons-material/CookieOutlined";
 import DatasetOutlinedIcon from "@mui/icons-material/DatasetOutlined";
 
-const SideBar =({type}) => {
+const SideBar = ({ type }) => {
+  const dispatch = useDispatch();
+  const { t, i18n } = useTranslation(["sidebar", "footer"]);
   return (
     <>
       {/* <Grid container> */}
       <Grid item md={12} className="positionSideBar">
-        <Grid item md={3} className="padingText">
-          <Typography variant="h5">HYPETEX</Typography>
+        <Grid item md={3} className="padingText disPlayFlexRow FlexRowCard">
+          <Typography variant="h5" className="imageCenter">{t("sidebar:header")}</Typography>
+          <img
+            src={process.env.PUBLIC_URL + "/img/Group.png"}
+            alt="img-logo"
+            width={60}
+          />
         </Grid>
         <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <Link to={"/"} className={`LinkColor ${type == "Dashboard" ? " activeIcon ":""}`}>
+          <Link
+            to={"/dashboard"}
+            className={`LinkColor ${type == "Dashboard" ? " activeIcon " : ""}`}
+          >
             <HomeOutlinedIcon />
-            <Typography variant="body1" className={`MarginSideBar ${type == "Dashboard" ? " active ":""}`}>
-              Dashboard
+            <Typography
+              variant="body1"
+              className={`MarginSideBar ${
+                type == "Dashboard" ? " active " : ""
+              }`}
+            >
+              {t("sidebar:dashboard")}
             </Typography>
           </Link>
         </Grid>
         <Grid item md={3} className="padingTextLeft FlexIconHead">
           <DatasetOutlinedIcon />
           <Typography variant="body1" className="MarginSideBar">
-            My Devices
+            {t("sidebar:myDevices")}
           </Typography>
         </Grid>
         <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <Link to={"/historicalData"} className={`LinkColor ${type == "HistoricalData" ? " activeIcon ":""}`}>
+          <Link
+            to={"/historicalData"}
+            className={`LinkColor ${
+              type == "HistoricalData" ? " activeIcon " : ""
+            }`}
+          >
             <CookieOutlinedIcon />
-            <Typography variant="body1" className={`MarginSideBar ${type == "HistoricalData" ? " active ":""}`}>
-              Historical Data
+            <Typography
+              variant="body1"
+              className={`MarginSideBar ${
+                type == "HistoricalData" ? " active " : ""
+              }`}
+            >
+              {t("sidebar:historicalData")}
             </Typography>
           </Link>
         </Grid>
         <Grid item md={3} className="padingTextLeft FlexIconHead">
           <CalendarViewWeekOutlinedIcon />
           <Typography variant="body1" className="MarginSideBar">
-            System Overview
+            {t("sidebar:systemOverview")}
           </Typography>
         </Grid>
         <Grid item md={3} className="padingTextLeft FlexIconHead">
@@ -59,26 +88,31 @@ const SideBar =({type}) => {
         <Grid item md={3} className="padingTextLeft FlexIconHead">
           <UploadFileOutlinedIcon />
           <Typography variant="body1" className="MarginSideBar">
-            Parameter
+            {t("sidebar:parameter")}
           </Typography>
         </Grid>
         <Grid item md={3} className="padingTextLeft FlexIconHead">
           <PlayCircleOutlinedIcon />
           <Typography variant="body1" className="MarginSideBar">
-            Group
+            {t("sidebar:group")}
           </Typography>
         </Grid>
         <Grid item md={3} className="padingTextLeft FlexIconHead">
           <PermIdentityOutlinedIcon />
           <Typography variant="body1" className="MarginSideBar">
-            User
+            {t("sidebar:user")}
           </Typography>
         </Grid>
         <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <LogoutOutlinedIcon />
-          <Typography variant="body1" className="MarginSideBar">
-            Logout
-          </Typography>
+          <Link
+            to={"/"}
+            className={`LinkColor ${type == "" ? " activeIcon " : ""}`}
+          >
+            <LogoutOutlinedIcon />
+            <Typography variant="body1" className="MarginSideBar">
+              {t("sidebar:logout")}
+            </Typography>
+          </Link>
         </Grid>
       </Grid>
       {/* </Grid> */}
@@ -86,8 +120,8 @@ const SideBar =({type}) => {
   );
 };
 
-SideBar.Prototype = { 
-    type : PropTypes.string,
-}
+SideBar.Prototype = {
+  type: PropTypes.string,
+};
 
 export default SideBar;

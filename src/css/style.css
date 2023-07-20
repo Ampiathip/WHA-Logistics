@@ -289,3 +289,42 @@ h6 {
     left: 29%;
 }
   
+.boxImage {
+    object-fit: scale-down;
+    object-position: center;
+    width: 600px;
+}
+
+.hightBox {
+    margin-top: 35px !important;
+}
+
+.imageCenter {
+    align-self: center;
+    /* width: 550px; */
+}
+
+.boxInputLog {
+    /* width: 100%; */
+    text-align: center;
+}
+
+.boxLogin {
+    display: flex;
+    justify-content: center;
+    height: 770px;
+}
+
+.backGrourdLog {
+    background-color: #F5F9FF !important;
+    box-shadow: none !important;
+}
+
+.maginImage {
+    margin-right: 35px !important;
+}
+
+.btnLogColor {
+    background-color: #000 !important;
+    color: white !important;
+}
