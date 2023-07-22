@@ -198,6 +198,7 @@ h6 {
 .btnIconWidth {
     width: -webkit-fill-available;
     justify-content: end !important;
+    background-color: #D9D9D9 !important;
 }
 
 .frontSizeBtn {
@@ -209,7 +210,12 @@ h6 {
 }
 
 .activeBar {
-    text-decoration: underline;
+    /* text-decoration: underline #03257D; */
+    border-bottom: 3px solid #03257D;
+}
+
+.cursorPointer {
+    cursor: pointer;
 }
 
 .colorTextLink {
@@ -327,4 +333,22 @@ h6 {
 .btnLogColor {
     background-color: #000 !important;
     color: white !important;
+}
+
+.autoPadding { 
+    margin-top: 0px !important;
+}
+
+.boxTextPoint {
+    background-color: #E6F7FF;
+    padding: 5px;
+    margin-top: 10px;
+}
+
+.MuiInputBase-input.MuiOutlinedInput-input {
+    padding: 8.5px 14px !important;
+}
+
+.activeBtn {
+    background-color: #EB2F96 !important;
 }

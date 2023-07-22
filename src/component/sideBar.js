@@ -21,15 +21,19 @@ import CalendarViewWeekOutlinedIcon from "@mui/icons-material/CalendarViewWeekOu
 import CookieOutlinedIcon from "@mui/icons-material/CookieOutlined";
 import DatasetOutlinedIcon from "@mui/icons-material/DatasetOutlined";
 
-const SideBar = ({ type }) => {
+const SideBar = () => {
   const dispatch = useDispatch();
   const { t, i18n } = useTranslation(["sidebar", "footer"]);
+  const sideBar = useSelector((state) => state.sidebar);
+
   return (
     <>
       {/* <Grid container> */}
       <Grid item md={12} className="positionSideBar">
         <Grid item md={3} className="padingText disPlayFlexRow FlexRowCard">
-          <Typography variant="h5" className="imageCenter">{t("sidebar:header")}</Typography>
+          <Typography variant="h5" className="imageCenter">
+            {t("sidebar:header")}
+          </Typography>
           <img
             src={process.env.PUBLIC_URL + "/img/Group.png"}
             alt="img-logo"
@@ -39,13 +43,15 @@ const SideBar = ({ type }) => {
         <Grid item md={3} className="padingTextLeft FlexIconHead">
           <Link
             to={"/dashboard"}
-            className={`LinkColor ${type == "Dashboard" ? " activeIcon " : ""}`}
+            className={`LinkColor ${
+              sideBar == "Dashboard" ? " activeIcon " : ""
+            }`}
           >
             <HomeOutlinedIcon />
             <Typography
               variant="body1"
               className={`MarginSideBar ${
-                type == "Dashboard" ? " active " : ""
+                sideBar == "Dashboard" ? " active " : ""
               }`}
             >
               {t("sidebar:dashboard")}
@@ -62,14 +68,14 @@ const SideBar = ({ type }) => {
           <Link
             to={"/historicalData"}
             className={`LinkColor ${
-              type == "HistoricalData" ? " activeIcon " : ""
+              sideBar == "HistoricalData" ? " activeIcon " : ""
             }`}
           >
             <CookieOutlinedIcon />
             <Typography
               variant="body1"
               className={`MarginSideBar ${
-                type == "HistoricalData" ? " active " : ""
+                sideBar == "HistoricalData" ? " active " : ""
               }`}
             >
               {t("sidebar:historicalData")}
@@ -106,7 +112,7 @@ const SideBar = ({ type }) => {
         <Grid item md={3} className="padingTextLeft FlexIconHead">
           <Link
             to={"/"}
-            className={`LinkColor ${type == "" ? " activeIcon " : ""}`}
+            className={`LinkColor ${sideBar == "" ? " activeIcon " : ""}`}
           >
             <LogoutOutlinedIcon />
             <Typography variant="body1" className="MarginSideBar">
@@ -120,8 +126,6 @@ const SideBar = ({ type }) => {
   );
 };
 
-SideBar.Prototype = {
-  type: PropTypes.string,
-};
+SideBar.Prototype = {};
 
 export default SideBar;

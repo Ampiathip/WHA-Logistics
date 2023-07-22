@@ -23,6 +23,7 @@
     "dayjs": "^1.11.9",
     "i18next": "^23.2.11",
     "material-ui-thai-datepickers": "^1.1.7",
+    "next": "^13.4.12",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

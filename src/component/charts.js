@@ -9,7 +9,6 @@ import {
   Box,
   Button,
 } from "@mui/material";
-import Link from "@mui/material/Link";
 import { LineChart } from "@mui/x-charts/LineChart";
 
 const Charts = () => {

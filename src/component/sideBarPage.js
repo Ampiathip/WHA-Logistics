@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Grid,
   Container,
@@ -11,7 +13,8 @@ import PropTypes from "prop-types";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import CustomizedAccordions from "./accondion";
 
-const SideBarPage = ({ children }) => {
+const SideBarPage = ({ children , t}) => {
+  const sideBar = useSelector((state) => state.sidebar);
 
   return (
     <>
@@ -20,7 +23,7 @@ const SideBarPage = ({ children }) => {
         <Grid item md={3} className="MaxWidthSideBar"></Grid>
         <Grid item md={5} className="FlexIconHead MarginCard">
           <HomeOutlinedIcon />
-          <Typography variant="body1"> / Historical Data</Typography>
+          <Typography variant="body1"> / {sideBar}</Typography>
         </Grid>
         {/* </Grid> */}
       </Grid>
@@ -33,8 +36,8 @@ const SideBarPage = ({ children }) => {
           <Grid item md={2} className="MarginCard">
             <Card>
               <CardContent>
-                <Typography variant="h6">Device List</Typography>
-                <CustomizedAccordions />
+                {/* <Typography variant="h6">{t('historicalData:devicelist')}</Typography> */}
+                <CustomizedAccordions t={t}/>
               </CardContent>
             </Card>
           </Grid>
@@ -69,6 +72,8 @@ const SideBarPage = ({ children }) => {
   );
 };
 
-SideBarPage.propTypes = {};
+SideBarPage.propTypes = {
+  t: PropTypes.func,
+};
 
 export default SideBarPage;

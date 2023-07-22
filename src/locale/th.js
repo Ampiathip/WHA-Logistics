@@ -25,7 +25,19 @@ let th = {
       "group": "Group",
       "user": "User",
       "logout": "Logout"
-    }
+    },
+    historicalData: {
+      "devicelist": "Device List",
+      "poin": "Point List",
+      "select": "Selected Point",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "search": "SEARCH",
+      "hr": "Past 24Hr",
+      "date": "Past 7 Days",
+      "threeDate": "Past 30 Days",
+      "custom": "Past Custom",
+    },
   };
   
   export default th;

@@ -1,135 +1,115 @@
-import React, { useState, useEffect } from 'react';
-import { styled } from '@mui/material/styles';
-import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp';
-import MuiAccordion from '@mui/material/Accordion';
-import MuiAccordionSummary from '@mui/material/AccordionSummary';
-import MuiAccordionDetails from '@mui/material/AccordionDetails';
-import Typography from '@mui/material/Typography';
+import React, { useState, useEffect } from "react";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
+import Stack from "@mui/material/Stack";
+import PropTypes from "prop-types";
+import { Typography, Grid } from "@material-ui/core";
 
-const Accordion = styled((props) => (
-  <MuiAccordion disableGutters elevation={0} square {...props} />
-))(({ theme }) => ({
-  border: `1px solid ${theme.palette.divider}`,
-  '&:not(:last-child)': {
-    borderBottom: 0,
-  },
-  '&:before': {
-    display: 'none',
-  },
-}));
+const Device = [
+  {id: 1, title: "Device1", year: 1994 },
+  {id: 2, title: "Device2", year: 1972 },
+  {id: 3, title: "Device3", year: 1974 },
+];
 
-const AccordionSummary = styled((props) => (
-  <MuiAccordionSummary
-    expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: '0.9rem',}} />}
-    {...props}
-  />
-))(({ theme }) => ({
-  backgroundColor:
-    theme.palette.mode === 'dark'
-      ? 'rgba(255, 255, 255, .05)'
-      : 'rgba(0, 0, 0, .03)',
-  flexDirection: 'row-reverse',
-  '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-    transform: 'rotate(90deg)',
-  },
-  '& .MuiAccordionSummary-content': {
-    marginLeft: theme.spacing(1),
-    // backgroundColor: 'rgba(0, 255, 255, 0.37)',
-  },
-}));
+const Point = [
+  {id: 1, title: "Current", year: 1994 },
+  {id: 2, title: "Voltage", year: 1972 },
+  {id: 3, title: "Power", year: 1974 },
+];
 
-const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderTop: '1px solid rgba(0, 0, 0, .125)',
-}));
+const Tags = ({ t }) => {
+  const [nameDevice, setIsnameDevice] = useState([]);
+  const [pointDevice, setIspointDevice] = useState([]);
 
-export default function CustomizedAccordions() {
-  const [expanded, setExpanded] = useState('');
-  const [expandedDetail, setExpandedDetail] = useState('');
-  const [expandedDetailPower, setExpandedDetailPower] = useState('');
+  // useEffect (() => {
 
-  const handleChange = (panel) => (event, newExpanded) => {
-    setExpanded(newExpanded ? panel : false);
+  // }, [nameDevice])
+
+  const handleDevice = (event, value) => {
+    if (value) {
+      setIsnameDevice(value);
+    }
   };
 
-  const handleChangeDetail = (panel) => (event, newExpanded) => {
-    setExpandedDetail(newExpanded ? panel : false);
+  const handlePoint = (event, value) => {
+    if (value) {
+      setIspointDevice(value);
+    }
   };
 
-  const handleChangeDetailPower = (panel) => (event, newExpanded) => {
-    setExpandedDetailPower(newExpanded ? panel : false);
-  };
+  console.log("mmmmmm=====", nameDevice, pointDevice);
 
   return (
-    <div className='MarginCard'>
-      <Accordion expanded={expanded === 'panel1'} onChange={handleChange('panel1')}>
-        <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
-          <Typography variant="body1">Devices_1</Typography>
-        </AccordionSummary>
-        {/* <AccordionDetails>
-          <Typography>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-            malesuada lacus ex, sit amet blandit leo lobortis eget. Lorem ipsum dolor
-            sit amet, consectetur adipiscing elit. Suspendisse malesuada lacus ex,
-            sit amet blandit leo lobortis eget.
-          </Typography>
-        </AccordionDetails> */}
-      </Accordion>
-      <Accordion expanded={expanded === 'panel2'} onChange={handleChange('panel2')}>
-        <AccordionSummary aria-controls="panel2d-content" id="panel2d-header">
-          <Typography variant="body1">Devices_2</Typography>
-        </AccordionSummary>
-        {/* <AccordionDetails>
-          <Typography>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
-            malesuada lacus ex, sit amet blandit leo lobortis eget. Lorem ipsum dolor
-            sit amet, consectetur adipiscing elit. Suspendisse malesuada lacus ex,
-            sit amet blandit leo lobortis eget.
-          </Typography>
-        </AccordionDetails> */}
-      </Accordion>
-      <Accordion expanded={expanded === 'panel3'} onChange={handleChange('panel3')}>
-        <AccordionSummary aria-controls="panel3d-content" id="panel3d-header">
-          <Typography variant="body1">Devices_3</Typography>
-        </AccordionSummary>
-        {/* <AccordionDetails> */}
-        <Accordion expanded={expandedDetail === 'panel4'} onChange={handleChangeDetail('panel4')}>
-        <AccordionSummary aria-controls="panel4-content" id="panel4-header" className="paddingLeftAccondion">
-          <Typography variant="body1">Current</Typography>
-        </AccordionSummary>
-        </Accordion>
+    <>
+      <Stack spacing={3}>
+        <Typography variant="h6">{t("historicalData:devicelist")}</Typography>
+        <Autocomplete
+          multiple
+          id="tags-standard"
+          options={Device.map((option) => option.title)}
+          value={nameDevice}
+          onChange={handleDevice}
+          className="autoPadding"
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              size="small"
+              margin="normal"
+              variant="outlined"
+              // label={t('historicalData:devicelist')}
+              placeholder={t("historicalData:devicelist")}
+            />
+          )}
+        />
 
-        <Accordion expanded={expandedDetail === 'panel5'} onChange={handleChangeDetail('panel5')}>
-        <AccordionSummary aria-controls="panel5-content" id="panel5-header" className="paddingLeftAccondion">
-          <Typography variant="body1">Voltage</Typography>
-        </AccordionSummary>
-        </Accordion>
-
-        <Accordion expanded={expandedDetail === 'panel6'} onChange={handleChangeDetail('panel6')}>
-        <AccordionSummary aria-controls="panel6-content" id="panel6-header" className="paddingLeftAccondion">
-          <Typography variant="body1">Power</Typography>
-        </AccordionSummary>
-        <Accordion expanded={expandedDetailPower === 'PowerL1'} onChange={handleChangeDetailPower('PowerL1')}>
-        <AccordionSummary aria-controls="PowerL1-content" id="PowerL1-header" className="paddingLeftPower">
-          <Typography variant="body1" className='ColorAccondion'>Power L1</Typography>
-        </AccordionSummary>
-        </Accordion>
-
-        <Accordion expanded={expandedDetailPower === 'PowerL2'} onChange={handleChangeDetailPower('PowerL2')}>
-        <AccordionSummary aria-controls="PowerL2-content" id="PowerL1-header" className="paddingLeftPower">
-          <Typography variant="body1" className='ColorAccondion'>Power L2</Typography>
-        </AccordionSummary>
-        </Accordion>
-
-        <Accordion expanded={expandedDetailPower === 'PowerL3'} onChange={handleChangeDetailPower('PowerL3')}>
-        <AccordionSummary aria-controls="PowerL3-content" id="PowerL1-header" className="paddingLeftPower">
-          <Typography variant="body1" className='ColorAccondion'>Power L3</Typography>
-        </AccordionSummary>
-        </Accordion>
-
-        </Accordion>
-        {/* </AccordionDetails> */}
-      </Accordion>
-    </div>
+        {/* Point */}
+        <Typography variant="h6" className="autoPadding">
+          {t("historicalData:poin")}
+        </Typography>
+        <Autocomplete
+          multiple
+          id="tags-standard"
+          options={Point.map((option) => option.title)}
+          value={pointDevice}
+          onChange={handlePoint}
+          className="autoPadding"
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              size="small"
+              margin="normal"
+              variant="outlined"
+              // label={t('historicalData:devicelist')}
+              placeholder={t("historicalData:poin")}
+            />
+          )}
+        />
+        {/* <Grid item className="mt-3"> */}
+          <Typography variant="h6">{t("historicalData:select")}</Typography>
+          {nameDevice.length > 0 && pointDevice.length > 0 && (
+            <>
+              <div className="boxTextPoint">
+                {nameDevice.map((item) => {
+                  return pointDevice.map((point) => {
+                    return (
+                      <Typography variant="body1">
+                        {" "}
+                        {item + " / " + point}{" "}
+                      </Typography>
+                    );
+                  });
+                })}
+              </div>
+            </>
+          )}
+        {/* </Grid> */}
+      </Stack>
+    </>
   );
-}
+};
+
+Tags.propTypes = {
+  t: PropTypes.func,
+};
+
+export default Tags;

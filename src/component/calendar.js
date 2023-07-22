@@ -17,13 +17,34 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import StackedLineChartOutlinedIcon from "@mui/icons-material/StackedLineChartOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import PrintOutlinedIcon from "@mui/icons-material/PrintOutlined";
-import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import Charts from "../component/charts";
+import DataTable from "../component/table";
 
-const Calendar = () => {
+const Calendar = ({ t }) => {
   const [value, setValue] = useState(null);
   const [valueEnd, setValueEnd] = useState(null);
 
+  const [clickBtn, setClickBtn] = useState("graph");
+  const [clickDate, setClickDate] = useState("24hr");
+  const [table, setTable] = useState("");
+  const [graph, setGraph] = useState("");
+  const [search, setSearch] = useState("");
+
+  const handleClickTable = () => {
+    setClickBtn("table");
+  };
+
+  const handleClickGraph = () => {
+    setClickBtn("graph");
+  };
+
+  const handleClickSearch = () => {
+    console.log("88888888");
+  };
+
+  const handleClickNavbar = (text) => {
+    setClickDate(text);
+  };
 
   return (
     <>
@@ -32,21 +53,26 @@ const Calendar = () => {
           <CardContent>
             <Grid item md={12} className="FlexIconHead">
               <Grid item md={1}>
-                <Typography variant="body2">Start Date</Typography>
+                <Typography variant="body2">
+                  {t("historicalData:startDate")}
+                </Typography>
               </Grid>
               <Grid item md={3} className="marginRight">
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DemoContainer components={["DatePicker"]}>
                     <DatePicker
                       value={value}
-                      onChange={(newValue) => setValue(newValue)}
+                      onChange={(newValue) => {
+                        setValue(newValue);
+                        setClickDate("");
+                      }}
                     />
                   </DemoContainer>
                 </LocalizationProvider>
               </Grid>
               <Grid item md={1}>
                 <Typography variant="body2" className="marginRight">
-                  End Date
+                  {t("historicalData:endDate")}
                 </Typography>
               </Grid>
               <Grid item md={3} className="marginRight">
@@ -63,47 +89,92 @@ const Calendar = () => {
                 <div className="marginBtn">
                   <Button
                     variant="contained"
-                    color="inherit"
-                    className="btnIconWidth"
+                    className={`btnIconWidth ${
+                      clickBtn === "table" ? "activeBtn" : ""
+                    } `}
                     startIcon={<CalendarMonthOutlinedIcon />}
+                    onClick={handleClickTable}
                   ></Button>
                 </div>
                 <div className="marginBtn">
                   <Button
                     variant="contained"
-                    color="secondary"
-                    className="btnIconWidth"
+                    className={`btnIconWidth ${
+                      clickBtn === "graph" ? "activeBtn" : ""
+                    } `}
+                    onClick={handleClickGraph}
                     startIcon={<StackedLineChartOutlinedIcon />}
                   ></Button>
                 </div>
                 <div className="marginBtn">
                   <Button
                     variant="contained"
-                    color="secondary"
-                    className="btnIconWidth"
+                    className="btnIconWidth activeBtn"
+                    onClick={handleClickSearch}
                     endIcon={<SearchOutlinedIcon />}
                   >
-                    <Typography className="frontSizeBtn">Search</Typography>
+                    <Typography className="frontSizeBtn">
+                      {t("historicalData:search")}
+                    </Typography>
                   </Button>
                 </div>
               </div>
             </Grid>
 
             <Grid item md={12} className="FlexIconHead MarginCard">
-              <Grid item md={4} className="FlexCard ">
-                <Link href="#" underline="always">
-                  <Typography variant="body2" className="activeBar">
-                    Past 24Hr
-                  </Typography>
-                </Link>
-                <Link href="#" underline="hover" className="colorTextLink">
-                  <Typography variant="body2">Past 7 Davs</Typography>
-                </Link>
-                <Link href="#" underline="hover" className="colorTextLink">
-                  <Typography variant="body2">Past 30 Davs</Typography>
-                </Link>
+              <Grid item md={8} className="FlexCard ">
+                {/* <Link href="#" underline="always"> */}
+                <Typography
+                  variant="body2"
+                  className={`${
+                    clickDate === "24hr" ? "activeBar" : "cursorPointer"
+                  }`}
+                  onClick={() => {
+                    handleClickNavbar("24hr");
+                  }}
+                >
+                  {t("historicalData:hr")}
+                </Typography>
+
+                {/* </Link> */}
+                {/* <Link href="#" underline="hover" className="colorTextLink"> */}
+                <Typography
+                  variant="body2"
+                  className={`${
+                    clickDate === "7Date" ? "activeBar" : "cursorPointer"
+                  }`}
+                  onClick={() => {
+                    handleClickNavbar("7Date");
+                  }}
+                >
+                  {t("historicalData:date")}
+                </Typography>
+                {/* </Link> */}
+                {/* <Link href="#" underline="hover" className="colorTextLink"> */}
+                <Typography
+                  variant="body2"
+                  className={`${
+                    clickDate === "30Date" ? "activeBar" : "cursorPointer"
+                  }`}
+                  onClick={() => {
+                    handleClickNavbar("30Date");
+                  }}
+                >
+                  {t("historicalData:threeDate")}
+                </Typography>
+                {/* </Link>
+                <Link href="#" underline="hover" className="colorTextLink"> */}
+                <Typography
+                  variant="body2"
+                  className={`${
+                    value && valueEnd ? "activeBar" : "cursorPointer"
+                  }`}
+                >
+                  {t("historicalData:custom")}
+                </Typography>
+                {/* </Link> */}
               </Grid>
-              <Grid item md={6} className="FlexIconHead FlexRowCard">
+              {/* <Grid item md={6} className="FlexIconHead FlexRowCard">
                 <div className="marginBtn">
                   <Typography variant="body2">Sort</Typography>
                 </div>
@@ -117,19 +188,41 @@ const Calendar = () => {
                     Descending
                   </Button>
                 </div>
-              </Grid>
-              <Grid item md={2} className="textEnd">
-                <AssignmentOutlinedIcon />
-                <PrintOutlinedIcon />
+              </Grid> */}
+              <Grid item md={2}></Grid>
+              <Grid item md={2} className="disPlayFlexRow FlexRowCard">
+                <div>
+                  <img
+                    src={process.env.PUBLIC_URL + "/img/excel.png"}
+                    alt="img-logo-excel"
+                  />
+                </div>
+                <div>
+                  <img
+                    src={process.env.PUBLIC_URL + "/img/print.png"}
+                    alt="img-logo-print"
+                  />
+                </div>
               </Grid>
             </Grid>
           </CardContent>
         </Card>
       </div>
+      {clickBtn === "graph" ? (
+        <Grid item className="mt-4">
+          <Charts />
+        </Grid>
+      ) : (
+        <Grid item className="mt-4">
+          <DataTable />
+        </Grid>
+      )}
     </>
   );
 };
 
-Calendar.propTypes = {};
+Calendar.propTypes = {
+  t: PropTypes.func,
+};
 
 export default Calendar;

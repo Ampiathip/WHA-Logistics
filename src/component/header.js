@@ -15,6 +15,7 @@ import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined
 
 function Header({ type }) {
   const user = useSelector((state) => state.user);
+  const sideBar = useSelector((state) => state.sidebar);
   const [select, setSelect] = useState("none");
 
   const hideOccModal = (e) => {
@@ -27,7 +28,7 @@ function Header({ type }) {
         <Grid item md={2} className="FlexIconHead">
           <CheckBoxOutlineBlankIcon sx={{ mr: 3, ml: 3 }} />
           <Typography variant="h6" component="div">
-            {type ? type : "Dashboard"}
+            {sideBar ? sideBar : "Dashboard"}
           </Typography>
         </Grid>
         <Grid item md={4}>
