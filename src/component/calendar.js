@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
+  makeStyles,
   Grid,
   Container,
   Typography,
@@ -8,7 +9,7 @@ import {
   CardContent,
   Box,
   Button,
-} from "@mui/material";
+} from "@material-ui/core";
 import Link from "@mui/material/Link";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -19,8 +20,41 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import Charts from "../component/charts";
 import DataTable from "../component/table";
+import clsx from "clsx";
+
+const useStyles = makeStyles((theme) => ({
+  FlexIconHead: {
+    display: "flex",
+    justifyContent: "space-evenly",
+  },
+  disPlayFlexRow: {
+    display: "contents",
+  },
+  alignCenter: {
+    alignItems: "center",
+  },
+  marginTop: {
+    marginTop: 15,
+  },
+  activeBtn: {
+    backgroundColor: "#EB2F96",
+    color: "#fff",
+  },
+  btnIconWidth: {
+    width: "-webkit-fill-available",
+    backgroundColor: "#D9D9D9",
+    color: "#fff",
+  },
+  activeBar: {
+    borderBottom: "3px solid #03257D",
+  },
+  cursorPointer: {
+    cursor: "pointer",
+  },
+}));
 
 const Calendar = ({ t }) => {
+  const classes = useStyles();
   const [value, setValue] = useState(null);
   const [valueEnd, setValueEnd] = useState(null);
 
@@ -48,16 +82,19 @@ const Calendar = ({ t }) => {
 
   return (
     <>
-      <div className="MarginCard marginCardCalendar">
+      <Container>
         <Card>
           <CardContent>
-            <Grid item md={12} className="FlexIconHead">
-              <Grid item md={1}>
+            <Grid
+              item
+              className={clsx(classes.FlexIconHead, classes.alignCenter)}
+            >
+              <Grid item>
                 <Typography variant="body2">
                   {t("historicalData:startDate")}
                 </Typography>
               </Grid>
-              <Grid item md={3} className="marginRight">
+              <Grid item className="marginRight">
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DemoContainer components={["DatePicker"]}>
                     <DatePicker
@@ -75,7 +112,7 @@ const Calendar = ({ t }) => {
                   {t("historicalData:endDate")}
                 </Typography>
               </Grid>
-              <Grid item md={3} className="marginRight">
+              <Grid item className="marginRight">
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DemoContainer components={["DatePicker"]}>
                     <DatePicker
@@ -85,12 +122,14 @@ const Calendar = ({ t }) => {
                   </DemoContainer>
                 </LocalizationProvider>
               </Grid>
-              <div className="disPlayFlexRow">
+              <div className={classes.disPlayFlexRow}>
                 <div className="marginBtn">
                   <Button
                     variant="contained"
-                    className={`btnIconWidth ${
-                      clickBtn === "table" ? "activeBtn" : ""
+                    className={`${
+                      clickBtn === "table"
+                        ? classes.activeBtn
+                        : classes.btnIconWidth
                     } `}
                     startIcon={<CalendarMonthOutlinedIcon />}
                     onClick={handleClickTable}
@@ -99,8 +138,10 @@ const Calendar = ({ t }) => {
                 <div className="marginBtn">
                   <Button
                     variant="contained"
-                    className={`btnIconWidth ${
-                      clickBtn === "graph" ? "activeBtn" : ""
+                    className={`${
+                      clickBtn === "graph"
+                        ? classes.activeBtn
+                        : classes.btnIconWidth
                     } `}
                     onClick={handleClickGraph}
                     startIcon={<StackedLineChartOutlinedIcon />}
@@ -109,7 +150,7 @@ const Calendar = ({ t }) => {
                 <div className="marginBtn">
                   <Button
                     variant="contained"
-                    className="btnIconWidth activeBtn"
+                    className={classes.activeBtn}
                     onClick={handleClickSearch}
                     endIcon={<SearchOutlinedIcon />}
                   >
@@ -121,13 +162,21 @@ const Calendar = ({ t }) => {
               </div>
             </Grid>
 
-            <Grid item md={12} className="FlexIconHead MarginCard">
-              <Grid item md={8} className="FlexCard ">
+            <Grid
+              className={clsx(
+                classes.FlexIconHead,
+                classes.alignCenter,
+                classes.marginTop
+              )}
+            >
+              <Grid className={classes.disPlayFlexRow}>
                 {/* <Link href="#" underline="always"> */}
                 <Typography
                   variant="body2"
                   className={`${
-                    clickDate === "24hr" ? "activeBar" : "cursorPointer"
+                    clickDate === "24hr"
+                      ? classes.activeBar
+                      : classes.cursorPointer
                   }`}
                   onClick={() => {
                     handleClickNavbar("24hr");
@@ -141,7 +190,9 @@ const Calendar = ({ t }) => {
                 <Typography
                   variant="body2"
                   className={`${
-                    clickDate === "7Date" ? "activeBar" : "cursorPointer"
+                    clickDate === "7Date"
+                      ? classes.activeBar
+                      : classes.cursorPointer
                   }`}
                   onClick={() => {
                     handleClickNavbar("7Date");
@@ -154,7 +205,9 @@ const Calendar = ({ t }) => {
                 <Typography
                   variant="body2"
                   className={`${
-                    clickDate === "30Date" ? "activeBar" : "cursorPointer"
+                    clickDate === "30Date"
+                      ? classes.activeBar
+                      : classes.cursorPointer
                   }`}
                   onClick={() => {
                     handleClickNavbar("30Date");
@@ -167,7 +220,9 @@ const Calendar = ({ t }) => {
                 <Typography
                   variant="body2"
                   className={`${
-                    value && valueEnd ? "activeBar" : "cursorPointer"
+                    value && valueEnd
+                      ? classes.activeBar
+                      : classes.cursorPointer
                   }`}
                 >
                   {t("historicalData:custom")}
@@ -190,7 +245,7 @@ const Calendar = ({ t }) => {
                 </div>
               </Grid> */}
               <Grid item md={2}></Grid>
-              <Grid item md={2} className="disPlayFlexRow FlexRowCard">
+              <Grid item md={2} className={classes.disPlayFlexRow}>
                 <div>
                   <img
                     src={process.env.PUBLIC_URL + "/img/excel.png"}
@@ -207,16 +262,16 @@ const Calendar = ({ t }) => {
             </Grid>
           </CardContent>
         </Card>
-      </div>
-      {clickBtn === "graph" ? (
-        <Grid item className="mt-4">
-          <Charts />
-        </Grid>
-      ) : (
-        <Grid item className="mt-4">
-          <DataTable />
-        </Grid>
-      )}
+        {clickBtn === "graph" ? (
+          <Grid item className="mt-4">
+            <Charts />
+          </Grid>
+        ) : (
+          <Grid item className="mt-4">
+            <DataTable />
+          </Grid>
+        )}
+      </Container>
     </>
   );
 };

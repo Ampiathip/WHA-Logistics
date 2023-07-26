@@ -1,50 +1,108 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {} from "@mui/material";
 import {
+  makeStyles,
   Grid,
   Container,
   Typography,
+  FormControl,
+  Select,
+  MenuItem,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   Card,
   CardContent,
   Box,
-} from "@mui/material";
+} from "@material-ui/core";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import CustomizedAccordions from "./accondion";
+import clsx from "clsx";
 
-const SideBarPage = ({ children , t}) => {
+const drawerWidth = 200;
+const useStyles = makeStyles((theme) => ({
+  drawer: {
+    width: drawerWidth,
+  },
+  drawerPaper: {
+    width: drawerWidth,
+  },
+  flexRow: {
+    display: "flex",
+  },
+  marginRow: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  alignSelf: {
+    alignSelf: "center",
+  },
+  sideBarLeft: {
+    left: "18%",
+    top: 80,
+  },
+  borderRight: {
+    borderRight: 'none',
+  }
+}));
+
+const SideBarPage = ({ children, t }) => {
+  const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
 
   return (
     <>
-      <Grid container>
-        {/* <Grid item md={12}> */}
-        <Grid item md={3} className="MaxWidthSideBar"></Grid>
-        <Grid item md={5} className="FlexIconHead MarginCard">
-          <HomeOutlinedIcon />
-          <Typography variant="body1"> / {sideBar}</Typography>
-        </Grid>
-        {/* </Grid> */}
-      </Grid>
+      {/* <Grid container> */}
+      <Box className={clsx(classes.flexRow, classes.marginRow)}>
+        {/* <Grid item md={3}> */}
+          <Drawer
+            className={classes.drawer}
+            variant="permanent"
+            classes={{
+              paper: classes.drawerPaper,
+              paperAnchorLeft: classes.sideBarLeft,
+              paperAnchorDockedLeft: classes.borderRight,
+            }}
+          >
+            <Grid item className={classes.flexRow}>
+              <HomeOutlinedIcon className={classes.alignSelf} />
+              <Typography variant="h6"> / {sideBar}</Typography>
+            </Grid>
 
-      {/* Container Device List */}
-
-      <Grid container>
-        <Grid item md={12} className="disPlayFlexRow">
-          <Grid item md={3} className="MaxWidthSideBar"></Grid>
-          <Grid item md={2} className="MarginCard">
             <Card>
               <CardContent>
                 {/* <Typography variant="h6">{t('historicalData:devicelist')}</Typography> */}
-                <CustomizedAccordions t={t}/>
+                <CustomizedAccordions t={t} />
               </CardContent>
             </Card>
-          </Grid>
-          <Grid item md={7}>{children}</Grid>
+          </Drawer>
+        {/* </Grid> */}
+        <Grid item md={10}>
+          {children}
         </Grid>
+      </Box>
 
-        {/* <Grid item md={12} className="disPlayFlexRow">
+      {/* {children} */}
+      {/* </Box> */}
+      {/* </Grid> */}
+
+      {/* Container Device List */}
+
+      {/* <Box> */}
+      {/* <Grid item md={12} className="disPlayFlexRow">
+          <Grid item md={3} className="MaxWidthSideBar"></Grid>
+          <Grid item md={2} className="MarginCard"> */}
+
+      {/* </Grid> */}
+      {/* <Box>{children}</Box> */}
+      {/* </Grid> */}
+
+      {/* <Grid item md={12} className="disPlayFlexRow">
           <Grid item md={3} className="MaxWidthSideBar"></Grid>
           <Grid item md={2} className="MarginCard">
             <Card>
@@ -67,7 +125,7 @@ const SideBarPage = ({ children , t}) => {
           </Grid>
           <Grid item md={7}>{children}</Grid>
         </Grid> */}
-      </Grid>
+      {/* </Box> */}
     </>
   );
 };

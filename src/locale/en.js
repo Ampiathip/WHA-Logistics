@@ -20,11 +20,12 @@ let en = {
       "dashboard": "Dashboard",
       "myDevices": "My Devices",
       "historicalData": "Historical Data",
-      "systemOverview": "System Overview",
+      "Settings": "Settings",
       "parameter": "Parameter",
       "group": "Group",
       "user": "User",
-      "logout": "Logout"
+      "logout": "Logout",
+      "FloorDiagram": "Floor Diagram",
     },
     historicalData: {
       "devicelist": "Device List",
@@ -33,10 +34,10 @@ let en = {
       "startDate": "Start Date",
       "endDate": "End Date",
       "search": "SEARCH",
-      "hr": "Past 24Hr",
-      "date": "Past 7 Days",
-      "threeDate": "Past 30 Days",
-      "custom": "Past Custom",
+      "hr": "PAST 24 HR",
+      "date": "PAST 7 DAYS",
+      "threeDate": "PAST 30 DAYS",
+      "custom": "CUSTOM RANGE",
     },
   };
   

@@ -2,6 +2,8 @@ import { actionTypes } from './actions'
 const initialState = {
     user: 'Admin HypeTex',
     sidebar: '',
+    theme: 'default',
+    responsiveFontSizes: true,
   };
   
   function rootReducer(state = initialState, action) {
@@ -17,6 +19,13 @@ const initialState = {
         sidebar: action.payload
       });
     }
+
+    if (action.type === actionTypes.THEME) {
+      return Object.assign({}, state, {
+        theme: action.payload
+      });
+    }
+
 
 
     return state;

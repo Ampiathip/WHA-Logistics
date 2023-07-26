@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  makeStyles,
   Grid,
   Container,
   Typography,
   FormControl,
   Select,
   MenuItem,
-} from "@mui/material";
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+} from "@material-ui/core";
 import { useTranslation } from "react-i18next";
-
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -21,108 +26,207 @@ import CalendarViewWeekOutlinedIcon from "@mui/icons-material/CalendarViewWeekOu
 import CookieOutlinedIcon from "@mui/icons-material/CookieOutlined";
 import DatasetOutlinedIcon from "@mui/icons-material/DatasetOutlined";
 
+const drawerWidth = 240;
+const useStyles = makeStyles((theme) => ({
+  drawer: {
+    width: drawerWidth,
+  },
+  drawerPaper: {
+    width: drawerWidth,
+  },
+  disPlayFlexRow: {
+    display: "flex",
+    justifyContent: "space-evenly",
+  },
+  imageCenter: {
+    alignSelf: "center",
+  },
+  LinkColor: {
+    color: "#000",
+    textDecoration: 'blink',
+  },
+  activeIcon: {
+    color: "#ae84d3",
+    textDecoration: 'blink',
+    "&:hover": {
+      color: "#ae84d3",
+    },
+  },
+  margigLeft: {
+    marginLeft: 20,
+  },
+}));
+
 const SideBar = () => {
+  const classes = useStyles();
   const dispatch = useDispatch();
   const { t, i18n } = useTranslation(["sidebar", "footer"]);
   const sideBar = useSelector((state) => state.sidebar);
 
   return (
-    <>
-      {/* <Grid container> */}
-      <Grid item md={12} className="positionSideBar">
-        <Grid item md={3} className="padingText disPlayFlexRow FlexRowCard">
-          <Typography variant="h5" className="imageCenter">
-            {t("sidebar:header")}
-          </Typography>
-          <img
-            src={process.env.PUBLIC_URL + "/img/Group.png"}
-            alt="img-logo"
-            width={60}
-          />
-        </Grid>
-        <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <Link
-            to={"/dashboard"}
-            className={`LinkColor ${
-              sideBar == "Dashboard" ? " activeIcon " : ""
-            }`}
-          >
-            <HomeOutlinedIcon />
-            <Typography
-              variant="body1"
-              className={`MarginSideBar ${
-                sideBar == "Dashboard" ? " active " : ""
-              }`}
-            >
-              {t("sidebar:dashboard")}
-            </Typography>
-          </Link>
-        </Grid>
-        <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <DatasetOutlinedIcon />
-          <Typography variant="body1" className="MarginSideBar">
-            {t("sidebar:myDevices")}
-          </Typography>
-        </Grid>
-        <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <Link
-            to={"/historicalData"}
-            className={`LinkColor ${
-              sideBar == "HistoricalData" ? " activeIcon " : ""
-            }`}
-          >
-            <CookieOutlinedIcon />
-            <Typography
-              variant="body1"
-              className={`MarginSideBar ${
-                sideBar == "HistoricalData" ? " active " : ""
-              }`}
-            >
-              {t("sidebar:historicalData")}
-            </Typography>
-          </Link>
-        </Grid>
-        <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <CalendarViewWeekOutlinedIcon />
-          <Typography variant="body1" className="MarginSideBar">
-            {t("sidebar:systemOverview")}
-          </Typography>
-        </Grid>
-        <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <Typography variant="h6">Settings</Typography>
-        </Grid>
-        <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <UploadFileOutlinedIcon />
-          <Typography variant="body1" className="MarginSideBar">
-            {t("sidebar:parameter")}
-          </Typography>
-        </Grid>
-        <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <PlayCircleOutlinedIcon />
-          <Typography variant="body1" className="MarginSideBar">
-            {t("sidebar:group")}
-          </Typography>
-        </Grid>
-        <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <PermIdentityOutlinedIcon />
-          <Typography variant="body1" className="MarginSideBar">
-            {t("sidebar:user")}
-          </Typography>
-        </Grid>
-        <Grid item md={3} className="padingTextLeft FlexIconHead">
-          <Link
-            to={"/"}
-            className={`LinkColor ${sideBar == "" ? " activeIcon " : ""}`}
-          >
-            <LogoutOutlinedIcon />
-            <Typography variant="body1" className="MarginSideBar">
-              {t("sidebar:logout")}
-            </Typography>
-          </Link>
-        </Grid>
+    <Drawer
+      className={classes.drawer}
+      variant="permanent"
+      classes={{
+        paper: classes.drawerPaper,
+      }}
+    >
+      <Grid item className={classes.disPlayFlexRow}>
+        <Typography variant="h5" className={classes.imageCenter}>
+          {t("sidebar:header")}
+        </Typography>
+        <img
+          src={process.env.PUBLIC_URL + "/img/Group.png"}
+          alt="img-logo"
+          width={60}
+        />
       </Grid>
-      {/* </Grid> */}
-    </>
+      <List>
+        <Link
+          to={"/dashboard"}
+          className={`${
+            sideBar == "Dashboard" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "Dashboard" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <HomeOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:dashboard")} />
+          </ListItem>
+        </Link>
+        <Link
+          className={`${
+            sideBar == "FloorDiagram" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "FloorDiagram"
+                  ? classes.activeIcon
+                  : classes.LinkColor
+              }`}
+            >
+              <DatasetOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:FloorDiagram")} />
+          </ListItem>
+        </Link>
+        <Link
+          className={`${
+            sideBar == "myDevices" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "myDevices" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <CalendarViewWeekOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:myDevices")} />
+          </ListItem>
+        </Link>
+        <Link
+          to={"/historicalData"}
+          className={`${
+            sideBar == "HistoricalData" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "HistoricalData"
+                  ? classes.activeIcon
+                  : classes.LinkColor
+              }`}
+            >
+              <CookieOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:historicalData")} />
+          </ListItem>
+        </Link>
+        <Grid item className={classes.margigLeft}>
+          <Typography variant="h6" className={classes.imageCenter}>
+            {t("sidebar:Settings")}
+          </Typography>
+        </Grid>
+        <Link
+          to={"/parameter"}
+          className={`${
+            sideBar == "parameter" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "parameter" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <UploadFileOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:parameter")} />
+          </ListItem>
+        </Link>
+        <Link
+          to={"/group"}
+          className={`${
+            sideBar == "group" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "group" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <PlayCircleOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:group")} />
+          </ListItem>
+        </Link>
+        <Link
+          to={"/user"}
+          className={`${
+            sideBar == "user" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "user" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <PermIdentityOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:user")} />
+          </ListItem>
+        </Link>
+        <Link
+          to={"/"}
+          className={`${
+            sideBar == "" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <LogoutOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:Logout")} />
+          </ListItem>
+        </Link>
+      </List>
+    </Drawer>
   );
 };
 
