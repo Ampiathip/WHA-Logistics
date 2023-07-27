@@ -24,7 +24,7 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import CustomizedAccordions from "./accondion";
 import clsx from "clsx";
 
-const drawerWidth = 200;
+const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
   drawer: {
     width: drawerWidth,
@@ -48,7 +48,11 @@ const useStyles = makeStyles((theme) => ({
   },
   borderRight: {
     borderRight: 'none',
-  }
+  },
+  justify: {
+    justifyContent: 'center',
+  },
+ 
 }));
 
 const SideBarPage = ({ children, t }) => {
@@ -58,9 +62,10 @@ const SideBarPage = ({ children, t }) => {
   return (
     <>
       {/* <Grid container> */}
-      <Box className={clsx(classes.flexRow, classes.marginRow)}>
-        {/* <Grid item md={3}> */}
-          <Drawer
+      <Box className={clsx(classes.flexRow, classes.marginRow, classes.justify)}>
+        {/* <Grid item md={1}></Grid> */}
+        <Grid item md={2}>
+          {/* <Drawer
             className={classes.drawer}
             variant="permanent"
             classes={{
@@ -68,23 +73,24 @@ const SideBarPage = ({ children, t }) => {
               paperAnchorLeft: classes.sideBarLeft,
               paperAnchorDockedLeft: classes.borderRight,
             }}
-          >
+          > */}
             <Grid item className={classes.flexRow}>
               <HomeOutlinedIcon className={classes.alignSelf} />
               <Typography variant="h6"> / {sideBar}</Typography>
             </Grid>
 
-            <Card>
+            <Card className="mt-3">
               <CardContent>
                 {/* <Typography variant="h6">{t('historicalData:devicelist')}</Typography> */}
                 <CustomizedAccordions t={t} />
               </CardContent>
             </Card>
-          </Drawer>
-        {/* </Grid> */}
-        <Grid item md={10}>
+          {/* </Drawer> */}
+        </Grid>
+        <Grid item md={8}>
           {children}
         </Grid>
+        {/* <Grid item md={1}></Grid> */}
       </Box>
 
       {/* {children} */}

@@ -38,6 +38,12 @@ let en = {
       "date": "PAST 7 DAYS",
       "threeDate": "PAST 30 DAYS",
       "custom": "CUSTOM RANGE",
+      "poiniCheck": "Point",
+      "Action": "Action",
+    },
+    diveices: {
+      "search": "Search by device name",
+      "realtime": "Realtime data",
     },
   };
   

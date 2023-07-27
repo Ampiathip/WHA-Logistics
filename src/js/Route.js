@@ -4,6 +4,7 @@ import PageNotFound from "../pages/PageNotFound";
 import Dashboard from "../pages/Dashboard";
 import HistoricalData from "../pages/HistoricalData";
 import Login from "../pages/Login";
+import Diveices from "../pages/Diveices";
 
 const Routers = () => {
 
@@ -12,6 +13,7 @@ const Routers = () => {
       <Route path="/" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/historicalData" element={<HistoricalData />} />
+      <Route path="/divices" element={<Diveices />} />
       <Route element={PageNotFound} />
     </Routes>
   );

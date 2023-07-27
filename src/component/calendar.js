@@ -51,6 +51,9 @@ const useStyles = makeStyles((theme) => ({
   cursorPointer: {
     cursor: "pointer",
   },
+  flexWrap: {
+    flexWrap: 'wrap'
+  }
 }));
 
 const Calendar = ({ t }) => {
@@ -87,14 +90,17 @@ const Calendar = ({ t }) => {
           <CardContent>
             <Grid
               item
-              className={clsx(classes.FlexIconHead, classes.alignCenter)}
+              className={clsx(classes.FlexIconHead, classes.alignCenter, classes.flexWrap)}
             >
-              <Grid item>
+              {/* <Grid item>
                 <Typography variant="body2">
                   {t("historicalData:startDate")}
                 </Typography>
-              </Grid>
+              </Grid> */}
               <Grid item className="marginRight">
+                <Typography variant="body2">
+                  {t("historicalData:startDate")}
+                </Typography>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DemoContainer components={["DatePicker"]}>
                     <DatePicker
@@ -107,12 +113,15 @@ const Calendar = ({ t }) => {
                   </DemoContainer>
                 </LocalizationProvider>
               </Grid>
-              <Grid item md={1}>
+              {/* <Grid item md={1}>
                 <Typography variant="body2" className="marginRight">
                   {t("historicalData:endDate")}
                 </Typography>
-              </Grid>
+              </Grid> */}
               <Grid item className="marginRight">
+                <Typography variant="body2" className="marginRight">
+                  {t("historicalData:endDate")}
+                </Typography>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DemoContainer components={["DatePicker"]}>
                     <DatePicker
@@ -166,7 +175,8 @@ const Calendar = ({ t }) => {
               className={clsx(
                 classes.FlexIconHead,
                 classes.alignCenter,
-                classes.marginTop
+                classes.marginTop,
+                classes.flexWrap
               )}
             >
               <Grid className={classes.disPlayFlexRow}>

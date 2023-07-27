@@ -43,11 +43,11 @@ const useStyles = makeStyles((theme) => ({
   },
   LinkColor: {
     color: "#000",
-    textDecoration: 'blink',
+    textDecoration: "blink",
   },
   activeIcon: {
     color: "#ae84d3",
-    textDecoration: 'blink',
+    textDecoration: "blink",
     "&:hover": {
       color: "#ae84d3",
     },
@@ -118,14 +118,15 @@ const SideBar = () => {
           </ListItem>
         </Link>
         <Link
+          to={"/divices"}
           className={`${
-            sideBar == "myDevices" ? classes.activeIcon : classes.LinkColor
+            sideBar == "Divices" ? classes.activeIcon : classes.LinkColor
           }`}
         >
           <ListItem button>
             <ListItemIcon
               className={`${
-                sideBar == "myDevices" ? classes.activeIcon : classes.LinkColor
+                sideBar == "Divices" ? classes.activeIcon : classes.LinkColor
               }`}
             >
               <CalendarViewWeekOutlinedIcon />

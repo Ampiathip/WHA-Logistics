@@ -46,6 +46,9 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: 'center',
   },
+  flexWrap: {
+    flexWrap: 'wrap'
+  }
 }));
 
 const Dashboard = () => {
@@ -63,7 +66,7 @@ const Dashboard = () => {
       <Layout type={"Dashboard"}>
         {/* <Grid container className="FlexRowCard"> */}
         {/* <Grid item md={2}></Grid> */}
-        <Box className={clsx(classes.flexRow, classes.marginBox)}>
+        <Box className={clsx(classes.flexRow, classes.marginBox, classes.flexWrap)}>
           <Grid item md={3}>
             <Card>
               <CardContent>
@@ -114,7 +117,8 @@ const Dashboard = () => {
           className={clsx(
             classes.alignCenter,
             classes.marginBox,
-            classes.flexRow
+            classes.flexRow,
+            classes.flexWrap
           )}
         >
           <Grid item md={2}>
