@@ -38,7 +38,38 @@ let th = {
       "date": "PAST 7 DAYS",
       "threeDate": "PAST 30 DAYS",
       "custom": "CUSTOM RANGE",
+      "poiniCheck": "Point",
+      "Action": "Action",
     },
+    diveices: {
+      "search": "Search by device name",
+      "realtime": "Realtime data",
+      "meter": "Meter ID",
+      "meterName": "Meter Name",
+      "installation":"Installation Date",
+      "sn": "S/N Number",
+      "band": "Band of meter",
+      "series": "Series of meter",
+      "remark": "Remark",
+      "current": "Current (A)",
+      "voltage": "Voltage (V)",
+      "active": "Active Power (kW)",
+      "reactive": "Reactive Power (kVar)",
+      "energy": "Total Energy (kWh)",
+      "power": "Power Factor",
+      "l1": "L1",
+      "l2": "L2",
+      "l3": "L3",
+      "avg": "AVG",
+      "total": "Total",
+    },
+    parameter: {
+      "name": "Parameter",
+      "electrical": "Electrical Bill",
+      "alarm": "Alarm",
+      "refresh": "Refresh",
+      "save": "Save"
+    }
   };
   
   export default th;

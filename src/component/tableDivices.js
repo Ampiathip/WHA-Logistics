@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
@@ -29,6 +29,7 @@ import {
   TextField,
   InputAdornment,
 } from "@material-ui/core";
+import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
@@ -43,6 +44,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
 import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
+import { Height } from "@mui/icons-material";
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -66,6 +68,51 @@ const useStyles = makeStyles((theme) => ({
   marginIcon: {
     marginRight: 5,
   },
+  imgWidth: {
+    width: "-webkit-fill-available",
+  },
+  justContent: {
+    justifyContent: "space-between",
+  },
+  borderImg: {
+    border: "1px solid #D9D9D9",
+    borderRadius: 10,
+    padding: 10,
+  },
+  alignItem: {
+    alignItems: "center",
+  },
+  modalWidth: {
+    width: "90% !important",
+    height: "90% !important",
+  },
+  modalContent: {
+    justifyContent: "space-around",
+  },
+  boxMargin: {
+    marginLeft: 20,
+  },
+  textCenter: {
+    textAlign: "center",
+  },
+  paddingContent: {
+    padding: '0px 24px !important'
+  },
+  backgroundBox: {
+    backgroundColor: '#F9F9FA',
+  },
+  paddingRowHead: {
+    padding: '15px 0px 0px 15px',
+  },
+  paddingRow: {
+    padding: '0px 0px 0px 15px',
+  },
+  paddingCol: {
+    padding: '0px 15px 0px 15px',
+  },
+  borderBottom: {
+    borderBottom: 'solid #F9F9FA'
+  }
 }));
 
 function createData(name, calories, fat, carbs, power, protein) {
@@ -298,13 +345,20 @@ export default function EnhancedTable({ t }) {
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [meterId, setMeterId] = useState("");
+  const [meterName, setMeterName] = useState("");
+  const [installation, setInstallation] = useState("");
+  const [numberSN, setNumberSN] = useState("");
+  const [band, setBand] = useState("");
+  const [series, setSeries] = useState("");
+  const [remark, setRemark] = useState("");
 
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
   const theme = useTheme();
   // modal //
   const [open, setOpen] = useState(false);
-  const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const fullScreen = useMediaQuery(theme.breakpoints.down("xl"));
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -376,6 +430,34 @@ export default function EnhancedTable({ t }) {
       ),
     [order, orderBy, page, rowsPerPage]
   );
+
+  const handleMeterIdChange = (event) => {
+    setMeterId(event.target.value);
+  };
+
+  const handleMeterNameChange = (event) => {
+    setMeterName(event.target.value);
+  };
+
+  const handleBandChange = (event) => {
+    setBand(event.target.value);
+  };
+
+  const handleSeriesChange = (event) => {
+    setSeries(event.target.value);
+  };
+
+  const handleInstallationChange = (event) => {
+    setInstallation(event.target.value);
+  };
+
+  const handleRemarkChange = (event) => {
+    setRemark(event.target.value);
+  };
+
+  const handleNumberSNChange = (event) => {
+    setNumberSN(event.target.value);
+  };
 
   return (
     <Container className={classes.marginRow}>
@@ -523,20 +605,668 @@ export default function EnhancedTable({ t }) {
       {/* Modal */}
       <Dialog
         fullScreen={fullScreen}
+        // className={classes.modalWidth}
         open={open}
         onClose={handleClose}
         aria-labelledby="responsive-dialog-title"
+        classes={{
+          paper: classes.modalWidth,
+        }}
       >
-        <DialogTitle id="responsive-dialog-title">
-          <WestOutlinedIcon />
-          {t("diveices:realtime")}
-          <CloseIcon />
-        </DialogTitle>
-        <DialogContent>
+        <DialogTitle
+          id="responsive-dialog-title"
+          className={clsx(classes.flexRow, classes.justContent, classes.borderBottom)}
+        >
           <DialogContentText>
+            <WestOutlinedIcon
+              className={classes.marginIcon}
+              onClick={handleClose}
+            />
+            {t("diveices:realtime")}
+          </DialogContentText>
+          <CloseIcon onClick={handleClose} />
+        </DialogTitle>
+        <DialogContent className={clsx(classes.flexRow, classes.modalContent, classes.paddingContent)}>
+          <Box className="mt-3">
+            <Grid
+              item
+              md={12}
+              className={clsx(
+                classes.flexRow,
+                classes.justContent,
+                classes.alignItem
+              )}
+            >
+              <Grid item md={3} className={classes.borderImg}>
+                <img
+                  src={process.env.PUBLIC_URL + "/img/Group.png"}
+                  alt="img-test"
+                  className={classes.imgWidth}
+                />
+              </Grid>
+              <Grid item className={classes.boxMargin}>
+                <Typography variant="subtitle2" className="pb-3">
+                  {t("diveices:meter")}
+                </Typography>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:meter")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  value={meterId}
+                  onChange={handleMeterIdChange}
+                />
+              </Grid>
+              <Grid item className={classes.boxMargin}>
+              <Typography variant="subtitle2" className="pb-3">
+                {t("diveices:meterName")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:meterName")}
+                className={classes.inputWidth}
+                variant="outlined"
+                value={meterName}
+                onChange={handleMeterNameChange}
+              />
+            </Grid>
+            </Grid>
+            {/* <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:meterName")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:meterName")}
+                className={classes.inputWidth}
+                variant="outlined"
+                value={meterName}
+                onChange={handleMeterNameChange}
+              />
+            </Grid> */}
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:installation")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:installation")}
+                className={classes.inputWidth}
+                variant="outlined"
+                value={installation}
+                onChange={handleInstallationChange}
+              />
+            </Grid>
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:sn")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:sn")}
+                className={classes.inputWidth}
+                variant="outlined"
+                value={numberSN}
+                onChange={handleNumberSNChange}
+              />
+            </Grid>
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:band")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:band")}
+                className={classes.inputWidth}
+                variant="outlined"
+                value={band}
+                onChange={handleBandChange}
+              />
+            </Grid>
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:series")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:series")}
+                className={classes.inputWidth}
+                variant="outlined"
+                value={series}
+                onChange={handleSeriesChange}
+              />
+            </Grid>
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:remark")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                // size="small"
+                placeholder={t("diveices:remark")}
+                className={clsx(classes.inputWidth, "mb-4")}
+                variant="outlined"
+                value={remark}
+                onChange={handleRemarkChange}
+              />
+            </Grid>
+          </Box>
+          <Box className={clsx(classes.backgroundBox)}>
+            <Grid item md={12} className={classes.paddingRowHead}>
+              <Typography variant="h5">{t("diveices:realtime")}</Typography>
+            </Grid>
+
+            {/* Current */}
+            <Grid item md={12} className={classes.paddingRow}>
+              <Typography variant="h6" className="pt-2">
+                {t("diveices:current")}
+              </Typography>
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(
+                classes.flexRow,
+                classes.modalContent,
+                classes.alignItem,
+                classes.textCenter,
+                classes.paddingCol
+              )}
+            >
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l1")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l1")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l2")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l2")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l3")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l3")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:avg")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:avg")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+            </Grid>
+
+            {/* voltage */}
+            <Grid item md={12} className={classes.paddingRow}>
+              <Typography variant="h6" className="pt-2">
+                {t("diveices:voltage")}
+              </Typography>
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(
+                classes.flexRow,
+                classes.modalContent,
+                classes.alignItem,
+                classes.textCenter,
+                classes.paddingCol
+              )}
+            >
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l1")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l1")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l2")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l2")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l3")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l3")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:avg")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:avg")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+            </Grid>
+
+            {/* active */}
+            <Grid item md={12} className={classes.paddingRow}>
+              <Typography variant="h6" className="pt-2">
+                {t("diveices:active")}
+              </Typography>
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(
+                classes.flexRow,
+                classes.modalContent,
+                classes.alignItem,
+                classes.textCenter,
+                classes.paddingCol
+              )}
+            >
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l1")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l1")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l2")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l2")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l3")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l3")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:total")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:total")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+            </Grid>
+
+            {/* reactive */}
+            <Grid item md={12} className={classes.paddingRow}>
+              <Typography variant="h6" className="pt-2">
+                {t("diveices:reactive")}
+              </Typography>
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(
+                classes.flexRow,
+                classes.modalContent,
+                classes.alignItem,
+                classes.textCenter,
+                classes.paddingCol
+              )}
+            >
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l1")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l1")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l2")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l2")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l3")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l3")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:total")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:total")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+            </Grid>
+
+            {/* energy */}
+            <Grid item md={12} className={classes.paddingRow}>
+              <Typography variant="h6" className="pt-2">
+                {t("diveices:energy")}
+              </Typography>
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(
+                classes.flexRow,
+                classes.modalContent,
+                classes.alignItem,
+                classes.textCenter,
+                classes.paddingCol
+              )}
+            >
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l1")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l1")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l2")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l2")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l3")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l3")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:total")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:total")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+            </Grid>
+
+            {/* power */}
+            <Grid item md={12} className={classes.paddingRow}>
+              <Typography variant="h6" className="pt-2">
+                {t("diveices:power")}
+              </Typography>
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(
+                classes.flexRow,
+                classes.modalContent,
+                classes.alignItem,
+                classes.textCenter,
+                classes.paddingCol
+              )}
+            >
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l1")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l1")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l2")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l2")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:l3")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:l3")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+              <Grid item md={1}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("diveices:avg")}
+                </Typography>
+              </Grid>
+              <Grid item md={2}>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("diveices:avg")}
+                  className={classes.inputWidth}
+                  variant="outlined"
+                  //   value={installation}
+                  //   onChange={handleInstallationChange}
+                />
+              </Grid>
+            </Grid>
+
+          </Box>
+
+          {/* <DialogContentText>
             Let Google help apps determine location. This means sending
             anonymous location data to Google, even when no apps are running.
-          </DialogContentText>
+          </DialogContentText> */}
         </DialogContent>
         {/* <DialogActions>
           <Button autoFocus onClick={handleClose}>

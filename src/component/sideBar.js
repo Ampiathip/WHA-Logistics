@@ -161,13 +161,13 @@ const SideBar = () => {
         <Link
           to={"/parameter"}
           className={`${
-            sideBar == "parameter" ? classes.activeIcon : classes.LinkColor
+            sideBar == "Parameter" ? classes.activeIcon : classes.LinkColor
           }`}
         >
           <ListItem button>
             <ListItemIcon
               className={`${
-                sideBar == "parameter" ? classes.activeIcon : classes.LinkColor
+                sideBar == "Parameter" ? classes.activeIcon : classes.LinkColor
               }`}
             >
               <UploadFileOutlinedIcon />
