@@ -195,13 +195,13 @@ const SideBar = () => {
         <Link
           to={"/user"}
           className={`${
-            sideBar == "user" ? classes.activeIcon : classes.LinkColor
+            sideBar == "User" ? classes.activeIcon : classes.LinkColor
           }`}
         >
           <ListItem button>
             <ListItemIcon
               className={`${
-                sideBar == "user" ? classes.activeIcon : classes.LinkColor
+                sideBar == "User" ? classes.activeIcon : classes.LinkColor
               }`}
             >
               <PermIdentityOutlinedIcon />

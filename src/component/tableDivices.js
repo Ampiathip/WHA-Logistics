@@ -96,23 +96,26 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "center",
   },
   paddingContent: {
-    padding: '0px 24px !important'
+    padding: "0px 24px !important",
   },
   backgroundBox: {
-    backgroundColor: '#F9F9FA',
+    backgroundColor: "#F9F9FA",
   },
   paddingRowHead: {
-    padding: '15px 0px 0px 15px',
+    padding: "15px 0px 0px 15px",
   },
   paddingRow: {
-    padding: '0px 0px 0px 15px',
+    padding: "0px 0px 0px 15px",
   },
   paddingCol: {
-    padding: '0px 15px 0px 15px',
+    padding: "0px 15px 0px 15px",
   },
   borderBottom: {
-    borderBottom: 'solid #F9F9FA'
-  }
+    borderBottom: "solid #F9F9FA",
+  },
+  cursor: {
+    cursor: 'pointer',
+  },
 }));
 
 function createData(name, calories, fat, carbs, power, protein) {
@@ -470,7 +473,7 @@ export default function EnhancedTable({ t }) {
           id="input-with-icon-textfield"
           size="small"
           placeholder={t("diveices:search")}
-          className={classes.inputWidth}
+          fullWidth
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -615,18 +618,28 @@ export default function EnhancedTable({ t }) {
       >
         <DialogTitle
           id="responsive-dialog-title"
-          className={clsx(classes.flexRow, classes.justContent, classes.borderBottom)}
+          className={clsx(
+            classes.flexRow,
+            classes.justContent,
+            classes.borderBottom
+          )}
         >
-          <DialogContentText>
+          <Typography variant="h5">
             <WestOutlinedIcon
-              className={classes.marginIcon}
+              className={clsx(classes.marginIcon, classes.cursor)}
               onClick={handleClose}
             />
             {t("diveices:realtime")}
-          </DialogContentText>
-          <CloseIcon onClick={handleClose} />
+          </Typography>
+          <CloseIcon onClick={handleClose} className={clsx(classes.cursor)}/>
         </DialogTitle>
-        <DialogContent className={clsx(classes.flexRow, classes.modalContent, classes.paddingContent)}>
+        <DialogContent
+          className={clsx(
+            classes.flexRow,
+            classes.modalContent,
+            classes.paddingContent
+          )}
+        >
           <Box className="mt-3">
             <Grid
               item
@@ -637,56 +650,45 @@ export default function EnhancedTable({ t }) {
                 classes.alignItem
               )}
             >
-              <Grid item md={3} className={classes.borderImg}>
+              <Grid item md={5} className={classes.borderImg}>
                 <img
                   src={process.env.PUBLIC_URL + "/img/Group.png"}
                   alt="img-test"
                   className={classes.imgWidth}
                 />
               </Grid>
-              <Grid item className={classes.boxMargin}>
-                <Typography variant="subtitle2" className="pb-3">
-                  {t("diveices:meter")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("diveices:meter")}
-                  className={classes.inputWidth}
-                  variant="outlined"
-                  value={meterId}
-                  onChange={handleMeterIdChange}
-                />
+              <Grid item md={7}>
+                <Grid item className={classes.boxMargin}>
+                  <Typography variant="subtitle2" className="pb-3">
+                    {t("diveices:meter")}
+                  </Typography>
+                  <TextField
+                    id="input-with-icon-textfield"
+                    size="small"
+                    placeholder={t("diveices:meter")}
+                    fullWidth
+                    variant="outlined"
+                    value={meterId}
+                    disabled
+                    // onChange={handleMeterIdChange}
+                  />
+                </Grid>
+                <Grid item className={clsx(classes.boxMargin, classes.marginRow)}>
+                  <Typography variant="subtitle2" className="pb-3">
+                    {t("diveices:meterName")}
+                  </Typography>
+                  <TextField
+                    id="input-with-icon-textfield"
+                    size="small"
+                    placeholder={t("diveices:meterName")}
+                    fullWidth
+                    variant="outlined"
+                    value={meterName}
+                    onChange={handleMeterNameChange}
+                  />
+                </Grid>
               </Grid>
-              <Grid item className={classes.boxMargin}>
-              <Typography variant="subtitle2" className="pb-3">
-                {t("diveices:meterName")}
-              </Typography>
-              <TextField
-                id="input-with-icon-textfield"
-                size="small"
-                placeholder={t("diveices:meterName")}
-                className={classes.inputWidth}
-                variant="outlined"
-                value={meterName}
-                onChange={handleMeterNameChange}
-              />
             </Grid>
-            </Grid>
-            {/* <Grid item md={12}>
-              <Typography variant="subtitle2" className="mt-3 pb-3">
-                {t("diveices:meterName")}
-              </Typography>
-              <TextField
-                id="input-with-icon-textfield"
-                size="small"
-                placeholder={t("diveices:meterName")}
-                className={classes.inputWidth}
-                variant="outlined"
-                value={meterName}
-                onChange={handleMeterNameChange}
-              />
-            </Grid> */}
             <Grid item md={12}>
               <Typography variant="subtitle2" className="mt-3 pb-3">
                 {t("diveices:installation")}
@@ -695,7 +697,7 @@ export default function EnhancedTable({ t }) {
                 id="input-with-icon-textfield"
                 size="small"
                 placeholder={t("diveices:installation")}
-                className={classes.inputWidth}
+                fullWidth
                 variant="outlined"
                 value={installation}
                 onChange={handleInstallationChange}
@@ -709,7 +711,7 @@ export default function EnhancedTable({ t }) {
                 id="input-with-icon-textfield"
                 size="small"
                 placeholder={t("diveices:sn")}
-                className={classes.inputWidth}
+                fullWidth
                 variant="outlined"
                 value={numberSN}
                 onChange={handleNumberSNChange}
@@ -723,7 +725,7 @@ export default function EnhancedTable({ t }) {
                 id="input-with-icon-textfield"
                 size="small"
                 placeholder={t("diveices:band")}
-                className={classes.inputWidth}
+                fullWidth
                 variant="outlined"
                 value={band}
                 onChange={handleBandChange}
@@ -737,7 +739,7 @@ export default function EnhancedTable({ t }) {
                 id="input-with-icon-textfield"
                 size="small"
                 placeholder={t("diveices:series")}
-                className={classes.inputWidth}
+                fullWidth
                 variant="outlined"
                 value={series}
                 onChange={handleSeriesChange}
@@ -751,7 +753,8 @@ export default function EnhancedTable({ t }) {
                 id="input-with-icon-textfield"
                 // size="small"
                 placeholder={t("diveices:remark")}
-                className={clsx(classes.inputWidth, "mb-4")}
+                fullWidth
+                className={clsx("mb-4")}
                 variant="outlined"
                 value={remark}
                 onChange={handleRemarkChange}
@@ -790,7 +793,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l1")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -806,7 +809,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l2")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -822,7 +825,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l3")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -838,7 +841,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:avg")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -873,7 +876,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l1")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -889,7 +892,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l2")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -905,7 +908,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l3")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -921,7 +924,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:avg")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -956,7 +959,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l1")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -972,7 +975,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l2")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -988,7 +991,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l3")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1004,7 +1007,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:total")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1039,7 +1042,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l1")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1055,7 +1058,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l2")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1071,7 +1074,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l3")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1087,7 +1090,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:total")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1122,7 +1125,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l1")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1138,7 +1141,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l2")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1154,7 +1157,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l3")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1170,7 +1173,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:total")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1205,7 +1208,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l1")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1221,7 +1224,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l2")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1237,7 +1240,7 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:l3")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
@@ -1253,14 +1256,13 @@ export default function EnhancedTable({ t }) {
                   id="input-with-icon-textfield"
                   size="small"
                   placeholder={t("diveices:avg")}
-                  className={classes.inputWidth}
+                  fullWidth
                   variant="outlined"
                   //   value={installation}
                   //   onChange={handleInstallationChange}
                 />
               </Grid>
             </Grid>
-
           </Box>
 
           {/* <DialogContentText>

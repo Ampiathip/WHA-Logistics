@@ -6,6 +6,7 @@ import HistoricalData from "../pages/HistoricalData";
 import Login from "../pages/Login";
 import Diveices from "../pages/Diveices";
 import Parameter from "../pages/Parameter";
+import User from "../pages/User";
 
 const Routers = () => {
 
@@ -16,6 +17,7 @@ const Routers = () => {
       <Route path="/historicalData" element={<HistoricalData />} />
       <Route path="/divices" element={<Diveices />} />
       <Route path="/parameter" element={<Parameter />} />
+      <Route path="/user" element={<User />} />
       <Route element={PageNotFound} />
     </Routes>
   );

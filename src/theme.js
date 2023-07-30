@@ -10,7 +10,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Nunito, sans-serif",
+    fontFamily: "Nunito, sans-serif !important",
     h1: {
       fontSize: 26,
     },
