@@ -50,6 +50,7 @@ import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
 import { Height } from "@mui/icons-material";
 import Visibility from "@mui/icons-material/Visibility";
 import ModalResetPassword from "./modalResetPassword";
+import UserView from "./modalUserView";
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -143,10 +144,10 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: 15,
   },
   borderText: {
-    border: '1px solid #D9D9D9',
+    border: "1px solid #D9D9D9",
     borderRadius: 25,
     padding: 5,
-    textAlign: 'center'
+    textAlign: "center",
   },
 }));
 
@@ -1396,7 +1397,7 @@ export default function UserManagement({ t }) {
       />
 
       {/* Modal View */}
-      <Dialog
+      {/* <Dialog
         fullScreen={fullScreen}
         // className={classes.modalWidth}
         open={openViewUser}
@@ -1482,7 +1483,18 @@ export default function UserManagement({ t }) {
           </Grid>
 
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
+
+      <UserView
+        open={openViewUser}
+        close={handleCloseView}
+        userId={userId}
+        user={user}
+        t={t}
+        emailUser={emailUser}
+        phoneNumber={phoneNumber}
+        role={role}
+      />
     </Container>
   );
 }

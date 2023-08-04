@@ -176,11 +176,11 @@ const Tags = ({ t }) => {
                     {t("historicalData:poiniCheck")}
                   </Typography>
                 </TableCell>
-                <TableCell className={clsx(classes.border, classes.paddingCell)}>
+                {/* <TableCell className={clsx(classes.border, classes.paddingCell)}>
                   <Typography variant="body2">
                     {t("historicalData:Action")}
                   </Typography>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
               {pointDevice.length > 0 &&
                 pointDevice.map((item, index) => {
@@ -191,9 +191,9 @@ const Tags = ({ t }) => {
                           {nameDevice && nameDevice.title + ' / ' + item.title}
                         </Typography>
                       </TableCell>
-                      <TableCell className={clsx(classes.border, classes.paddingCell)}>
+                      {/* <TableCell className={clsx(classes.border, classes.paddingCell)}>
                         <HighlightOffOutlinedIcon />
-                      </TableCell>
+                      </TableCell> */}
                     </TableRow>
                   );
                 })}

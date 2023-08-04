@@ -87,7 +87,7 @@ let th = {
       "role": "Role",
       "pass": "Password",
       "rePass": "Re-password",
-      "active": "Active",
+      "active": "Enabel",
       "cancel": "Cancel",
       "confrim": "Confirm",
       "placeholderEmail": "Enter your email",

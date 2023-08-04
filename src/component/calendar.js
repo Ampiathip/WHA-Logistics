@@ -190,6 +190,8 @@ const Calendar = ({ t }) => {
                   }`}
                   onClick={() => {
                     handleClickNavbar("24hr");
+                    setValue(null);
+                    setValueEnd(null);
                   }}
                 >
                   {t("historicalData:hr")}
@@ -206,6 +208,8 @@ const Calendar = ({ t }) => {
                   }`}
                   onClick={() => {
                     handleClickNavbar("7Date");
+                    setValue(null);
+                    setValueEnd(null);
                   }}
                 >
                   {t("historicalData:date")}
@@ -221,6 +225,8 @@ const Calendar = ({ t }) => {
                   }`}
                   onClick={() => {
                     handleClickNavbar("30Date");
+                    setValue(null);
+                    setValueEnd(null);
                   }}
                 >
                   {t("historicalData:threeDate")}
