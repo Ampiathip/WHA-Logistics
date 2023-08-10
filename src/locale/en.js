@@ -67,6 +67,7 @@ let en = {
       "l3": "L3",
       "avg": "AVG",
       "total": "Total",
+      "add": "Add Device",
     },
     parameter: {
       "name": "Parameter",

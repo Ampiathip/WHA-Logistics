@@ -774,6 +774,7 @@ export default function UserManagement({ t }) {
             autoFocus
             fullWidth
             className={clsx(classes.backGroundConfrim)}
+            variant="outlined"
           >
             {t("user:addUser")}
           </Button>
@@ -1159,6 +1160,7 @@ export default function UserManagement({ t }) {
                   autoFocus
                   fullWidth
                   className={clsx(classes.backGroundConfrim)}
+                  variant="outlined"
                 >
                   {t("user:confrim")}
                 </Button>
@@ -1374,6 +1376,7 @@ export default function UserManagement({ t }) {
                   autoFocus
                   fullWidth
                   className={clsx(classes.backGroundConfrim)}
+                  variant="outlined"
                 >
                   {t("user:confrim")}
                 </Button>
