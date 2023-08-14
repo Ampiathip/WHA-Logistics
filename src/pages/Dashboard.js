@@ -14,7 +14,10 @@ import {
   Popover,
 } from "@material-ui/core";
 import clsx from "clsx";
-import { useMousePosition } from "../utils/useMousePosition";
+import CanvasComponent from "../utils/canvasComponent";
+import ImageComponent from "../utils/imageComponent";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import ModalProcess from "../component/modalProcess";
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -85,11 +88,22 @@ const useStyles = makeStyles((theme) => ({
   paddindCardContent: {
     padding: "5px !important",
   },
+  fontSizeHead: {
+    fontSize: 14,
+    fontWeight: "bold",
+    fontFamily: "Nunito, sans-serif !important",
+  },
+  fontSizeSub: {
+    fontSize: 12,
+    fontWeight: "normal",
+    fontFamily: "Nunito, sans-serif !important",
+  },
 }));
 
 const Dashboard = () => {
   const classes = useStyles();
   const { t, i18n } = useTranslation(["home", "footer", "login"]);
+  const matches = useMediaQuery("(min-width:1024px)");
 
   const [diagram, setDiagram] = useState("1");
   // const position = useMousePosition();
@@ -240,6 +254,150 @@ const Dashboard = () => {
     },
   });
 
+  // modal //
+  const [openModalProcess, setOpenModalProcess] = useState(false);
+  const [dataModal, setDataModal] = useState("");
+
+  const defaultData = [
+    {
+      box: "box1",
+      x: {
+        min: "140",
+        max: "200",
+      },
+      y: {
+        min: "300",
+        max: "450",
+      },
+      detail: {
+        title: "LC.WH.11",
+        subTitle: "Power 2kw",
+      },
+    },
+    {
+      box: "box2",
+      x: {
+        min: "220",
+        max: "280",
+      },
+      y: {
+        min: "380",
+        max: "450",
+      },
+      detail: {
+        title: "CU.EX.11",
+        subTitle: "Power 2kw",
+      },
+    },
+    {
+      box: "box3",
+      x: {
+        min: "300",
+        max: "380",
+      },
+      y: {
+        min: "380",
+        max: "450",
+      },
+      detail: {
+        title: "LC.WH.12",
+        subTitle: "Power 2kw",
+      },
+    },
+    {
+      box: "box4",
+      x: {
+        min: "380",
+        max: "450",
+      },
+      y: {
+        min: "400",
+        max: "450",
+      },
+      detail: {
+        title: "LC.WH.13",
+        subTitle: "Power 2kw",
+      },
+    },
+    {
+      box: "box5",
+      x: {
+        min: "460",
+        max: "550",
+      },
+      y: {
+        min: "380",
+        max: "450",
+      },
+      detail: {
+        title: "CU.OF.11",
+        subTitle: "Power 2kw",
+      },
+    },
+    {
+      box: "box6",
+      x: {
+        min: "540",
+        max: "620",
+      },
+      y: {
+        min: "380",
+        max: "450",
+      },
+      detail: {
+        title: "CU.OF.12",
+        subTitle: "Power 2kw",
+      },
+    },
+    {
+      box: "box7",
+      x: {
+        min: "620",
+        max: "690",
+      },
+      y: {
+        min: "380",
+        max: "450",
+      },
+      detail: {
+        title: "LC.AC.11",
+        subTitle: "Power 2kw",
+      },
+    },
+    {
+      box: "box8",
+      x: {
+        min: "700",
+        max: "780",
+      },
+      y: {
+        min: "380",
+        max: "450",
+      },
+      detail: {
+        title: "BP.11",
+        subTitle: "Power 2kw",
+      },
+    },
+    {
+      box: "solarCell",
+      x: {
+        min: "840",
+        max: "880",
+      },
+      y: {
+        min: "380",
+        max: "450",
+      },
+      detail: {
+        title: "Solar Cell",
+        subTitle: "Power 2kw",
+      },
+    },
+  ];
+
+  const Image = process.env.PUBLIC_URL + "/img/test2.png";
+
   const handleBtnDiaram = (value) => {
     // console.log("e", value, index);
     setDiagram(value);
@@ -260,6 +418,108 @@ const Dashboard = () => {
     } else {
       setOpenPopover(false);
     }
+  };
+
+  const handleOpenModal = (item) => {
+    setDataModal(item);
+    setOpenModalProcess(true);
+  };
+
+  // ขนาดหน้าจอ บน computer จะแสดงผลแบบนี้ // 
+  const renderCardBox = () => {
+    if (openPopover) {
+      return (
+        <Grid
+          item
+          className={classes.positionBox}
+          style={{
+            top: `${popoverAnchor.y - 50}px`,
+            left: `${popoverAnchor.x - 50}px`,
+          }}
+        >
+          <Card
+            className={
+              popoverAnchor.x > 830 ? classes.btnColorActive : classes.btnColor
+            }
+          >
+            <CardContent className={classes.paddindCardContent}>
+              <Grid item>
+                <Typography className={classes.fontSizeHead}>
+                  {popoverAnchor.detail.title}
+                </Typography>
+              </Grid>
+              <Grid item className="FlexCard">
+                <Typography className={classes.fontSizeSub}>
+                  {popoverAnchor.detail.subTitle}
+                </Typography>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      );
+    } else {
+      return defaultData.map((item) => {
+        return (
+          <Grid
+            item
+            className={classes.positionBox}
+            style={{
+              top: `${item.y.max - 34}px`,
+              left: `${item.x.min - 50}px`,
+            }}
+          >
+            <Card
+              className={
+                item.x.max > 830 ? classes.btnColorActive : classes.btnColor
+              }
+            >
+              <CardContent
+                className={clsx(classes.paddindCardContent, classes.cursorImag)}
+                onClick={() => handleOpenModal(item)}
+              >
+                <Grid item>
+                  <Typography className={classes.fontSizeHead}>
+                    {item.detail.title}
+                  </Typography>
+                </Grid>
+                <Grid item className="FlexCard">
+                  <Typography className={classes.fontSizeSub}>
+                    {item.detail.subTitle}
+                  </Typography>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+        );
+      });
+    }
+  };
+
+  // ขนาดหน้าจอ ipad จะแสดงผลแบบนี้ // 
+  const renderCardRow = () => {
+    return defaultData.map((card) => {
+      return (
+        <Grid item md={12} className={classes.marginBox}>
+          <Card
+            className={
+              card.x.max > 830 ? classes.btnColorActive : classes.btnColor
+            }
+          >
+            <CardContent
+              className={clsx(classes.paddindCardContent, classes.cursorImag)}
+              onClick={() => handleOpenModal(card)}
+            >
+              <Grid item>
+                <Typography variant="h6">{card.detail?.title}</Typography>
+              </Grid>
+              <Grid item>
+                <Typography variant="body1">{card.detail?.subTitle}</Typography>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      );
+    });
   };
 
   return (
@@ -373,24 +633,18 @@ const Dashboard = () => {
           </Grid>
         </Box>
 
-        <Box>
-          <Grid item md={12} className={classes.FlexIcon}>
-            <Grid item md={1}></Grid>
-            {/* <Grid item > */}
-            {/* <img
-                src={process.env.PUBLIC_URL + "/img/test2.png"}
-                alt="img-test"
-                width={1100}
-                onClick={(event) => handleClick(event)}
-              /> */}
-            {/* </Grid> */}
-            <Grid item className={classes.positionImg}>
-              <ImageComponent className={classes} />
-              <CanvasComponent
-                className={classes}
-                setOffSet={handleCanvasData}
-              />
-              {openPopover && (
+        {matches ? (
+          <Box>
+            <Grid item md={12} className={classes.FlexIcon}>
+              <Grid item md={1}></Grid>
+              <Grid item className={classes.positionImg}>
+                <ImageComponent className={classes} src={Image} />
+                <CanvasComponent
+                  className={classes}
+                  setOffSet={handleCanvasData}
+                />
+                {renderCardBox()}
+                {/* {openPopover && (
                 <Grid
                   item
                   className={classes.positionBox}
@@ -399,7 +653,13 @@ const Dashboard = () => {
                     left: `${popoverAnchor.x - 50}px`,
                   }}
                 >
-                  <Card className={popoverAnchor.x > 830 ? classes.btnColorActive : classes.btnColor}>
+                  <Card
+                    className={
+                      popoverAnchor.x > 830
+                        ? classes.btnColorActive
+                        : classes.btnColor
+                    }
+                  >
                     <CardContent className={classes.paddindCardContent}>
                       <Grid item>
                         <Typography variant="body1">
@@ -414,9 +674,9 @@ const Dashboard = () => {
                     </CardContent>
                   </Card>
                 </Grid>
-              )}
+              )} */}
 
-              {/* <Popover
+                {/* <Popover
                 open={openPopover}
                 anchorReference="anchorPosition"
                 anchorPosition={
@@ -429,11 +689,14 @@ const Dashboard = () => {
                 Popover content
                 <div>Popover Content</div>
               </Popover> */}
+              </Grid>
             </Grid>
-          </Grid>
-        </Box>
+          </Box>
+        ) : (
+          <Box>{renderCardRow()}</Box>
+        )}
 
-        <Grid item md={12}>
+        {/* <Grid item md={12}>
           <Grid item md={3} className={classes.positionBixImg}>
             <Card className="MarginCard">
               <CardContent>
@@ -458,145 +721,14 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-        </Grid>
-
-        {/* <Grid item md={12}>
-          <Grid item md={3} className="positionBixImgTwo">
-            <Card className="MarginCard">
-              <CardContent className="paddindCardContent">
-                <Grid item>
-                  <Typography variant="h6">MDB - 1</Typography>
-                </Grid>
-                <Grid item className="FlexCard">
-                  <Typography variant="body1" className="frontSizeBtn">
-                    Power
-                  </Typography>
-                  <Typography variant="body1" className="frontSizeBtn">
-                    2 kWh
-                  </Typography>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
         </Grid> */}
 
-        {/* <Grid item md={12}>
-          <Grid item md={3} className="positionBixImgThree">
-            <Card className="MarginCard">
-              <CardContent className="paddindCardContent borderCard">
-                <Grid item>
-                  <Typography variant="h6">Solar Cell</Typography>
-                </Grid>
-                <Grid item className="FlexCard">
-                  <Typography variant="body1" className="frontSizeBtn">
-                    Power
-                  </Typography>
-                  <Typography variant="body1" className="frontSizeBtn">
-                    2 kWh
-                  </Typography>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid> */}
-
-        {/* <Grid item md={12}>
-          <Grid item md={3} className="positionBixImgInfo">
-            <Card className="MarginCard">
-              <CardContent className="paddindCardContent borderCardInfo">
-                <Grid item>
-                  <Typography className="frontSizeBtn">BP.11</Typography>
-                </Grid>
-                <Grid item className="FlexCard">
-                  <Typography className="frontSizeBtn">Power</Typography>
-                  <Typography className="frontSizeBtn">2 kWh</Typography>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid> */}
-
-        {/* <Grid item md={12}>
-          <Grid item md={3} className="positionBixImgInfoTwo">
-            <Card className="MarginCard">
-              <CardContent className="paddindCardContent borderCardInfo">
-                <Grid item>
-                  <Typography className="frontSizeBtn">LC.AC.11</Typography>
-                </Grid>
-                <Grid item className="FlexCard">
-                  <Typography className="frontSizeBtn">Power</Typography>
-                  <Typography className="frontSizeBtn">2 kWh</Typography>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid> */}
-
-        {/* <Grid item md={12}>
-          <Grid item md={3} className="positionBixImgInfoThree">
-            <Card className="MarginCard">
-              <CardContent className="paddindCardContent borderCardInfo">
-                <Grid item>
-                  <Typography className="frontSizeBtn">CU.OF.12</Typography>
-                </Grid>
-                <Grid item className="FlexCard">
-                  <Typography className="frontSizeBtn">Power</Typography>
-                  <Typography className="frontSizeBtn">2 kWh</Typography>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid> */}
-
-        {/* <Grid item md={12}>
-          <Grid item md={3} className="positionBixImgInfoFour">
-            <Card className="MarginCard">
-              <CardContent className="paddindCardContent borderCardInfo">
-                <Grid item>
-                  <Typography className="frontSizeBtn">CU.OF.11</Typography>
-                </Grid>
-                <Grid item className="FlexCard">
-                  <Typography className="frontSizeBtn">Power</Typography>
-                  <Typography className="frontSizeBtn">2 kWh</Typography>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid> */}
-
-        {/* <Grid item md={12}>
-          <Grid item md={3} className="positionBixImgInfoFive">
-            <Card className="MarginCard">
-              <CardContent className="paddindCardContent borderCardInfo">
-                <Grid item>
-                  <Typography className="frontSizeBtn">LC.WH.13</Typography>
-                </Grid>
-                <Grid item className="FlexCard">
-                  <Typography className="frontSizeBtn">Power</Typography>
-                  <Typography className="frontSizeBtn">2 kWh</Typography>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid> */}
-        {/* 
-        <Grid item md={12}>
-          <Grid item md={3} className="positionBixImgInfoSix">
-            <Card className="MarginCard">
-              <CardContent className="paddindCardContent borderCardInfo">
-                <Grid item>
-                  <Typography className="frontSizeBtn">LC.WH.12</Typography>
-                </Grid>
-                <Grid item className="FlexCard">
-                  <Typography className="frontSizeBtn">Power</Typography>
-                  <Typography className="frontSizeBtn">2 kWh</Typography>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid> */}
-
-        {/* </Grid> */}
+        <ModalProcess
+          open={openModalProcess}
+          close={() => setOpenModalProcess(false)}
+          t={t}
+          data={dataModal}
+        />
       </Layout>
     </>
   );
@@ -605,102 +737,3 @@ const Dashboard = () => {
 Dashboard.propTypes = {};
 
 export default Dashboard;
-
-class ImageComponent extends Component {
-  render() {
-    const { className } = this.props;
-    return (
-      <img
-        src={process.env.PUBLIC_URL + "/img/test2.png"}
-        alt="Your Image"
-        className={className.positionAbImg}
-      />
-    );
-  }
-}
-
-class CanvasComponent extends Component {
-  state = {
-    isDrawing: false,
-    // positions: [
-    //   {
-    //     box: "box1",
-    //     x: {
-    //       min: "160",
-    //       max: "175",
-    //     },
-    //     y: {
-    //       min: "430",
-    //       max: "445",
-    //     },
-    //   },
-    //   {
-    //     box: "box2",
-    //     x: {
-    //       min: "170",
-    //       max: "185",
-    //     },
-    //     y: {
-    //       min: "440",
-    //       max: "450",
-    //     },
-    //   },
-    // ],
-  };
-
-  canvasRef = React.createRef();
-
-  componentDidMount() {
-    const canvas = this.canvasRef.current;
-    this.context = canvas.getContext("2d");
-  }
-
-  handleMouseDown = async (event) => {
-    this.setState({ isDrawing: true });
-    const { offsetX, offsetY } = event.nativeEvent;
-    // this.context.beginPath();
-    // this.context.moveTo(offsetX, offsetY);
-    console.log("handleMouseDown", offsetX, offsetY);
-    // await this.setState({
-    //   offset: { x: offsetX, y: offsetY },
-    // });
-    this.props.setOffSet({ x: offsetX, y: offsetY });
-    // const clickedBox = this.state.positions.find((box) => {
-    //   const xInRange = offsetX >= box.x.min && offsetX <= box.x.max;
-    //   const yInRange = offsetY >= box.y.min && offsetY <= box.y.max;
-    //   return xInRange && yInRange;
-    // });
-  };
-
-  // handleMouseMove = (event) => {
-  //   if (!this.state.isDrawing) return;
-  //   const { offsetX, offsetY } = event.nativeEvent;
-  //   this.context.lineTo(offsetX, offsetY);
-  //   this.context.stroke();
-  //   this.setState((prevState) => ({
-  //     positions: [...prevState.positions, { x: offsetX, y: offsetY }],
-  //   }));
-  //   console.log('handleMouseMove', offsetX, offsetY);
-  // };
-
-  handleMouseUp = () => {
-    this.setState({ isDrawing: false });
-    console.log("handleMouseUp");
-  };
-
-  render() {
-    const { className } = this.props;
-    return (
-      <canvas
-        ref={this.canvasRef}
-        onMouseDown={this.handleMouseDown}
-        // onMouseMove={this.handleMouseMove}
-        onMouseUp={this.handleMouseUp}
-        onTouchStart={this.handleMouseDown}
-        // onTouchMove={this.handleMouseMove}
-        onTouchEnd={this.handleMouseUp}
-        className={clsx(className.positionAbImg, className.cursorImag)}
-      />
-    );
-  }
-}

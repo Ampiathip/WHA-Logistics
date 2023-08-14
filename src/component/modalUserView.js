@@ -202,7 +202,7 @@ export default function UserView({ t, open, close, userId, user, emailUser, phon
 
           <Grid item md={12} className={clsx(classes.marginRow)}>
             <Typography variant="h5">{t("user:department")}</Typography>
-            <Grid item md={2} className={clsx("mt-2", classes.borderText)}>
+            <Grid item md={3} className={clsx("mt-2", classes.borderText)}>
               <Typography variant="body1">
                 {t(`user:department`) + `${" 1"}`}
               </Typography>

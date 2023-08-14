@@ -64,7 +64,7 @@ const useStyles = makeStyles((theme) => ({
     marginTop: 15,
   },
   btnWidthAction: {
-    width: "50%",
+    width: "100%",
   },
   fontSixeHead: {
     fontSize: "18px !important",

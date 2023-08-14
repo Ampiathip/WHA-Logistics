@@ -23,6 +23,7 @@ import PropTypes from "prop-types";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import CustomizedAccordions from "./accondion";
 import clsx from "clsx";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
@@ -58,13 +59,14 @@ const useStyles = makeStyles((theme) => ({
 const SideBarPage = ({ children, t }) => {
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
+  const matches = useMediaQuery("(min-width:1024px)");
 
   return (
     <>
       {/* <Grid container> */}
       <Box className={clsx(classes.flexRow, classes.marginRow, classes.justify)}>
         {/* <Grid item md={1}></Grid> */}
-        <Grid item md={2}>
+        <Grid item md={matches ? 2 : 3}>
           {/* <Drawer
             className={classes.drawer}
             variant="permanent"
@@ -87,7 +89,7 @@ const SideBarPage = ({ children, t }) => {
             </Card>
           {/* </Drawer> */}
         </Grid>
-        <Grid item md={8}>
+        <Grid item md={9}>
           {children}
         </Grid>
         {/* <Grid item md={1}></Grid> */}

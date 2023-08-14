@@ -5,13 +5,17 @@ import Header from "./header";
 import SideBar from "./sideBar";
 import PropTypes from "prop-types";
 import { Grid, Container } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const Layout = ({ children, type }) => {
   const dispatch = useDispatch();
+  const matches = useMediaQuery("(min-width:1024px)");
 
   useEffect(() => {
     dispatch(addSidebar(type));
   }, [type]);
+
+  console.log("matches", matches);
 
   return (
     // <>
@@ -25,31 +29,20 @@ const Layout = ({ children, type }) => {
     //   </Grid>
     // </>
     <div>
-      <Header />
-      {/* {type == "HistoricalData" ? (
-        <>
-          <Grid container>
-            <Grid item xs={2}>
-              <SideBar />
-            </Grid>
-            <Grid item xs={10}>
-              {children}
-            </Grid>
+      <Header matches={matches} />
+      {/* <Container> */}
+      <Grid container>
+        {matches && (
+          <Grid item xs={2}>
+            <SideBar />
           </Grid>
-        </>
-      ) : (
-        <> */}
-          {/* <Container> */}
-            <Grid container>
-              <Grid item xs={2}>
-                <SideBar />
-              </Grid>
-              <Grid item xs={10}>
-                {children}
-              </Grid>
-            </Grid>
-          {/* </Container> */}
-        {/* </>
+        )}
+        <Grid item xs={matches ? 10 : 12}>
+          {children}
+        </Grid>
+      </Grid>
+      {/* </Container> */}
+      {/* </>
       )} */}
     </div>
   );

@@ -15,6 +15,7 @@ import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import StackedLineChartOutlinedIcon from "@mui/icons-material/StackedLineChartOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
@@ -102,8 +103,8 @@ const Calendar = ({ t }) => {
                   {t("historicalData:startDate")}
                 </Typography>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DemoContainer components={["DatePicker"]}>
-                    <DatePicker
+                  <DemoContainer components={["DateTimePicker"]}>
+                    <DateTimePicker
                       value={value}
                       onChange={(newValue) => {
                         setValue(newValue);
@@ -123,8 +124,8 @@ const Calendar = ({ t }) => {
                   {t("historicalData:endDate")}
                 </Typography>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DemoContainer components={["DatePicker"]}>
-                    <DatePicker
+                  <DemoContainer components={["DateTimePicker"]}>
+                    <DateTimePicker
                       value={valueEnd}
                       onChange={(newValue) => setValueEnd(newValue)}
                     />
