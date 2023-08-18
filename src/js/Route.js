@@ -7,6 +7,7 @@ import Login from "../pages/Login";
 import Diveices from "../pages/Diveices";
 import Parameter from "../pages/Parameter";
 import User from "../pages/User";
+import FloorDiagram from "../pages/FloorDiagram";
 
 const Routers = () => {
 
@@ -14,6 +15,7 @@ const Routers = () => {
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/floorDiagram" element={<FloorDiagram />} />
       <Route path="/historicalData" element={<HistoricalData />} />
       <Route path="/divices" element={<Diveices />} />
       <Route path="/parameter" element={<Parameter />} />

@@ -100,6 +100,7 @@ const SideBar = () => {
           </ListItem>
         </Link>
         <Link
+         to={"/floorDiagram"}
           className={`${
             sideBar == "FloorDiagram" ? classes.activeIcon : classes.LinkColor
           }`}

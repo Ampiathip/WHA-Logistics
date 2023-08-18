@@ -124,6 +124,9 @@ const useStyles = makeStyles((theme) => ({
       boxShadow: `none`,
     },
   },
+  width: {
+    width: '100%',
+  },
 }));
 
 function createData(name, calories, fat, carbs, power, protein) {
@@ -506,8 +509,8 @@ export default function EnhancedTable({ t }) {
           <Button
             onClick={handleClickOpenAdd}
             autoFocus
-            fullWidth
-            className={clsx(classes.backGroundConfrim)}
+            // fullWidth
+            className={clsx(classes.backGroundConfrim, classes.width)}
             variant="outlined"
           >
             {t("diveices:add")}

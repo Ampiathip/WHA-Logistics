@@ -149,6 +149,9 @@ const useStyles = makeStyles((theme) => ({
     padding: 5,
     textAlign: "center",
   },
+  width: {
+    width: '100%',
+  },
 }));
 
 function createData(
@@ -772,8 +775,8 @@ export default function UserManagement({ t }) {
           <Button
             onClick={handleClickOpenAddUser}
             autoFocus
-            fullWidth
-            className={clsx(classes.backGroundConfrim)}
+            // fullWidth
+            className={clsx(classes.backGroundConfrim, classes.width)}
             variant="outlined"
           >
             {t("user:addUser")}
