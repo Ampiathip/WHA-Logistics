@@ -13,9 +13,11 @@ const theme = createTheme({
     fontFamily: "Nunito, sans-serif !important",
     h1: {
       fontSize: 26,
+      fontWeight: 'bold',
     },
     h2: {
       fontSize: 24,
+      fontWeight: 'bold',
     },
     h3: {
       fontSize: 22,

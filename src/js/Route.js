@@ -8,6 +8,8 @@ import Diveices from "../pages/Diveices";
 import Parameter from "../pages/Parameter";
 import User from "../pages/User";
 import FloorDiagram from "../pages/FloorDiagram";
+import Building from "../pages/Building";
+import Gateway from "../pages/Gateway";
 
 const Routers = () => {
 
@@ -20,6 +22,8 @@ const Routers = () => {
       <Route path="/divices" element={<Diveices />} />
       <Route path="/parameter" element={<Parameter />} />
       <Route path="/user" element={<User />} />
+      <Route path="/building" element={<Building />} />
+      <Route path="/gateway" element={<Gateway />} />
       <Route element={PageNotFound} />
     </Routes>
   );

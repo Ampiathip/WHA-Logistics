@@ -25,6 +25,7 @@ import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import CalendarViewWeekOutlinedIcon from "@mui/icons-material/CalendarViewWeekOutlined";
 import CookieOutlinedIcon from "@mui/icons-material/CookieOutlined";
 import DatasetOutlinedIcon from "@mui/icons-material/DatasetOutlined";
+import BookmarkOutlinedIcon from '@mui/icons-material/BookmarkOutlined';
 
 const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
@@ -225,6 +226,45 @@ const SideBar = () => {
               <LogoutOutlinedIcon />
             </ListItemIcon>
             <ListItemText primary={t("sidebar:Logout")} />
+          </ListItem>
+        </Link>
+        <Grid item className={classes.margigLeft}>
+          <Typography variant="h6" className={classes.imageCenter}>
+            {t("sidebar:BuildingSettings")}
+          </Typography>
+        </Grid>
+        <Link
+          to={"/building"}
+          className={`${
+            sideBar == "Building" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "Building" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <HomeOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:Building")} />
+          </ListItem>
+        </Link>
+        <Link
+          to={"/gateway"}
+          className={`${
+            sideBar == "Gateway" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "Gateway" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <BookmarkOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:Gateway")} />
           </ListItem>
         </Link>
       </List>
