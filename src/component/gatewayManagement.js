@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -437,6 +438,7 @@ export default function EnhancedTable({ t }) {
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
   const theme = useTheme();
+  const navigate = useNavigate();
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -545,6 +547,10 @@ export default function EnhancedTable({ t }) {
 
   const handleBuilding = (event) => {
     setBuilding(event.target.value);
+  };
+
+  const openPageDeviceDetail = () => {
+    navigate("/gatewayDeviceDetail");
   };
 
   return (
@@ -676,7 +682,7 @@ export default function EnhancedTable({ t }) {
                         align="center"
                         className={classes.fontSixeCell}
                       >
-                        <FeedOutlinedIcon className={classes.marginIcon} />
+                        <FeedOutlinedIcon className={classes.marginIcon} onClick={openPageDeviceDetail}/>
                         <VisibilityOutlinedIcon
                           className={classes.marginIcon}
                         />

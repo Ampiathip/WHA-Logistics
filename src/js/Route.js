@@ -10,6 +10,7 @@ import User from "../pages/User";
 import FloorDiagram from "../pages/FloorDiagram";
 import Building from "../pages/Building";
 import Gateway from "../pages/Gateway";
+import GatewayDeviceDetail from "../pages/GatewayDeviceDetail";
 
 const Routers = () => {
 
@@ -24,6 +25,7 @@ const Routers = () => {
       <Route path="/user" element={<User />} />
       <Route path="/building" element={<Building />} />
       <Route path="/gateway" element={<Gateway />} />
+      <Route path="/gatewayDeviceDetail" element={<GatewayDeviceDetail />} />
       <Route element={PageNotFound} />
     </Routes>
   );

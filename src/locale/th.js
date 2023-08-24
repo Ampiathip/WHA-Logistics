@@ -154,6 +154,10 @@ let th = {
       "serialNumber": "Serial Number",
       "Installation": "Installation date",
       "billingType": "Billing Type",
+      "addDevice": "Add new Device",
+      "uploadDevice": "Upload Device Image",
+      "gatewayInfo": "Gateway Info",
+      "DeviceInfo": "Device Info",
     }
   };
   
