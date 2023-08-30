@@ -89,7 +89,7 @@ const useStyles = makeStyles((theme) => ({
   },
   modalWidth: {
     width: "90% !important",
-    height: "90% !important",
+    // height: "90% !important",
   },
   modalContent: {
     justifyContent: "space-around",
@@ -158,34 +158,37 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "flex-end",
   },
+  activeColor: {
+    color: "#3E6DC5",
+  },
 }));
 
-function createData(name, calories, fat, carbs, power, protein, unit) {
+function createData(name, calories, fat, unit) {
   return {
     name,
     calories,
     fat,
-    carbs,
-    power,
-    protein,
+    // carbs,
+    // power,
+    // protein,
     unit,
   };
 }
 
 const rows = [
-  createData(1, "Building 1", 10, 220, 20, 20, 1120),
-  createData(2, "Building 2", 10, 220, 20, 20, 1120),
-  createData(3, "Building 3", 10, 220, 20, 20, 1120),
-  createData(4, "Building 4", 10, 220, 20, 20, 1120),
-  createData(5, "Building 5", 10, 220, 20, 20, 1120),
-  createData(6, "Building 6", 10, 220, 20, 20, 1120),
-  createData(7, "Building 7", 10, 220, 20, 20, 1120),
-  createData(8, "Building 8", 10, 220, 20, 20, 1120),
-  createData(9, "Building 9", 10, 220, 20, 20, 1120),
-  createData(10, "Building 10", 10, 220, 20, 20, 1120),
-  createData(11, "Building 11", 10, 220, 20, 20, 1120),
-  createData(12, "Building 12", 10, 220, 20, 20, 1120),
-  createData(13, "Building 13", 10, 220, 20, 20, 1120),
+  createData(1, "Building 1", 20, 1120),
+  createData(2, "Building 2", 20, 1120),
+  createData(3, "Building 3", 20, 1120),
+  createData(4, "Building 4", 20, 1120),
+  createData(5, "Building 5", 20, 1120),
+  createData(6, "Building 6", 20, 1120),
+  createData(7, "Building 7", 20, 1120),
+  createData(8, "Building 8", 20, 1120),
+  createData(9, "Building 9", 20, 1120),
+  createData(10, "Building 10", 20, 1120),
+  createData(11, "Building 11", 20, 1120),
+  createData(12, "Building 12", 20, 1120),
+  createData(13, "Building 13", 20, 1120),
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -225,41 +228,41 @@ const headCells = [
     id: "name",
     numeric: false,
     disablePadding: true,
-    label: "Building  ID",
+    label: "Floor  ID",
   },
   {
     id: "calories",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
-    label: "Building  Name",
+    label: "Floor  Name",
   },
   {
     id: "fat",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
-    label: "Latitude",
+    label: "Building  Name",
   },
-  {
-    id: "carbs",
-    numeric: true,
-    disablePadding: false,
-    label: "Longitude",
-  },
-  {
-    id: "power",
-    numeric: true,
-    disablePadding: false,
-    label: "No of Floor",
-  },
-  {
-    id: "protein",
-    numeric: true,
-    disablePadding: false,
-    label: "No of Floor",
-  },
+  // {
+  //   id: "carbs",
+  //   numeric: true,
+  //   disablePadding: false,
+  //   label: "Longitude",
+  // },
+  // {
+  //   id: "power",
+  //   numeric: true,
+  //   disablePadding: false,
+  //   label: "No of Floor",
+  // },
+  // {
+  //   id: "protein",
+  //   numeric: true,
+  //   disablePadding: false,
+  //   label: "No of Floor",
+  // },
   {
     id: "unit",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "No of Unit",
   },
@@ -390,17 +393,14 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTable({ t }) {
+export default function EnhancedTable({ t, pageName}) {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [buildingName, setBuildingName] = useState("");
-  const [lattitude, setLattitude] = useState("");
-  const [longtitude, setLongtitude] = useState("");
-  const [area, setArea] = useState("");
+  const [floorName, setFloorName] = useState("");
 
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
@@ -410,8 +410,7 @@ export default function EnhancedTable({ t }) {
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [openAdd, setOpenAdd] = useState(false);
-  const [file, setFile] = useState(null);
-
+  
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -464,10 +463,6 @@ export default function EnhancedTable({ t }) {
     setPage(0);
   };
 
-  const handleChangeDense = (event) => {
-    setDense(event.target.checked);
-  };
-
   const isSelected = (name) => selected.indexOf(name) !== -1;
 
   // Avoid a layout jump when reaching the last page with empty rows.
@@ -483,21 +478,10 @@ export default function EnhancedTable({ t }) {
     [order, orderBy, page, rowsPerPage]
   );
 
-  const handleLongtitude = (event) => {
-    setLongtitude(event.target.value);
+  const handleFloorName = (event) => {
+    setFloorName(event.target.value);
   };
 
-  const handleArea = (event) => {
-    setArea(event.target.value);
-  };
-
-  const handleBuildingName = (event) => {
-    setBuildingName(event.target.value);
-  };
-
-  const handleLattitude = (event) => {
-    setLattitude(event.target.value);
-  };
 
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
@@ -507,30 +491,24 @@ export default function EnhancedTable({ t }) {
     setOpenAdd(false);
   };
 
-  const handleUploadFile = (e) => {
-    // setFile(e.target.files[0]);
-    if (e.target.files.length > 0) {
-      setFile(URL.createObjectURL(e.target.files[0]));
-    }
-  };
 
-  const openPageFlooreDetail = () => {
-    navigate("/buildingFloorDetail");
+  const openPageFlooreUnitDetail = () => {
+    navigate("/buildingFloorUnitDetail");
   };
-
 
   return (
     <Container className={classes.marginRow}>
       <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon className={classes.alignSelf} />
-        <Typography variant="h6"> / {sideBar}</Typography>
+        <HomeOutlinedIcon className={clsx(pageName ? classes.activeColor : classes.alignSelf)} />
+        <Typography variant="h6" className={clsx(pageName ? classes.activeColor : "")}> / {sideBar}</Typography>
+        <Typography variant="h6"> / {pageName} </Typography>
       </Grid>
       <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
         <Grid item md={5} className={classes.marginRow}>
           <TextField
             id="input-with-icon-textfield"
             size="small"
-            placeholder={t("building:search")}
+            placeholder={t("floor:search")}
             fullWidth
             InputProps={{
               startAdornment: (
@@ -550,7 +528,7 @@ export default function EnhancedTable({ t }) {
             className={clsx(classes.backGroundConfrim, classes.width)}
             variant="outlined"
           >
-            {t("building:btnAdd")}
+            {t("floor:btnAdd")}
           </Button>
         </Grid>
       </Grid>
@@ -620,7 +598,7 @@ export default function EnhancedTable({ t }) {
                       >
                         {row.fat}
                       </TableCell>
-                      <TableCell
+                      {/* <TableCell
                         align="center"
                         className={classes.fontSixeCell}
                       >
@@ -637,7 +615,7 @@ export default function EnhancedTable({ t }) {
                         className={classes.fontSixeCell}
                       >
                         {row.protein}
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell
                         align="center"
                         className={classes.fontSixeCell}
@@ -648,7 +626,7 @@ export default function EnhancedTable({ t }) {
                         align="center"
                         className={classes.fontSixeCell}
                       >
-                        <FeedOutlinedIcon className={classes.marginIcon} onClick={openPageFlooreDetail} />
+                        <FeedOutlinedIcon className={classes.marginIcon} onClick={openPageFlooreUnitDetail} />
                         <VisibilityOutlinedIcon
                           className={classes.marginIcon}
                         />
@@ -698,115 +676,22 @@ export default function EnhancedTable({ t }) {
         }}
       >
         <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("building:edit")}</Typography>
+          <Typography variant="h3">{t("floor:edit")}</Typography>
         </DialogTitle>
         <DialogContent>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="pb-3">
-              {t("building:buildingName")}
+              {t("floor:floorName")}
             </Typography>
             <TextField
               id="input-with-icon-textfield"
               size="small"
-              placeholder={t("building:buildingName")}
+              placeholder={t("floor:floorName")}
               fullWidth
               variant="outlined"
-              value={buildingName}
-              onChange={handleBuildingName}
+              value={floorName}
+              onChange={handleFloorName}
             />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:lattitude")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:lattitude")}
-              fullWidth
-              variant="outlined"
-              value={lattitude}
-              onChange={handleLattitude}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:longtitude")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:longtitude")}
-              fullWidth
-              variant="outlined"
-              value={longtitude}
-              onChange={handleLongtitude}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:area")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:area")}
-              fullWidth
-              variant="outlined"
-              value={area}
-              onChange={handleArea}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:upload")}
-            </Typography>
-            <Grid
-              item
-              md={12}
-              //   className={clsx(classes.flexRow, classes.justContentCenter)}
-            >
-              <input
-                className={classes.input}
-                id={"contained-button-file"}
-                type="file"
-                accept="image/jpeg,image/png,application/pdf,image/tiff"
-                // multiple={isMultiple}
-                onChange={handleUploadFile}
-                onClick={(e) => {
-                  console.log("aaaaa");
-                }}
-              />
-              <label
-                htmlFor={"contained-button-file"}
-                className={clsx(
-                  classes.flexRow,
-                  classes.justContentCenter,
-                  classes.width
-                )}
-              >
-                <Card
-                  variant="outlined"
-                  style={{ width: 200, height: 200 }}
-                  className={clsx(classes.boxUpload)}
-                >
-                  {file ? (
-                    <img
-                      src={file}
-                      alt="img-upload"
-                      className={classes.imgWidth}
-                    />
-                  ) : (
-                    <CardContent
-                      className={clsx(classes.textCenter, classes.marginTopBox)}
-                    >
-                      <Typography> +</Typography>
-                      <Typography> upload</Typography>
-                    </CardContent>
-                  )}
-                </Card>
-              </label>
-            </Grid>
           </Grid>
           {/* <DialogContentText>
             Let Google help apps determine location. This means sending
@@ -851,115 +736,22 @@ export default function EnhancedTable({ t }) {
         }}
       >
         <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("building:add")}</Typography>
+          <Typography variant="h3">{t("floor:add")}</Typography>
         </DialogTitle>
         <DialogContent>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="pb-3">
-              {t("building:buildingName")}
+              {t("floor:floorName")}
             </Typography>
             <TextField
               id="input-with-icon-textfield"
               size="small"
-              placeholder={t("building:buildingName")}
+              placeholder={t("floor:floorName")}
               fullWidth
               variant="outlined"
-              value={buildingName}
-              onChange={handleBuildingName}
+              value={floorName}
+              onChange={handleFloorName}
             />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:lattitude")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:lattitude")}
-              fullWidth
-              variant="outlined"
-              value={lattitude}
-              onChange={handleLattitude}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:longtitude")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:longtitude")}
-              fullWidth
-              variant="outlined"
-              value={longtitude}
-              onChange={handleLongtitude}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:area")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:area")}
-              fullWidth
-              variant="outlined"
-              value={area}
-              onChange={handleArea}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:upload")}
-            </Typography>
-            <Grid
-              item
-              md={12}
-              //   className={clsx(classes.flexRow, classes.justContentCenter)}
-            >
-              <input
-                className={classes.input}
-                id={"contained-button-file"}
-                type="file"
-                accept="image/jpeg,image/png,application/pdf,image/tiff"
-                // multiple={isMultiple}
-                onChange={handleUploadFile}
-                onClick={(e) => {
-                  console.log("aaaaa");
-                }}
-              />
-              <label
-                htmlFor={"contained-button-file"}
-                className={clsx(
-                  classes.flexRow,
-                  classes.justContentCenter,
-                  classes.width
-                )}
-              >
-                <Card
-                  variant="outlined"
-                  style={{ width: 200, height: 200 }}
-                  className={clsx(classes.boxUpload)}
-                >
-                  {file ? (
-                    <img
-                      src={file}
-                      alt="img-upload"
-                      className={classes.imgWidth}
-                    />
-                  ) : (
-                    <CardContent
-                      className={clsx(classes.textCenter, classes.marginTopBox)}
-                    >
-                      <Typography> +</Typography>
-                      <Typography> upload</Typography>
-                    </CardContent>
-                  )}
-                </Card>
-              </label>
-            </Grid>
           </Grid>
           {/* <DialogContentText>
             Let Google help apps determine location. This means sending

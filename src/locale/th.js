@@ -131,6 +131,22 @@ let th = {
       "btnAddModal": "Add",
       "edit": "Edit Floor Information",
       "btnSave": "Save",
+      "searchUnit": "Search by Unit name",
+      "btnAddUnit": "Add Unit",
+      "addUnit": "Add new Unit",
+      "description": "Unit Description",
+      "measurement": "Measurement",
+      "shopLogo": "Shop Logo",
+      "unitNumber": "Unit Number",
+      "unitName": "Unit Name",
+      "unitType": "Unit Type",
+      "building": "Building",
+      "floor": "Floor",
+      "zone": "Zone",
+      "gateway": "*Gateway",
+      "delete": "Delete",
+      "addMeasurement": "+ Add Measurement",
+      "action": "Action",
     },
     gateway: {
       "search": "Search by Gateway name",
@@ -158,6 +174,8 @@ let th = {
       "uploadDevice": "Upload Device Image",
       "gatewayInfo": "Gateway Info",
       "DeviceInfo": "Device Info",
+      "btnRefresh": "Refresh",
+      "btnAddPoint": "Add Point",
     }
   };
   

@@ -53,6 +53,7 @@ import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
+import { Topic } from "@mui/icons-material";
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -194,6 +195,10 @@ const useStyles = makeStyles((theme) => ({
   },
   marginDataTable: {
     margin: 10,
+  },
+  borderBox: {
+    borderRight: "1px solid #8f8a8a",
+    paddingRight: 10,
   },
 }));
 
@@ -628,6 +633,13 @@ export default function EnhancedTable({ t, pageName }) {
     //   format: (value) => value.toFixed(2),
     // },
   ];
+  // edit //
+  const [deviceId, setDeviceId] = useState("");
+  const [pointName, setPointName] = useState("");
+  const [topic, setTopic] = useState("");
+  const [data, setData] = useState("");
+  const [dataUnit, setDataUnit] = useState("");
+  const [unitBinding, setUnitBinding] = useState("");
   const [rowsPerPageEdit, setRowsPerPageEdit] = useState(5);
   const [pageEdit, setPageEdit] = useState(0);
   const [rowsPointEdit, setRowsPointEdit] = useState([
@@ -845,6 +857,30 @@ export default function EnhancedTable({ t, pageName }) {
     // setRowsPointEdit(updatedRows);
   };
 
+  const handleDeviceId  = (event) => {
+    setDeviceId(event.target.value);
+  };
+
+  const handlePointName  = (event) => {
+    setPointName(event.target.value);
+  };
+
+  const handleTopic  = (event) => {
+    setTopic(event.target.value);
+  };
+
+  const handleData  = (event) => {
+    setData(event.target.value);
+  };
+
+  const handleDataUnit  = (event) => {
+    setDataUnit(event.target.value);
+  };
+
+  const handleUnitBinding  = (event) => {
+    setUnitBinding(event.target.value);
+  };
+
   return (
     <Container className={classes.marginRow}>
       <Grid item className={classes.flexRow}>
@@ -1053,7 +1089,7 @@ export default function EnhancedTable({ t, pageName }) {
           </Grid>
         </DialogTitle>
         <DialogContent className={clsx(classes.flexRow, classes.modalContent)}>
-          <Box>
+          <Box className={classes.borderBox}>
             <Card className={clsx(classes.cardBoxGeteway)}>
               <CardContent>
                 <Typography variant="h5">{t("gateway:gatewayInfo")}</Typography>
@@ -1185,7 +1221,21 @@ export default function EnhancedTable({ t, pageName }) {
           </Box>
           <Box className={classes.boxMargin}>
             <Grid item md={12} className={classes.flexRowBtnModal}>
-              <Grid item md={3}>
+              <Grid
+                item
+                className={clsx(
+                  classes.flexRow,
+                  classes.alignItem,
+                  classes.justContentCenter
+                )}
+              >
+                <Typography variant="h5">Point</Typography>
+                <Grid item className={classes.borderPoint}>
+                  <Typography variant="body2">20/100</Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={3} className={classes.boxMargin}>
                 <Button
                   variant="outlined"
                   onClick={addNewRow}
@@ -1239,11 +1289,11 @@ export default function EnhancedTable({ t, pageName }) {
                               ) : (
                                 <Grid item className={classes.marginDataTable}>
                                   <TextField
-                                    // value={row.unit}
+                                    value={deviceId}
                                     variant="outlined"
                                     size="small"
                                     fullWidth
-                                    // onChange={handleChangeUnit}
+                                    onChange={handleDeviceId}
                                   />
                                 </Grid>
                               )}
@@ -1261,11 +1311,11 @@ export default function EnhancedTable({ t, pageName }) {
                               ) : (
                                 <Grid item className={classes.marginDataTable}>
                                   <TextField
-                                    // value={row.unit}
+                                    value={pointName}
                                     variant="outlined"
                                     size="small"
                                     fullWidth
-                                    // onChange={handleChangeUnit}
+                                    onChange={handlePointName}
                                   />
                                 </Grid>
                               )}
@@ -1283,11 +1333,11 @@ export default function EnhancedTable({ t, pageName }) {
                               ) : (
                                 <Grid item className={classes.marginDataTable}>
                                   <TextField
-                                    // value={row.unit}
+                                    value={topic}
                                     variant="outlined"
                                     size="small"
                                     fullWidth
-                                    // onChange={handleChangeUnit}
+                                    onChange={handleTopic}
                                   />
                                 </Grid>
                               )}
@@ -1305,11 +1355,11 @@ export default function EnhancedTable({ t, pageName }) {
                               ) : (
                                 <Grid item className={classes.marginDataTable}>
                                   <TextField
-                                    // value={row.unit}
+                                    value={data}
                                     variant="outlined"
                                     size="small"
                                     fullWidth
-                                    // onChange={handleChangeUnit}
+                                    onChange={handleData}
                                   />
                                 </Grid>
                               )}
@@ -1327,11 +1377,11 @@ export default function EnhancedTable({ t, pageName }) {
                               ) : (
                                 <Grid item className={classes.marginDataTable}>
                                   <TextField
-                                    // value={row.unit}
+                                    value={dataUnit}
                                     variant="outlined"
                                     size="small"
                                     fullWidth
-                                    // onChange={handleChangeUnit}
+                                    onChange={handleDataUnit}
                                   />
                                 </Grid>
                               )}
@@ -1349,11 +1399,11 @@ export default function EnhancedTable({ t, pageName }) {
                               ) : (
                                 <Grid item className={classes.marginDataTable}>
                                   <TextField
-                                    // value={row.unit}
+                                    value={unitBinding}
                                     variant="outlined"
                                     size="small"
                                     fullWidth
-                                    // onChange={handleChangeUnit}
+                                    onChange={handleUnitBinding}
                                   />
                                 </Grid>
                               )}
