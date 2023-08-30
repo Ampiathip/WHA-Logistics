@@ -34,6 +34,7 @@ let en = {
       "BuildingSettings": "Building Settings",
       "Building": "Building",
       "Gateway": "Gateway",
+      "zone": "Zone",
     },
     historicalData: {
       "devicelist": "Device List",
@@ -176,6 +177,18 @@ let en = {
       "DeviceInfo": "Device Info",
       "btnRefresh": "Refresh",
       "btnAddPoint": "Add Point",
+    },
+    zone: {
+      "search": "Search by Zone name",
+      "btnAdd": "Add Zone",
+      "add": "Add new Zone",
+      "zoneName": "Zone Name",
+      "zoneType": "Zone Type",
+      "editZone": "Edit Zone Information",
+      "label": "Label",
+      "select": "Select input",
+      "selectZoneType": "Select Type",
+      "type": "Type",
     }
   };
   

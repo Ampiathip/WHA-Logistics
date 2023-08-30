@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -573,6 +574,7 @@ export default function EnhancedTable({ t, pageName }) {
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
   const theme = useTheme();
+  const navigate = useNavigate();
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -881,6 +883,10 @@ export default function EnhancedTable({ t, pageName }) {
     setUnitBinding(event.target.value);
   };
 
+  const openPageGateway = () => {
+    navigate("/gateway");
+  };
+
   return (
     <Container className={classes.marginRow}>
       <Grid item className={classes.flexRow}>
@@ -889,7 +895,8 @@ export default function EnhancedTable({ t, pageName }) {
         />
         <Typography
           variant="h6"
-          className={clsx(pageName ? classes.activeColor : "")}
+          className={clsx(pageName ? classes.activeColor : "", classes.cursor)}
+          onClick={openPageGateway}
         >
           {" "}
           / {sideBar}{" "}

@@ -4,6 +4,7 @@ export const actionTypes = {
     LOG_IN_SUCCESS: 'LOG_IN_SUCCESS',
     SIDE_BAR: 'SIDE_BAR',
     THEME: 'THEME',
+    ZONE: 'ZONE,'
 }
 
 export function failure(error) {
@@ -27,3 +28,9 @@ export function addTheme(payload) {
     console.log("actions_addTheme", payload);
     return { type: actionTypes.THEME, payload }
 };
+
+export function addZone(payload) {
+    console.log("actions_addZone", payload);
+    return { type: actionTypes.ZONE, payload }
+};
+

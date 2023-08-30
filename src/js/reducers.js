@@ -3,6 +3,7 @@ const initialState = {
     user: 'Admin HypeTex',
     sidebar: '',
     theme: 'default',
+    zone: '',
     responsiveFontSizes: true,
   };
   
@@ -25,6 +26,13 @@ const initialState = {
         theme: action.payload
       });
     }
+
+    if (action.type === actionTypes.ZONE) {
+      return Object.assign({}, state, {
+        zone: action.payload
+      });
+    }
+
 
 
 

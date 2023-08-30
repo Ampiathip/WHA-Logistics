@@ -31,6 +31,9 @@ import {
   InputAdornment,
   Card,
   CardContent,
+  FormControl,
+  Select,
+  MenuItem,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -50,6 +53,7 @@ import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import { addZone } from "../js/actions";
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -158,17 +162,14 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "flex-end",
   },
-  activeColor: {
-    color: "#3E6DC5",
-  },
 }));
 
-function createData(name, calories, fat, unit) {
+function createData(name, calories, fat, carbs, unit) {
   return {
     name,
     calories,
     fat,
-    // carbs,
+    carbs,
     // power,
     // protein,
     unit,
@@ -176,19 +177,19 @@ function createData(name, calories, fat, unit) {
 }
 
 const rows = [
-  createData(1, "Building 1", 20, 1120),
-  createData(2, "Building 2", 20, 1120),
-  createData(3, "Building 3", 20, 1120),
-  createData(4, "Building 4", 20, 1120),
-  createData(5, "Building 5", 20, 1120),
-  createData(6, "Building 6", 20, 1120),
-  createData(7, "Building 7", 20, 1120),
-  createData(8, "Building 8", 20, 1120),
-  createData(9, "Building 9", 20, 1120),
-  createData(10, "Building 10", 20, 1120),
-  createData(11, "Building 11", 20, 1120),
-  createData(12, "Building 12", 20, 1120),
-  createData(13, "Building 13", 20, 1120),
+  createData(1, "Zone 1", "Public Zone", "Building 1", 1120),
+  createData(2, "Zone 2", "Public Zone", "Building 1", 1120),
+  createData(3, "Zone 3", "Public Zone", "Building 1", 1120),
+  createData(4, "Zone 4", "Public Zone", "Building 1", 1120),
+  createData(5, "Zone 5", "Public Zone", "Building 1", 1120),
+  createData(6, "Zone 6", "Public Zone", "Building 1", 1120),
+  createData(7, "Zone 7", "Public Zone", "Building 1", 1120),
+  createData(8, "Zone 8", "Public Zone", "Building 1", 1120),
+  createData(9, "Zone 9", "Public Zone", "Building 1", 1120),
+  createData(10, "Zone 10", "Public Zone", "Building 1", 1120),
+  createData(11, "Zone 11", "Public Zone", "Building 1", 1120),
+  createData(12, "Zone 12", "Public Zone", "Building 1", 1120),
+  createData(13, "Zone 13", "Public Zone", "Building 1", 1120),
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -228,26 +229,26 @@ const headCells = [
     id: "name",
     numeric: false,
     disablePadding: true,
-    label: "Floor  ID",
+    label: "Zone ID",
   },
   {
     id: "calories",
     numeric: false,
     disablePadding: false,
-    label: "Floor  Name",
+    label: "Zone Name",
   },
   {
     id: "fat",
     numeric: false,
     disablePadding: false,
-    label: "Building  Name",
+    label: "Zone Type",
   },
-  // {
-  //   id: "carbs",
-  //   numeric: true,
-  //   disablePadding: false,
-  //   label: "Longitude",
-  // },
+  {
+    id: "carbs",
+    numeric: false,
+    disablePadding: false,
+    label: "Building Name",
+  },
   // {
   //   id: "power",
   //   numeric: true,
@@ -393,24 +394,27 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTable({ t, pageName}) {
+export default function EnhancedTable({ t }) {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [floorName, setFloorName] = useState("");
+  const [buildingName, setBuildingName] = useState("none");
+  const [zoneName, setZoneName] = useState("");
+  const [zoneType, setZoneType] = useState("none");
 
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
   const theme = useTheme();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [openAdd, setOpenAdd] = useState(false);
-  
+
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -463,6 +467,10 @@ export default function EnhancedTable({ t, pageName}) {
     setPage(0);
   };
 
+  const handleChangeDense = (event) => {
+    setDense(event.target.checked);
+  };
+
   const isSelected = (name) => selected.indexOf(name) !== -1;
 
   // Avoid a layout jump when reaching the last page with empty rows.
@@ -478,10 +486,17 @@ export default function EnhancedTable({ t, pageName}) {
     [order, orderBy, page, rowsPerPage]
   );
 
-  const handleFloorName = (event) => {
-    setFloorName(event.target.value);
+  const handleZoneType = (event) => {
+    setZoneType(event.target.value);
   };
 
+  const handleBuildingName = (event) => {
+    setBuildingName(event.target.value);
+  };
+
+  const handleZoneName = (event) => {
+    setZoneName(event.target.value);
+  };
 
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
@@ -491,28 +506,26 @@ export default function EnhancedTable({ t, pageName}) {
     setOpenAdd(false);
   };
 
-
-  const openPageFlooreUnitDetail = () => {
-    navigate("/buildingFloorUnitDetail");
+  const openPageZoneDetail = () => {
+    navigate(`/zoneDetail`);
   };
 
-  const openPageFloor = () => {
-    navigate("/building");
+  const handleDetailZone = (event, row) => {
+    dispatch(addZone(row));
   };
 
   return (
     <Container className={classes.marginRow}>
       <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon className={clsx(pageName ? classes.activeColor : classes.alignSelf)} />
-        <Typography variant="h6" className={clsx(pageName ? classes.activeColor : "", classes.cursor)} onClick={openPageFloor}> / {sideBar}</Typography>
-        <Typography variant="h6"> / {pageName} </Typography>
+        <HomeOutlinedIcon className={classes.alignSelf} />
+        <Typography variant="h6"> / {sideBar}</Typography>
       </Grid>
       <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
         <Grid item md={5} className={classes.marginRow}>
           <TextField
             id="input-with-icon-textfield"
             size="small"
-            placeholder={t("floor:search")}
+            placeholder={t("zone:search")}
             fullWidth
             InputProps={{
               startAdornment: (
@@ -532,7 +545,7 @@ export default function EnhancedTable({ t, pageName}) {
             className={clsx(classes.backGroundConfrim, classes.width)}
             variant="outlined"
           >
-            {t("floor:btnAdd")}
+            {t("zone:btnAdd")}
           </Button>
         </Grid>
       </Grid>
@@ -602,19 +615,19 @@ export default function EnhancedTable({ t, pageName}) {
                       >
                         {row.fat}
                       </TableCell>
-                      {/* <TableCell
+                      <TableCell
                         align="center"
                         className={classes.fontSixeCell}
                       >
                         {row.carbs}
                       </TableCell>
-                      <TableCell
+                      {/* <TableCell
                         align="center"
                         className={classes.fontSixeCell}
                       >
                         {row.power}
-                      </TableCell>
-                      <TableCell
+                      </TableCell> */}
+                      {/* <TableCell
                         align="center"
                         className={classes.fontSixeCell}
                       >
@@ -630,7 +643,14 @@ export default function EnhancedTable({ t, pageName}) {
                         align="center"
                         className={classes.fontSixeCell}
                       >
-                        <FeedOutlinedIcon className={classes.marginIcon} onClick={openPageFlooreUnitDetail} />
+                        <FeedOutlinedIcon
+                          className={classes.marginIcon}
+                          // onClick={{openPageZoneDetail, handleDetailZone(row)}}
+                          onClick={(event) => {
+                            openPageZoneDetail();
+                            handleDetailZone(event, row);
+                          }}
+                        />
                         <VisibilityOutlinedIcon
                           className={classes.marginIcon}
                         />
@@ -680,27 +700,61 @@ export default function EnhancedTable({ t, pageName}) {
         }}
       >
         <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("floor:edit")}</Typography>
+          <Typography variant="h3">{t("zone:editZone")}</Typography>
         </DialogTitle>
         <DialogContent>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="pb-3">
-              {t("floor:floorName")}
+              {t("zone:zoneName")}
             </Typography>
             <TextField
               id="input-with-icon-textfield"
               size="small"
-              placeholder={t("floor:floorName")}
+              placeholder={t("building:buildingName")}
               fullWidth
               variant="outlined"
-              value={floorName}
-              onChange={handleFloorName}
+              value={zoneName}
+              onChange={handleZoneName}
             />
           </Grid>
-          {/* <DialogContentText>
-            Let Google help apps determine location. This means sending
-            anonymous location data to Google, even when no apps are running.
-          </DialogContentText> */}
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("zone:zoneType")}
+            </Typography>
+            <FormControl variant="outlined" size="small" fullWidth>
+              <Select
+                labelId="demo-select-small-label"
+                id="demo-select-small"
+                value={zoneType}
+                placeholder={t("gateway:selectCommunication")}
+                onChange={handleZoneType}
+              >
+                <MenuItem value="none">{t("zone:selectZoneType")}</MenuItem>
+                {/* <MenuItem value={10}>Ten</MenuItem>
+                    <MenuItem value={20}>Twenty</MenuItem>
+                    <MenuItem value={30}>Thirty</MenuItem> */}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("building:buildingName")}
+            </Typography>
+            <FormControl variant="outlined" size="small" fullWidth>
+              <Select
+                labelId="demo-select-small-label"
+                id="demo-select-small"
+                value={buildingName}
+                placeholder={t("gateway:selectCommunication")}
+                onChange={handleBuildingName}
+              >
+                <MenuItem value="none">{t("building:buildingName")}</MenuItem>
+                {/* <MenuItem value={10}>Ten</MenuItem>
+                    <MenuItem value={20}>Twenty</MenuItem>
+                    <MenuItem value={30}>Thirty</MenuItem> */}
+              </Select>
+            </FormControl>
+          </Grid>
           <Grid
             item
             md={12}
@@ -740,27 +794,61 @@ export default function EnhancedTable({ t, pageName}) {
         }}
       >
         <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("floor:add")}</Typography>
+          <Typography variant="h3">{t("zone:add")}</Typography>
         </DialogTitle>
         <DialogContent>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="pb-3">
-              {t("floor:floorName")}
+              {t("zone:zoneName")}
             </Typography>
             <TextField
               id="input-with-icon-textfield"
               size="small"
-              placeholder={t("floor:floorName")}
+              placeholder={t("building:buildingName")}
               fullWidth
               variant="outlined"
-              value={floorName}
-              onChange={handleFloorName}
+              value={zoneName}
+              onChange={handleZoneName}
             />
           </Grid>
-          {/* <DialogContentText>
-            Let Google help apps determine location. This means sending
-            anonymous location data to Google, even when no apps are running.
-          </DialogContentText> */}
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("zone:zoneType")}
+            </Typography>
+            <FormControl variant="outlined" size="small" fullWidth>
+              <Select
+                labelId="demo-select-small-label"
+                id="demo-select-small"
+                value={zoneType}
+                placeholder={t("gateway:selectCommunication")}
+                onChange={handleZoneType}
+              >
+                <MenuItem value="none">{t("zone:selectZoneType")}</MenuItem>
+                {/* <MenuItem value={10}>Ten</MenuItem>
+                    <MenuItem value={20}>Twenty</MenuItem>
+                    <MenuItem value={30}>Thirty</MenuItem> */}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("building:buildingName")}
+            </Typography>
+            <FormControl variant="outlined" size="small" fullWidth>
+              <Select
+                labelId="demo-select-small-label"
+                id="demo-select-small"
+                value={buildingName}
+                placeholder={t("gateway:selectCommunication")}
+                onChange={handleBuildingName}
+              >
+                <MenuItem value="none">{t("building:buildingName")}</MenuItem>
+                {/* <MenuItem value={10}>Ten</MenuItem>
+                    <MenuItem value={20}>Twenty</MenuItem>
+                    <MenuItem value={30}>Thirty</MenuItem> */}
+              </Select>
+            </FormControl>
+          </Grid>
           <Grid
             item
             md={12}

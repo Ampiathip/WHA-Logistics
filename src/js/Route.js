@@ -13,9 +13,10 @@ import Gateway from "../pages/Gateway";
 import GatewayDeviceDetail from "../pages/GatewayDeviceDetail";
 import BuildingFloor from "../pages/BulidingFloor";
 import BuildingFloorUnit from "../pages/BulidingFloorUnit";
+import Zone from "../pages/Zone";
+import ZoneDetail from "../pages/zoneDetail";
 
 const Routers = () => {
-
   return (
     <Routes>
       <Route path="/" element={<Login />} />
@@ -30,6 +31,8 @@ const Routers = () => {
       <Route path="/buildingFloorUnitDetail" element={<BuildingFloorUnit />} />
       <Route path="/gateway" element={<Gateway />} />
       <Route path="/gatewayDeviceDetail" element={<GatewayDeviceDetail />} />
+      <Route path="/zone" element={<Zone />} />
+      <Route path="/zoneDetail" element={<ZoneDetail />} />
       <Route element={PageNotFound} />
     </Routes>
   );

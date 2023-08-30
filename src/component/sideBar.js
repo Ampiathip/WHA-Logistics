@@ -267,6 +267,24 @@ const SideBar = () => {
             <ListItemText primary={t("sidebar:Gateway")} />
           </ListItem>
         </Link>
+
+        <Link
+          to={"/zone"}
+          className={`${
+            sideBar == "Zone" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "Zone" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <HomeOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:zone")} />
+          </ListItem>
+        </Link>
       </List>
     </Drawer>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -283,7 +284,7 @@ const headCells = [
   },
 ];
 
-function EnhancedTableHead(props) {
+function EnhancedTableUnitHead(props) {
   const {
     onSelectAllClick,
     order,
@@ -338,7 +339,7 @@ function EnhancedTableHead(props) {
   );
 }
 
-EnhancedTableHead.propTypes = {
+EnhancedTableUnitHead.propTypes = {
   numSelected: PropTypes.number.isRequired,
   onRequestSort: PropTypes.func.isRequired,
   onSelectAllClick: PropTypes.func.isRequired,
@@ -347,7 +348,7 @@ EnhancedTableHead.propTypes = {
   rowCount: PropTypes.number.isRequired,
 };
 
-// function EnhancedTableToolbar(props) {
+// function EnhancedTableUnitToolbar(props) {
 //   const { numSelected } = props;
 
 //   return (
@@ -398,11 +399,16 @@ EnhancedTableHead.propTypes = {
 //   );
 // }
 
-// EnhancedTableToolbar.propTypes = {
+// EnhancedTableUnitToolbar.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTable({ t, pageName, subPageName }) {
+export default function EnhancedTableUnit({
+  t,
+  pageName,
+  subPageName,
+  zoneData,
+}) {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -431,6 +437,7 @@ export default function EnhancedTable({ t, pageName, subPageName }) {
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
   const theme = useTheme();
+  const navigate = useNavigate();
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -501,6 +508,8 @@ export default function EnhancedTable({ t, pageName, subPageName }) {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
+  console.log("zoneData=====", zoneData);
 
   const isSelected = (name) => selected.indexOf(name) !== -1;
 
@@ -624,6 +633,14 @@ export default function EnhancedTable({ t, pageName, subPageName }) {
     setGatewayMeter(event.target.value);
   };
 
+  const openPageFloorDetail = () => {
+    if (subPageName) {
+      navigate("/buildingFloorDetail");
+    } else {
+      navigate("/zone");
+    }
+  };
+
   return (
     <Container className={classes.marginRow}>
       <Grid item className={classes.flexRow}>
@@ -632,13 +649,42 @@ export default function EnhancedTable({ t, pageName, subPageName }) {
         />
         <Typography
           variant="h6"
-          className={clsx(pageName ? classes.activeColor : "")}
+          className={clsx(pageName ? classes.activeColor : "", classes.cursor)}
+          onClick={openPageFloorDetail}
         >
           {" "}
           / {sideBar} / {pageName}
         </Typography>
-        <Typography variant="h6"> / {subPageName} </Typography>
+        <Typography variant="h6">
+          {subPageName ? " / " + subPageName : ""}{" "}
+        </Typography>
       </Grid>
+      {zoneData && (
+        <Grid item md={12} className={classes.marginRow}>
+          <Card>
+            <CardContent>
+              <Typography variant="h4">E10023</Typography>
+              <Typography variant="h5" className="pt-3">
+                {zoneData?.calories}
+              </Typography>
+              <Grid item md={12} className={clsx(classes.flexRow, classes.justContent, classes.marginRow)}>
+                <Grid item md={6}>
+                  <Typography variant="body2">{t("gateway:building")}</Typography>
+                  <Typography variant="subtitle2" className="pt-1">
+                  {zoneData?.carbs}
+                  </Typography>
+                </Grid>
+                <Grid item md={6}>
+                  <Typography variant="body2">{t("zone:type")}</Typography>
+                  <Typography variant="subtitle2" className="pt-1">
+                  {zoneData?.fat}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      )}
       <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
         <Grid item md={5} className={classes.marginRow}>
           <TextField
@@ -671,14 +717,14 @@ export default function EnhancedTable({ t, pageName, subPageName }) {
 
       <Box sx={{ width: "100%" }} className={classes.marginRow}>
         <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
+          {/* <EnhancedTableUnitToolbar numSelected={selected.length} /> */}
           <TableContainer>
             <Table
               sx={{ minWidth: 750 }}
               aria-labelledby="tableTitle"
               size={dense ? "small" : "medium"}
             >
-              <EnhancedTableHead
+              <EnhancedTableUnitHead
                 numSelected={selected.length}
                 order={order}
                 orderBy={orderBy}
@@ -822,7 +868,11 @@ export default function EnhancedTable({ t, pageName, subPageName }) {
           </Grid>
         </DialogTitle>
         <DialogContent>
-          <Grid item md={12} className={clsx(classes.flexRow, classes.modalContent)}>
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRow, classes.modalContent)}
+          >
             <Grid item md={5}>
               <Grid
                 item
