@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import Layout from "../component/layout";
-import TableBuildingFloorUnit from "../component/buildingFloorUnitDetail";
+import TableZoneDetail from "../component/zoneDetail";
 
 const ZoneDetail = () => {
   const zone = useSelector((state) => state.zone);
@@ -10,8 +10,7 @@ const ZoneDetail = () => {
   return (
     <>
       <Layout type={"Zone"}>
-        {/* component Unit */}
-        <TableBuildingFloorUnit
+        <TableZoneDetail
           t={t}
           pageName={zone?.calories}
           subPageName={""}

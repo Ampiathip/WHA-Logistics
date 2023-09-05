@@ -15,6 +15,7 @@ import BuildingFloor from "../pages/BulidingFloor";
 import BuildingFloorUnit from "../pages/BulidingFloorUnit";
 import Zone from "../pages/Zone";
 import ZoneDetail from "../pages/zoneDetail";
+import SystemOverview from "../pages/SystemOverview";
 
 const Routers = () => {
   return (
@@ -23,6 +24,7 @@ const Routers = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/floorDiagram" element={<FloorDiagram />} />
       <Route path="/historicalData" element={<HistoricalData />} />
+      <Route path="/systemOverview" element={<SystemOverview />} />
       <Route path="/divices" element={<Diveices />} />
       <Route path="/parameter" element={<Parameter />} />
       <Route path="/user" element={<User />} />

@@ -26,6 +26,7 @@ import CalendarViewWeekOutlinedIcon from "@mui/icons-material/CalendarViewWeekOu
 import CookieOutlinedIcon from "@mui/icons-material/CookieOutlined";
 import DatasetOutlinedIcon from "@mui/icons-material/DatasetOutlined";
 import BookmarkOutlinedIcon from '@mui/icons-material/BookmarkOutlined';
+import PageviewOutlinedIcon from '@mui/icons-material/PageviewOutlined';
 
 const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
@@ -153,6 +154,25 @@ const SideBar = () => {
               <CookieOutlinedIcon />
             </ListItemIcon>
             <ListItemText primary={t("sidebar:historicalData")} />
+          </ListItem>
+        </Link>
+        <Link
+          to={"/systemOverview"}
+          className={`${
+            sideBar == "SystemOverview" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button>
+            <ListItemIcon
+              className={`${
+                sideBar == "SystemOverview"
+                  ? classes.activeIcon
+                  : classes.LinkColor
+              }`}
+            >
+              <PageviewOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:systemOverview")} />
           </ListItem>
         </Link>
         <Grid item className={classes.margigLeft}>

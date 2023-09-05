@@ -33,8 +33,9 @@ const getAPI = () => {
     return api.get(`/api/v1/user/forgetpwd/${email}`)
   }
 
-  const userLogin = (username, password) => {
-    return api.post(`/api/v1/user/login?username=${username}&password=${password}`)
+  const userLogin = (body) => {
+    console.log('gggggg=====', body);
+    return api.post(`/api/login`, body)
   }
 
   /* ============= Master Data ============== */

@@ -17,6 +17,7 @@ import {
   OutlinedInput,
   InputLabel,
   InputAdornment,
+  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import Dialog from "@mui/material/Dialog";
@@ -30,6 +31,9 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import IconButton from "@mui/material/IconButton";
 import ModalResetPassword from "../component/modalResetPassword";
+import apis from "../js/apis";
+
+const API = apis.getAPI();
 
 const useStyles = makeStyles((theme) => ({
   contentHight: {
@@ -80,8 +84,8 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
   },
   paddingFoot: {
-    padding: '24px !important',
-  }
+    padding: "24px !important",
+  },
 }));
 
 function Login(props) {
@@ -103,7 +107,9 @@ function Login(props) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("lg"));
-  //   const [data, setDdata] = useState("user");
+  const [alertShow, setAlertShow] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   //   useEffect(() => {
   //     document.title = `You clicked ${data} times`;
@@ -114,9 +120,31 @@ function Login(props) {
     dispatch(addLogin(value));
   };
 
-  const handleLogIn = () => {
+  const handleLogIn = async () => {
+    // setIsLoading(true);
+    // if (email.trim() === "" || passWord.trim() === "") {
+    //   setAlertShow(true);
+    //   setMessage("กรุณากรอกชื่อผู้ใช้หรือรหัสผ่าน");
+    //   return;
+    // }
+    // let response;
+    // try {
+    //   const body = {
+    //     username: email.trim(),
+    //     password: passWord.trim(),
+    //   };
+    //   await API.userLogin(body).then((response) => {
+    //     console.log("response====", response);
+    //   });
+    // } catch (error) {
+    //   if (response.status === 200) {
+    //     console.log("response====", response);
+    //   }
+    // }
+
     if (email === "test" && passWord === "1234") {
       navigate("/dashboard");
+      setIsLoading(false);
     }
     console.log("66666666", email, passWord);
   };
@@ -161,7 +189,6 @@ function Login(props) {
     setConfrimPassword(event.target.value);
   };
 
-
   return (
     <Grid
       container
@@ -172,100 +199,108 @@ function Login(props) {
         classes.backGround
       )}
     >
-      <Grid item md={6}>
-        <Box>
-          <img
-            src={process.env.PUBLIC_URL + "/img/imageLogin.png"}
-            alt="img-logo-logIn"
-            className={classes.boxImage}
-          />
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
         </Box>
-      </Grid>
-      <Grid item md={5} className={classes.backGroundLogin}>
-        <Box>
-          <Grid item md={12} className={classes.flexRow}>
-            <img
-              src={process.env.PUBLIC_URL + "/img/Group.png"}
-              alt="img-logo"
-            />
+      ) : (
+        <>
+          <Grid item md={6}>
+            <Box>
+              <img
+                src={process.env.PUBLIC_URL + "/img/imageLogin.png"}
+                alt="img-logo-logIn"
+                className={classes.boxImage}
+              />
+            </Box>
           </Grid>
-          <Grid item md={12} className={classes.textCenter}>
-            <Typography variant="h6">{t("login:header")}</Typography>
-            <Typography variant="h5" className="pt-3">
-              {t("login:subHead")}
-            </Typography>
-          </Grid>
-          <Grid item md={12} className="pt-3">
-            <Typography variant="h6" className="pb-3">
-              {t("login:email")}
-            </Typography>
-            <Grid item xs={12} md={12}>
-              <Typography variant="subtitle2">
-                <TextField
-                  data-testid="input-email"
-                  variant="outlined"
-                  size="small"
-                  placeholder={t("login:email")}
-                  value={email}
-                  inputProps={{ maxLength: 70 }}
-                  onChange={handleEmailChange}
-                  fullWidth
-                ></TextField>
-              </Typography>
-            </Grid>
-          </Grid>
-          <Grid item md={12} className="pt-4">
-            <Typography variant="h6" className="pb-3">
-              {t("login:password")}
-            </Typography>
-            <Grid item xs={12} md={12}>
-              <Typography variant="subtitle2">
-                <TextField
-                  data-testid="input-password"
-                  variant="outlined"
-                  size="small"
-                  placeholder={t("login:password")}
-                  value={passWord}
-                  inputProps={{ maxLength: 70 }}
-                  onChange={handlePasswordChange}
-                  fullWidth
-                ></TextField>
-              </Typography>
-            </Grid>
-          </Grid>
+          <Grid item md={5} className={classes.backGroundLogin}>
+            <Box>
+              <Grid item md={12} className={classes.flexRow}>
+                <img
+                  src={process.env.PUBLIC_URL + "/img/Group.png"}
+                  alt="img-logo"
+                />
+              </Grid>
+              <Grid item md={12} className={classes.textCenter}>
+                <Typography variant="h6">{t("login:header")}</Typography>
+                <Typography variant="h5" className="pt-3">
+                  {t("login:subHead")}
+                </Typography>
+              </Grid>
+              <Grid item md={12} className="pt-3">
+                <Typography variant="h6" className="pb-3">
+                  {t("login:email")}
+                </Typography>
+                <Grid item xs={12} md={12}>
+                  <Typography variant="subtitle2">
+                    <TextField
+                      data-testid="input-email"
+                      variant="outlined"
+                      size="small"
+                      placeholder={t("login:email")}
+                      value={email}
+                      inputProps={{ maxLength: 70 }}
+                      onChange={handleEmailChange}
+                      fullWidth
+                    ></TextField>
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Grid item md={12} className="pt-4">
+                <Typography variant="h6" className="pb-3">
+                  {t("login:password")}
+                </Typography>
+                <Grid item xs={12} md={12}>
+                  <Typography variant="subtitle2">
+                    <TextField
+                      data-testid="input-password"
+                      variant="outlined"
+                      size="small"
+                      placeholder={t("login:password")}
+                      value={passWord}
+                      inputProps={{ maxLength: 70 }}
+                      onChange={handlePasswordChange}
+                      fullWidth
+                    ></TextField>
+                  </Typography>
+                </Grid>
+              </Grid>
 
-          <Grid item md={12}>
-            <Typography
-              variant="body1"
-              className={classes.cuserPoint}
-              onClick={handleClickOpen}
-            >
-              {t("login:forgot")}
-            </Typography>
+              <Grid item md={12}>
+                <Typography
+                  variant="body1"
+                  className={classes.cuserPoint}
+                  onClick={handleClickOpen}
+                >
+                  {t("login:forgot")}
+                </Typography>
+              </Grid>
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRow, classes.marginTop)}
+              >
+                <Button
+                  variant="contained"
+                  className={classes.btnLogColor}
+                  onClick={handleLogIn}
+                >
+                  {t("login:btnLog")}
+                </Button>
+              </Grid>
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.textCenter, classes.marginTop)}
+              >
+                <Typography variant="body2">{t("login:webFooter")}</Typography>
+                <Typography variant="h6">{t("login:footer")}</Typography>
+              </Grid>
+            </Box>
           </Grid>
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRow, classes.marginTop)}
-          >
-            <Button
-              variant="contained"
-              className={classes.btnLogColor}
-              onClick={handleLogIn}
-            >
-              {t("login:btnLog")}
-            </Button>
-          </Grid>
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.textCenter, classes.marginTop)}
-          >
-            <Typography variant="body2">{t("login:webFooter")}</Typography>
-            <Typography variant="h6">{t("login:footer")}</Typography>
-          </Grid>
-        </Box>
-      </Grid>
+        </>
+      )}
 
       {/* Modal */}
       {/* <Dialog
@@ -353,7 +388,7 @@ function Login(props) {
           </Button>
         </DialogActions>
       </Dialog> */}
-      <ModalResetPassword 
+      <ModalResetPassword
         open={open}
         close={handleClose}
         handleNewPassChange={handleNewPassChange}

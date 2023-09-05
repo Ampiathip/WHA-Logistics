@@ -35,6 +35,7 @@ let th = {
       "Building": "Building",
       "Gateway": "Gateway",
       "zone": "Zone",
+      "systemOverview": "System Overview",
     },
     historicalData: {
       "devicelist": "Device List",

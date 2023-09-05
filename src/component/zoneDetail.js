@@ -171,35 +171,10 @@ const useStyles = makeStyles((theme) => ({
     borderRight: "1px solid #8f8a8a",
     padding: 10,
   },
+  paddingIcon: {
+    padding: "0px !important",
+  },
 }));
-
-function createData(name, calories, fat, carbs, power, protein, unit) {
-  return {
-    name,
-    calories,
-    fat,
-    carbs,
-    power,
-    protein,
-    unit,
-  };
-}
-
-const rows = [
-  createData(1, 10, "Building 1", "Building 1", "Building 1", 1120, 1120),
-  createData(2, 10, "Building 2", "Building 2", "Building 2", 1120, 1120),
-  createData(3, 10, "Building 3", "Building 3", "Building 3", 1120, 1120),
-  createData(4, 10, "Building 4", "Building 4", "Building 4", 1120, 1120),
-  createData(5, 10, "Building 5", "Building 5", "Building 5", 1120, 1120),
-  createData(6, 10, "Building 6", "Building 6", "Building 6", 1120, 1120),
-  createData(7, 10, "Building 7", "Building 7", "Building 7", 1120, 1120),
-  createData(8, 10, "Building 8", "Building 8", "Building 8", 1120, 1120),
-  createData(9, 10, "Building 9", "Building 9", "Building 9", 1120, 1120),
-  createData(10, 10, "Building 10", "Building 10", "Building 10", 1120, 1120),
-  createData(11, 10, "Building 11", "Building 11", "Building 11", 1120, 1120),
-  createData(12, 10, "Building 12", "Building 12", "Building 12", 1120, 1120),
-  createData(13, 10, "Building 13", "Building 13", "Building 13", 1120, 1120),
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -254,13 +229,13 @@ const headCells = [
   },
   {
     id: "carbs",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Unit Type",
   },
   {
     id: "power",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Building",
   },
@@ -272,7 +247,7 @@ const headCells = [
   },
   {
     id: "unit",
-    numeric: false,
+    numeric: true,
     disablePadding: false,
     label: "No of Point",
   },
@@ -407,7 +382,7 @@ export default function EnhancedTableUnit({
   t,
   pageName,
   subPageName,
-  // zoneData,
+  zoneData,
 }) {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
@@ -420,8 +395,8 @@ export default function EnhancedTableUnit({
   const [deviceBrand, setDeviceBrand] = useState("");
   const [deviceName, setDeviceName] = useState("");
   const [model, setModel] = useState("");
-  const [serialNumber, setSerialNumber] = useState("");
-  const [installation, setInstallation] = useState("");
+  const [point, setPoint] = useState("");
+  const [noPoint, setNoPoint] = useState("");
   const [communicationType, setCommunicationType] = useState("none");
   const [gatewayMeter, setGatewayMeter] = useState("none");
   const [gatewayMeterTwo, setGatewayMeterTwo] = useState("none");
@@ -453,6 +428,19 @@ export default function EnhancedTableUnit({
       size: "",
       density: "",
       unit: "",
+      action: "",
+    },
+  ]);
+
+  const [rows, setRow] = useState([
+    {
+      name: 1,
+      calories: 10,
+      fat: "Building",
+      carbs: "Building",
+      power: "Building",
+      protein: 1120,
+      unit: 1120,
       action: "",
     },
   ]);
@@ -515,13 +503,13 @@ export default function EnhancedTableUnit({
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const visibleRows = React.useMemo(
+  const visibleRows = useMemo(
     () =>
       stableSort(rows, getComparator(order, orderBy)).slice(
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
       ),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, rows]
   );
 
   const handleDeviceBrand = (event) => {
@@ -548,12 +536,12 @@ export default function EnhancedTableUnit({
     setModel(event.target.value);
   };
 
-  const handleSerialNumber = (event) => {
-    setSerialNumber(event.target.value);
+  const handlePoint = (event) => {
+    setPoint(event.target.value);
   };
 
-  const handleInstallation = (event) => {
-    setInstallation(event.target.value);
+  const handleNoPoint = (event) => {
+    setNoPoint(event.target.value);
   };
 
   const handleFloorName = (event) => {
@@ -585,7 +573,23 @@ export default function EnhancedTableUnit({
   };
 
   const handleClickOpenAdd = () => {
-    setOpenAdd(true);
+    let newRow;
+    rows.forEach((item) => {
+      newRow = {
+        // Construct the new row object here
+        // For example: id: someValue, name: someValue, ...
+        name: item.name + 1,
+        calories: "",
+        fat: "",
+        carbs: "",
+        power: "",
+        protein: "",
+        unit: "",
+        action: "",
+      };
+    });
+    // Add the new row to the existing rowsPoint array
+    setRow([...rows, newRow]);
   };
 
   const handleCloseAdd = () => {
@@ -632,7 +636,7 @@ export default function EnhancedTableUnit({
   };
 
   const openPageFloorDetail = () => {
-    navigate("/buildingFloorDetail");
+    navigate("/zone");
   };
 
   return (
@@ -653,6 +657,42 @@ export default function EnhancedTableUnit({
           {subPageName ? " / " + subPageName : ""}{" "}
         </Typography>
       </Grid>
+      {zoneData && (
+        <Grid item md={12} className={classes.marginRow}>
+          <Card>
+            <CardContent>
+              <Typography variant="h4">E10023</Typography>
+              <Typography variant="h5" className="pt-3">
+                {zoneData?.calories}
+              </Typography>
+              <Grid
+                item
+                md={12}
+                className={clsx(
+                  classes.flexRow,
+                  classes.justContent,
+                  classes.marginRow
+                )}
+              >
+                <Grid item md={6}>
+                  <Typography variant="body2">
+                    {t("gateway:building")}
+                  </Typography>
+                  <Typography variant="subtitle2" className="pt-1">
+                    {zoneData?.carbs}
+                  </Typography>
+                </Grid>
+                <Grid item md={6}>
+                  <Typography variant="body2">{t("zone:type")}</Typography>
+                  <Typography variant="subtitle2" className="pt-1">
+                    {zoneData?.fat}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      )}
       <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
         <Grid item md={5} className={classes.marginRow}>
           <TextField
@@ -702,7 +742,7 @@ export default function EnhancedTableUnit({
                 classes={classes}
               />
               <TableBody>
-                {visibleRows.map((row, index) => {
+                {rows.map((row, index) => {
                   const isItemSelected = isSelected(row.name);
                   const labelId = `enhanced-table-checkbox-${index}`;
 
@@ -740,41 +780,113 @@ export default function EnhancedTableUnit({
                         align="center"
                         className={classes.fontSixeCell}
                       >
-                        {row.calories}
+                        {row.calories ? (
+                          row.calories
+                        ) : (
+                          <TextField
+                            id="input-with-icon-textfield"
+                            size="small"
+                            placeholder={t("floor:unitNumber")}
+                            fullWidth
+                            variant="outlined"
+                            value={unitNumber}
+                            onChange={handleUnitNumber}
+                          />
+                        )}
                       </TableCell>
                       <TableCell
                         align="center"
                         className={classes.fontSixeCell}
                       >
-                        {row.fat}
+                        {row.fat ? (
+                          row.fat
+                        ) : (
+                          <TextField
+                            id="input-with-icon-textfield"
+                            size="small"
+                            placeholder={t("floor:description")}
+                            fullWidth
+                            variant="outlined"
+                            value={description}
+                            onChange={handleDescription}
+                          />
+                        )}
                       </TableCell>
                       <TableCell
                         align="center"
                         className={classes.fontSixeCell}
                       >
-                        {row.carbs}
+                        {row.carbs ? (
+                          row.carbs
+                        ) : (
+                          <TextField
+                            id="input-with-icon-textfield"
+                            size="small"
+                            placeholder={t("floor:unitType")}
+                            fullWidth
+                            variant="outlined"
+                            value={unitType}
+                            onChange={handleUnitType}
+                          />
+                        )}
                       </TableCell>
                       <TableCell
                         align="center"
                         className={classes.fontSixeCell}
                       >
-                        {row.power}
+                        {row.power ? (
+                          row.power
+                        ) : (
+                          <TextField
+                            id="input-with-icon-textfield"
+                            size="small"
+                            placeholder={t("floor:building")}
+                            fullWidth
+                            variant="outlined"
+                            value={building}
+                            onChange={handleBuilding}
+                          />
+                        )}
                       </TableCell>
                       <TableCell
                         align="center"
                         className={classes.fontSixeCell}
                       >
-                        {row.protein}
+                        {row.protein ? (
+                          row.protein
+                        ) : (
+                          <TextField
+                            id="input-with-icon-textfield"
+                            size="small"
+                            placeholder={"No of Point"}
+                            fullWidth
+                            variant="outlined"
+                            value={point}
+                            onChange={handlePoint}
+                          />
+                        )}
                       </TableCell>
                       <TableCell
                         align="center"
                         className={classes.fontSixeCell}
                       >
-                        {row.unit}
+                        {row.unit ? (
+                          row.unit
+                        ) : (
+                          <TextField
+                            id="input-with-icon-textfield"
+                            size="small"
+                            placeholder={"No of Point"}
+                            fullWidth
+                            variant="outlined"
+                            value={noPoint}
+                            onChange={handleNoPoint}
+                          />
+                        )}
                       </TableCell>
                       <TableCell
                         align="center"
-                        className={classes.fontSixeCell}
+                        className={clsx(classes.fontSixeCell, classes.paddingIcon)}
                       >
                         <FeedOutlinedIcon className={classes.marginIcon} />
                         <VisibilityOutlinedIcon
@@ -1249,184 +1361,6 @@ export default function EnhancedTableUnit({
             </Grid>
           </Grid>
         </DialogContent>
-      </Dialog>
-
-      {/* Modal Add */}
-
-      <Dialog
-        fullScreen={fullScreen}
-        // className={classes.modalWidth}
-        open={openAdd}
-        onClose={handleCloseAdd}
-        aria-labelledby="responsive-dialog-title"
-        classes={{
-          paper: classes.modalWidth,
-        }}
-      >
-        <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("floor:addUnit")}</Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="pb-3">
-              {t("gateway:deviceName")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:deviceName")}
-              fullWidth
-              variant="outlined"
-              value={deviceName}
-              onChange={handleDeviceName}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:gatewayName")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:gatewayName")}
-              fullWidth
-              variant="outlined"
-              value={gatewayName}
-              onChange={handleGatewayName}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:deviceBrand")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:deviceBrand")}
-              fullWidth
-              variant="outlined"
-              value={deviceBrand}
-              onChange={handleDeviceBrand}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:model")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:model")}
-              fullWidth
-              variant="outlined"
-              value={model}
-              onChange={handleModel}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:serialNumber")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:serialNumber")}
-              fullWidth
-              variant="outlined"
-              value={serialNumber}
-              onChange={handleSerialNumber}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:Installation")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:Installation")}
-              fullWidth
-              variant="outlined"
-              value={installation}
-              onChange={handleInstallation}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:communicationType")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={communicationType}
-                placeholder={t("gateway:selectCommunication")}
-                onChange={handleCommunicationType}
-              >
-                <MenuItem value="none">
-                  {t("gateway:selectCommunication")}
-                </MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:billingType")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={billingType}
-                placeholder={t("gateway:billingType")}
-                onChange={handleBillingType}
-              >
-                <MenuItem value="none">{t("gateway:billingType")}</MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
-              </Select>
-            </FormControl>
-          </Grid>
-          {/* <DialogContentText>
-            Let Google help apps determine location. This means sending
-            anonymous location data to Google, even when no apps are running.
-          </DialogContentText> */}
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-          >
-            <Grid item md={3}>
-              <Button
-                onClick={handleCloseAdd}
-                className={clsx(classes.backGroundCancel)}
-                variant="outlined"
-              >
-                {t("building:btnCancel")}
-              </Button>
-            </Grid>
-            <Grid item md={3} className={classes.boxMargin}>
-              <Button
-                className={clsx(classes.backGroundConfrim)}
-                variant="outlined"
-              >
-                {t("building:btnAddModal")}
-              </Button>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        {/* <DialogActions>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnCancel")}
-          </Button>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnAddModal")}
-          </Button>
-        </DialogActions> */}
       </Dialog>
     </Container>
   );
