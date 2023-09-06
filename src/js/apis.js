@@ -34,7 +34,6 @@ const getAPI = () => {
   }
 
   const userLogin = (body) => {
-    console.log('gggggg=====', body);
     return api.post(`/api/login`, body)
   }
 

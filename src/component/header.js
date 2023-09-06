@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { logout, checkLogin } from "../js/actions";
 import {
   makeStyles,
   Grid,
@@ -19,6 +20,10 @@ import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined
 import clsx from "clsx";
 import UserView from "./modalUserView";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   backGrourdHead: {
@@ -45,14 +50,21 @@ const useStyles = makeStyles((theme) => ({
 
 function Header({ type, matches }) {
   const { t, i18n } = useTranslation(["user"]);
+  const dispatch = useDispatch();
   const classes = useStyles();
   const user = useSelector((state) => state.user);
+  const login = useSelector((state) => state.login);
   const sideBar = useSelector((state) => state.sidebar);
   const [select, setSelect] = useState("none");
   const [openViewUser, setOpenViewUser] = useState(false);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
+
+  useEffect(() => {
+    dispatch(checkLogin());
+  }, [login]);
+
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -74,11 +86,27 @@ function Header({ type, matches }) {
     setOpenViewUser(false);
   };
 
+  const handleLogout = () => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการออกจากระบบ",
+    }).then(() => {
+      dispatch(logout(false));
+    });
+  };
+
   return (
     <>
       <AppBar position="static" className={classes.backGrourdHead}>
         <Toolbar>
-          <Grid container spacing={2} className={matches ? classes.backGrourdHead : classes.FlexIconHead }>
+          <Grid
+            container
+            spacing={2}
+            className={matches ? classes.backGrourdHead : classes.FlexIconHead}
+          >
             {matches ? (
               <>
                 <Grid item md={2}></Grid>
@@ -106,7 +134,7 @@ function Header({ type, matches }) {
                       onChange={(e) => hideOccModal(e)}
                     >
                       <MenuItem value={"none"}>
-                        WHA Mega Logistics Center เทพารักษ์ กม. 21
+                        {user?.building[0]?.name}
                       </MenuItem>
                       {/* <MenuItem value={10}>Ten</MenuItem>
                 <MenuItem value={20}>Twenty</MenuItem>
@@ -125,7 +153,7 @@ function Header({ type, matches }) {
                 className={classes.marginHead}
                 onClick={handleClickOpenView}
               />
-              <Typography variant="h5">{user}</Typography>
+              <Typography variant="h5">{user?.user?.username}</Typography>
               <IconButton
                 size="large"
                 edge="start"
@@ -147,7 +175,7 @@ function Header({ type, matches }) {
               >
                 <MenuItem onClick={handleClose}>Profile</MenuItem>
                 <MenuItem onClick={handleClose}>My account</MenuItem>
-                <MenuItem onClick={handleClose}>Logout</MenuItem>
+                <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>
             </Grid>
           </Grid>
@@ -156,12 +184,12 @@ function Header({ type, matches }) {
       <UserView
         open={openViewUser}
         close={handleCloseView}
-        // userId={userId}
-        user={user}
+        userId={user?.user?.id}
+        user={user?.user?.username}
         t={t}
         // emailUser={emailUser}
         // phoneNumber={phoneNumber}
-        // role={role}
+        role={user?.user?.role}
       />
     </>
   );

@@ -1,19 +1,33 @@
 import { actionTypes } from './actions'
 const initialState = {
-    user: 'Admin HypeTex',
+    user: {},
     sidebar: '',
     theme: 'default',
     zone: '',
     responsiveFontSizes: true,
+    login: false,
   };
   
   function rootReducer(state = initialState, action) {
 
-    if (action.type === actionTypes.LOG_IN) {
+    if (action.type === actionTypes.LOG_IN_SUCCESS) {
       return Object.assign({}, state, {
-        user: action.payload
+        user: action.payload,
       });
     }
+
+    if (action.type === actionTypes.LOG_IN_SUCCESS) {
+      return Object.assign({}, state, {
+        login: action.payload
+      });
+    }
+
+    if (action.type === actionTypes.LOG_OUT_SUCCESS) {
+      return Object.assign({}, state, {
+        login: action.payload
+      });
+    }
+
 
     if (action.type === actionTypes.SIDE_BAR) {
       return Object.assign({}, state, {

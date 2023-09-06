@@ -30,10 +30,15 @@ import { useTheme } from "@mui/material/styles";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import IconButton from "@mui/material/IconButton";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
 import ModalResetPassword from "../component/modalResetPassword";
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 import apis from "../js/apis";
 
 const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   contentHight: {
@@ -89,8 +94,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Login(props) {
-  const user = useSelector((state) => state.user);
-  const login = useSelector((state) => state.login);
+  // const user = useSelector((state) => state.user);
+  // const login = useSelector((state) => state.login);
   const dispatch = useDispatch();
   const classes = useStyles();
   const { t, i18n } = useTranslation(["home", "footer", "login"]);
@@ -115,38 +120,51 @@ function Login(props) {
   //     document.title = `You clicked ${data} times`;
   //   });
 
-  const display = (value) => {
-    console.log(value);
-    dispatch(addLogin(value));
-  };
+  // const display = (value) => {
+  //   console.log(value);
+  //   dispatch(addLogin(value));
+  // };
+
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: 'warning',
+      confirmButtonText: 'ตกลง',
+      text: msg
+    });
+  }
 
   const handleLogIn = async () => {
-    // setIsLoading(true);
-    // if (email.trim() === "" || passWord.trim() === "") {
-    //   setAlertShow(true);
-    //   setMessage("กรุณากรอกชื่อผู้ใช้หรือรหัสผ่าน");
-    //   return;
-    // }
+    setIsLoading(true);
+    if (email.trim() === "" || passWord.trim() === "") {
+      setAlertShow(true);
+      setMessage("กรุณากรอกอีเมลหรือรหัสผ่าน");
+      setIsLoading(false);
+      return;
+    }
     // let response;
-    // try {
-    //   const body = {
-    //     username: email.trim(),
-    //     password: passWord.trim(),
-    //   };
-    //   await API.userLogin(body).then((response) => {
-    //     console.log("response====", response);
-    //   });
-    // } catch (error) {
-    //   if (response.status === 200) {
-    //     console.log("response====", response);
-    //   }
-    // }
-
-    if (email === "test" && passWord === "1234") {
-      navigate("/dashboard");
+    try {
+      const body = {
+        username: email.trim(),
+        password: passWord.trim(),
+      };
+      await API.userLogin(body).then((response) => {
+        const dataPayload = response.data;
+        dispatch(addLogin(dataPayload?.payload));
+        navigate("/dashboard");
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response
+      swalFire(response.data);
       setIsLoading(false);
     }
-    console.log("66666666", email, passWord);
+
+    // if (email === "test" && passWord === "1234") {
+    //   navigate("/dashboard");
+    //   setIsLoading(false);
+    // }
+    // console.log("66666666", email, passWord);
   };
 
   const changeLanguage = (lng) => {
@@ -155,10 +173,12 @@ function Login(props) {
 
   const handleEmailChange = (event) => {
     setEmail(event.target.value);
+    setAlertShow(false);
   };
 
   const handlePasswordChange = (event) => {
     setPassWord(event.target.value);
+    setAlertShow(false);
   };
 
   const handleClickOpen = () => {
@@ -228,6 +248,15 @@ function Login(props) {
                   {t("login:subHead")}
                 </Typography>
               </Grid>
+              {alertShow && (
+                <Grid item md={12} className={classes.marginTop}>
+                  <Alert severity="error">
+                    <AlertTitle>Error</AlertTitle>
+                    <Typography variant="body2">{message}</Typography>
+                  </Alert>
+                </Grid>
+              )}
+
               <Grid item md={12} className="pt-3">
                 <Typography variant="h6" className="pb-3">
                   {t("login:email")}

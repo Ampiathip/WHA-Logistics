@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../js/actions";
 import {
   makeStyles,
   Grid,
@@ -25,8 +26,12 @@ import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import CalendarViewWeekOutlinedIcon from "@mui/icons-material/CalendarViewWeekOutlined";
 import CookieOutlinedIcon from "@mui/icons-material/CookieOutlined";
 import DatasetOutlinedIcon from "@mui/icons-material/DatasetOutlined";
-import BookmarkOutlinedIcon from '@mui/icons-material/BookmarkOutlined';
-import PageviewOutlinedIcon from '@mui/icons-material/PageviewOutlined';
+import BookmarkOutlinedIcon from "@mui/icons-material/BookmarkOutlined";
+import PageviewOutlinedIcon from "@mui/icons-material/PageviewOutlined";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
+const MySwal = withReactContent(Swal);
 
 const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
@@ -65,6 +70,18 @@ const SideBar = () => {
   const { t, i18n } = useTranslation(["sidebar", "footer"]);
   const sideBar = useSelector((state) => state.sidebar);
 
+  const handleLogout = () => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการออกจากระบบ",
+    }).then(() => {
+      dispatch(logout(false));
+    });
+  };
+
   return (
     <Drawer
       className={classes.drawer}
@@ -102,7 +119,7 @@ const SideBar = () => {
           </ListItem>
         </Link>
         <Link
-         to={"/floorDiagram"}
+          to={"/floorDiagram"}
           className={`${
             sideBar == "FloorDiagram" ? classes.activeIcon : classes.LinkColor
           }`}
@@ -231,23 +248,23 @@ const SideBar = () => {
             <ListItemText primary={t("sidebar:user")} />
           </ListItem>
         </Link>
-        <Link
+        {/* <Link
           to={"/"}
           className={`${
             sideBar == "" ? classes.activeIcon : classes.LinkColor
           }`}
-        >
-          <ListItem button>
-            <ListItemIcon
-              className={`${
-                sideBar == "" ? classes.activeIcon : classes.LinkColor
-              }`}
-            >
-              <LogoutOutlinedIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("sidebar:Logout")} />
-          </ListItem>
-        </Link>
+        > */}
+        <ListItem button onClick={handleLogout}>
+          <ListItemIcon
+            className={`${
+              sideBar == "" ? classes.activeIcon : classes.LinkColor
+            }`}
+          >
+            <LogoutOutlinedIcon />
+          </ListItemIcon>
+          <ListItemText primary={t("sidebar:Logout")} />
+        </ListItem>
+        {/* </Link> */}
         <Grid item className={classes.margigLeft}>
           <Typography variant="h6" className={classes.imageCenter}>
             {t("sidebar:BuildingSettings")}

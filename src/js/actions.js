@@ -2,6 +2,10 @@ export const actionTypes = {
     FAILURE: 'FAILURE',
     LOG_IN: 'LOG_IN',
     LOG_IN_SUCCESS: 'LOG_IN_SUCCESS',
+    CHECK_LOGIN: 'CHECK_LOGIN',
+    AUTHEN_LOGIN: 'AUTHEN_LOGIN',
+    LOG_OUT: 'LOG_OUT',
+    LOG_OUT_SUCCESS: 'LOG_OUT_SUCCESS',
     SIDE_BAR: 'SIDE_BAR',
     THEME: 'THEME',
     ZONE: 'ZONE,'
@@ -32,5 +36,17 @@ export function addTheme(payload) {
 export function addZone(payload) {
     console.log("actions_addZone", payload);
     return { type: actionTypes.ZONE, payload }
+};
+
+export function logout(payload) {
+    return { type: actionTypes.LOG_OUT, payload }
+};
+
+export function checkLogin() {
+    return { type: actionTypes.CHECK_LOGIN}
+};
+
+export function checkAuthen() {
+    return { type: actionTypes.AUTHEN_LOGIN}
 };
 
