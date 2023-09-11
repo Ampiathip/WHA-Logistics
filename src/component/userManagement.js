@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, connect } from "react-redux";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
+import _, { stubFalse } from "lodash";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -31,6 +32,7 @@ import {
   FormControl,
   MenuItem,
   Select,
+  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -49,8 +51,24 @@ import CloseIcon from "@mui/icons-material/Close";
 import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
 import { Height } from "@mui/icons-material";
 import Visibility from "@mui/icons-material/Visibility";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
 import ModalResetPassword from "./modalResetPassword";
 import UserView from "./modalUserView";
+import Validate from "./validate";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+} from "../js/actions";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -150,179 +168,9 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "center",
   },
   width: {
-    width: '100%',
+    width: "100%",
   },
 }));
-
-function createData(
-  name,
-  calories,
-  fat,
-  carbs,
-  power,
-  protein,
-  phone,
-  last,
-  remark
-) {
-  return {
-    name,
-    calories,
-    fat,
-    carbs,
-    power,
-    protein,
-    phone,
-    last,
-    remark,
-  };
-}
-
-const rows = [
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-  createData(
-    "Email",
-    "Admin HypeTex",
-    "Admin HypeTex",
-    "Role",
-    "Position",
-    "Department",
-    "Phone No.",
-    "28/01/2023 09:09",
-    "Remark"
-  ),
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -544,7 +392,7 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function UserManagement({ t }) {
+const UserManagement = ({ t, login }) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -553,14 +401,14 @@ export default function UserManagement({ t }) {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [fitterSelect, setFitterSelect] = useState("none");
   const [userId, setUserId] = useState("1234");
-  const [emailUser, setEmailUser] = useState("admin@hypetex.com");
+  const [emailUser, setEmailUser] = useState("");
   const [fristName, setFristName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("0899999999");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [role, setRole] = useState("Admin");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
-  const [active, setActive] = useState(false);
+  const [active, setActive] = useState(null);
   const [selectInput, setSelectInput] = useState("none");
   const [activeEdit, setActiveEdit] = useState(false);
 
@@ -569,15 +417,173 @@ export default function UserManagement({ t }) {
   const [newPassWord, setNewPassWord] = useState("");
   const [confrimPassword, setConfrimPassword] = useState("");
 
+  const dispatch = useDispatch();
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
   const user = useSelector((state) => state.user);
+  const token = useSelector((state) => state.token);
   const theme = useTheme();
   // modal //
   const [openAddUser, setOpenAddUser] = useState(false);
   const [openEditUser, setOpenEditUser] = useState(false);
   const [openViewUser, setOpenViewUser] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("xl"));
+  const [isLoading, setIsLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [isValidate, setIsValidate] = useState(true);
+  const [isValidateEmail, setIsValidateEmail] = useState(true);
+  const [isValidatePass, setIsValidatePass] = useState(true);
+  const [alertShow, setAlertShow] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    dispatch(checkToken());
+    API.connectTokenAPI(token);
+    getUser();
+    console.log("token", token, login);
+  }, [token]);
+
+  useEffect(() => {
+    if (user && user?.user) {
+      setUserId(user?.user.username);
+    }
+  }, [user, userId]);
+
+  useEffect(() => {
+    if (!isValidateEmail) {
+      handleValidate();
+    }
+    
+  }, [
+    emailUser,
+    fristName,
+    lastName,
+    phoneNumber,
+    password,
+    rePassword,
+    active,
+    isValidateEmail,
+  ]);
+
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
+  };
+
+  const getUser = async () => {
+    setIsLoading(true);
+    try {
+      await API.getUserData().then((response) => {
+        const dataPayload = response.data;
+        setRows(dataPayload);
+        // console.log("9999=======", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const handleValidate = () => {
+    let isValidate = true;
+    let emailPattern =
+      /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!_.isEmpty(emailUser)) {
+      if (!emailPattern.test(emailUser)) {
+        console.log("email format1");
+        isValidate = false;
+        setMessage("กรุณากรอกรูปแบบอีเมลให้ถูกต้อง");
+        setIsValidateEmail(false);
+      }
+    }
+
+    if (
+      _.isEmpty(emailUser) ||
+      _.isEmpty(password) ||
+      _.isEmpty(rePassword) ||
+      _.isEmpty(fristName) ||
+      _.isEmpty(lastName) ||
+      _.isEmpty(phoneNumber) ||
+      _.isNull(active)
+    ) {
+      isValidate = false;
+      setMessage("กรุณาระบุข้อมูล");
+    }
+    if (!_.isEmpty(password) && password.replace(/\D/g, "").length < 6) {
+      isValidate = false;
+      setMessage("รหัสผ่านต้องมากกว่าหรือเท่ากับ 6 ตัวอักษร");
+    }
+
+    if (!_.isEmpty(password) && !_.isEmpty(rePassword)) {
+      if (password !== rePassword) {
+        isValidate = false;
+        setMessage("กรุณากรอกรหัสผ่านกับยืนยันรหัสผ่านให้ตรงกัน");
+        setIsValidatePass(false);
+      }
+    }
+
+    if (!_.isEmpty(phoneNumber) && phoneNumber.replace(/-/gi, "").length < 9) {
+      isValidate = false;
+      setMessage("กรุณาระบุหมายเลขโทรศัพท์ให้ครบจำนวน");
+    }
+
+    console.log("isValidate", isValidate, message);
+    setIsValidate(isValidate);
+    if (isValidate) {
+      userRegister();
+    }
+  };
+
+  const userRegister = async () => {
+    setIsLoading(true);
+
+    try {
+      const body = {
+        username: userId,
+        password: password,
+        first_name: fristName,
+        last_name: lastName,
+        phone_number: phoneNumber,
+        enabled: active,
+        position: "",
+        department: "",
+      };
+
+      console.log("888888====", body);
+      // await API.userRegister(body).then((response) => {
+      //   const dataPayload = response.data;
+      //   console.log("dataPayload", dataPayload);
+      //   setIsLoading(false);
+      // });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
 
   const handleClickOpenAddUser = () => {
     setOpenAddUser(true);
@@ -665,7 +671,7 @@ export default function UserManagement({ t }) {
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
       ),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, rows]
   );
 
   // modal add //
@@ -674,19 +680,23 @@ export default function UserManagement({ t }) {
   };
 
   const handleEmailUserChange = (event) => {
-    setEmailUser(event.target.value);
+    setEmailUser(event.target.value.trim());
   };
 
   const handleFristNameChange = (event) => {
-    setFristName(event.target.value);
+    setFristName(event.target.value.trim());
   };
 
   const handleLastNameChange = (event) => {
-    setLastName(event.target.value);
+    setLastName(event.target.value.trim());
   };
 
   const handlePhoneNumberChange = (event) => {
-    setPhoneNumber(event.target.value);
+    if (event.target.value === "" || /^[0-9]*$/.test(event.target.value)) {
+      setPhoneNumber(event.target.value);
+    } else {
+      return false;
+    }
   };
 
   const handleRoleChange = (event) => {
@@ -694,11 +704,11 @@ export default function UserManagement({ t }) {
   };
 
   const handlePasswordChange = (event) => {
-    setPassword(event.target.value);
+    setPassword(event.target.value.trim());
   };
 
   const handleRePasswordChange = (event) => {
-    setRePassword(event.target.value);
+    setRePassword(event.target.value.trim());
   };
 
   const onSelectClickActive = (event) => {
@@ -734,91 +744,101 @@ export default function UserManagement({ t }) {
 
   return (
     <Container className={classes.marginRow}>
-      <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon className={classes.alignSelf} />
-        <Typography variant="h6"> / {sideBar}</Typography>
-      </Grid>
-      <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
-        <Grid item md={5} className={classes.marginRow}>
-          <TextField
-            id="input-with-icon-textfield"
-            size="small"
-            placeholder={t("user:search")}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-          />
-        </Grid>
-        <Grid item md={3} className={classes.marginRow}>
-          <FormControl variant="outlined" size="small" fullWidth>
-            <Select
-              labelId="demo-select-small-label"
-              id="demo-select-small"
-              value={fitterSelect}
-              placeholder={t("user:filter")}
-              onChange={handleFitterSelectChange}
-            >
-              <MenuItem value="none">{t("user:filter")}</MenuItem>
-              {/* <MenuItem value={10}>Ten</MenuItem>
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <Grid item className={classes.flexRow}>
+            <HomeOutlinedIcon className={classes.alignSelf} />
+            <Typography variant="h6"> / {sideBar}</Typography>
+          </Grid>
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRow, classes.justContent)}
+          >
+            <Grid item md={5} className={classes.marginRow}>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("user:search")}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchOutlinedIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
+              />
+            </Grid>
+            <Grid item md={3} className={classes.marginRow}>
+              <FormControl variant="outlined" size="small" fullWidth>
+                <Select
+                  labelId="demo-select-small-label"
+                  id="demo-select-small"
+                  value={fitterSelect}
+                  placeholder={t("user:filter")}
+                  onChange={handleFitterSelectChange}
+                >
+                  <MenuItem value="none">{t("user:filter")}</MenuItem>
+                  {/* <MenuItem value={10}>Ten</MenuItem>
               <MenuItem value={20}>Twenty</MenuItem>
               <MenuItem value={30}>Thirty</MenuItem> */}
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item md={2} className={clsx(classes.marginRow)}>
-          <Button
-            onClick={handleClickOpenAddUser}
-            autoFocus
-            // fullWidth
-            className={clsx(classes.backGroundConfrim, classes.width)}
-            variant="outlined"
-          >
-            {t("user:addUser")}
-          </Button>
-        </Grid>
-      </Grid>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item md={2} className={clsx(classes.marginRow)}>
+              <Button
+                onClick={handleClickOpenAddUser}
+                autoFocus
+                // fullWidth
+                className={clsx(classes.backGroundConfrim, classes.width)}
+                variant="outlined"
+              >
+                {t("user:addUser")}
+              </Button>
+            </Grid>
+          </Grid>
 
-      <Box sx={{ width: "100%" }} className={classes.marginRow}>
-        <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
-            >
-              <EnhancedTableHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                //   onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-                classes={classes}
-              />
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+          <Box sx={{ width: "100%" }} className={classes.marginRow}>
+            <Paper sx={{ width: "100%", mb: 2 }}>
+              {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
+              <TableContainer>
+                <Table
+                  sx={{ minWidth: 750 }}
+                  aria-labelledby="tableTitle"
+                  size={dense ? "small" : "medium"}
+                >
+                  <EnhancedTableHead
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    //   onSelectAllClick={handleSelectAllClick}
+                    onRequestSort={handleRequestSort}
+                    rowCount={rows.length}
+                    classes={classes}
+                  />
+                  <TableBody>
+                    {visibleRows.map((row, index) => {
+                      const isItemSelected = isSelected(row.name);
+                      const labelId = `enhanced-table-checkbox-${index}`;
 
-                  return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleClick(event, row.name)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.name}
-                      selected={isItemSelected}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      {/* <TableCell padding="checkbox">
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) => handleClick(event, row.name)}
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.id}
+                          selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          {/* <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
@@ -827,120 +847,122 @@ export default function UserManagement({ t }) {
                         }}
                       />
                     </TableCell> */}
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                        className={clsx(
-                          classes.fontSixeCell
-                          //   classes.paddingHead
-                        )}
-                        align="center"
-                      >
-                        {row.name}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.calories}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.fat}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.carbs}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.power}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.protein}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.phone}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.last}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.remark}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={dense}
-                              onChange={handleChangeDense}
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            className={clsx(
+                              classes.fontSixeCell
+                              //   classes.paddingHead
+                            )}
+                            align="center"
+                          >
+                            {row.id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.fist_name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.last_name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.role}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.position}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.department}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.phone_number}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.last_login}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.remark}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={row.enabled ? row.enabled : dense}
+                                  onChange={handleChangeDense}
+                                />
+                              }
                             />
-                          }
-                        />
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            <BorderColorOutlinedIcon
+                              className={classes.marginIcon}
+                              onClick={handleClickOpenEditUser}
+                            />
+                            <Visibility onClick={handleClickOpenView} />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {emptyRows > 0 && (
+                      <TableRow
+                        style={{
+                          height: (dense ? 33 : 53) * emptyRows,
+                        }}
                       >
-                        <BorderColorOutlinedIcon
-                          className={classes.marginIcon}
-                          onClick={handleClickOpenEditUser}
-                        />
-                        <Visibility onClick={handleClickOpenView} />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: (dense ? 33 : 53) * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
-        {/* <FormControlLabel
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+            {/* <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
       /> */}
-      </Box>
+          </Box>
+        </>
+      )}
 
       {/* Modal Add User */}
       <Dialog
@@ -949,6 +971,7 @@ export default function UserManagement({ t }) {
         open={openAddUser}
         onClose={handleCloseAddUser}
         aria-labelledby="responsive-dialog-title-add"
+        id="register-form"
         classes={{
           paper: classes.modalWidth,
         }}
@@ -1003,14 +1026,20 @@ export default function UserManagement({ t }) {
                   {t("user:email")}
                 </Typography>
                 <TextField
-                  id="input-with-icon-textfield"
+                  id="uemail"
                   size="small"
                   placeholder={t("user:placeholderEmail")}
                   fullWidth
                   variant="outlined"
                   value={emailUser}
                   onChange={handleEmailUserChange}
+                  error={
+                    (!isValidate && _.isEmpty(emailUser)) || !isValidateEmail
+                  }
                 />
+                {!isValidateEmail || _.isEmpty(emailUser) ? (
+                  <Validate errorText={message} />
+                ) : null}
               </Grid>
             </Grid>
           </Grid>
@@ -1025,28 +1054,32 @@ export default function UserManagement({ t }) {
                 {t("user:firstName")}
               </Typography>
               <TextField
-                id="input-with-icon-textfield"
+                labelId="ufname"
                 size="small"
                 placeholder={t("user:placeholderFrist")}
                 fullWidth
                 variant="outlined"
                 value={fristName}
                 onChange={handleFristNameChange}
+                error={!isValidate && _.isEmpty(fristName)}
               />
+              {_.isEmpty(fristName) && <Validate errorText={message} />}
             </Grid>
             <Grid item md={6} className={classes.boxMargin}>
               <Typography variant="subtitle2" className="pb-3">
                 {t("user:lastName")}
               </Typography>
               <TextField
-                id="input-with-icon-textfield"
+                labelId="ulname"
                 size="small"
                 placeholder={t("user:placeholderLast")}
                 fullWidth
                 variant="outlined"
                 value={lastName}
                 onChange={handleLastNameChange}
+                error={!isValidate && _.isEmpty(lastName)}
               />
+              {_.isEmpty(lastName) && <Validate errorText={message} />}
             </Grid>
           </Grid>
 
@@ -1060,15 +1093,20 @@ export default function UserManagement({ t }) {
                 {t("user:phone")}
               </Typography>
               <TextField
-                id="input-with-icon-textfield"
+                labelId="utel"
                 size="small"
-                type="number"
+                // type="number"
                 placeholder={t("user:placeholderPhone")}
                 fullWidth
                 variant="outlined"
+                inputProps={{ maxLength: 10 }}
                 value={phoneNumber}
                 onChange={handlePhoneNumberChange}
+                error={!isValidate && _.isEmpty(phoneNumber)}
               />
+              {_.isEmpty(phoneNumber) || phoneNumber < 10 ? (
+                <Validate errorText={message} />
+              ) : null}
             </Grid>
             <Grid item md={6} className={classes.boxMargin}>
               <Typography variant="subtitle2" className="pb-3">
@@ -1101,28 +1139,38 @@ export default function UserManagement({ t }) {
                 {t("user:pass")}
               </Typography>
               <TextField
-                id="input-with-icon-textfield"
+                labelId="upassword"
                 size="small"
                 placeholder={t("user:placeholderPass")}
                 fullWidth
                 variant="outlined"
                 value={password}
                 onChange={handlePasswordChange}
+                error={!isValidate && _.isEmpty(password)}
               />
+              {!isValidate && _.isEmpty(password) ? (
+                <Validate errorText={message} />
+              ) : null}
             </Grid>
             <Grid item md={6} className={classes.boxMargin}>
               <Typography variant="subtitle2" className="pb-3">
                 {t("user:rePass")}
               </Typography>
               <TextField
-                id="input-with-icon-textfield"
+                labelId="ucfpassword"
                 size="small"
                 placeholder={t("user:placeholderPass")}
                 fullWidth
                 variant="outlined"
                 value={rePassword}
                 onChange={handleRePasswordChange}
+                error={
+                  (!isValidate && _.isEmpty(rePassword)) || !isValidatePass
+                }
               />
+              {(!isValidate && _.isEmpty(rePassword)) || !isValidatePass ? (
+                <Validate errorText={message} />
+              ) : null}
             </Grid>
           </Grid>
 
@@ -1146,6 +1194,7 @@ export default function UserManagement({ t }) {
                 }
                 label={t("user:active")}
               />
+              {_.isNull(active) && <Validate errorText={message} />}
             </Grid>
             <Grid item md={9} className={clsx(classes.flexRowBtnModal)}>
               <Grid item md={3}>
@@ -1162,6 +1211,7 @@ export default function UserManagement({ t }) {
                 <Button
                   autoFocus
                   fullWidth
+                  onClick={handleValidate}
                   className={clsx(classes.backGroundConfrim)}
                   variant="outlined"
                 >
@@ -1236,7 +1286,7 @@ export default function UserManagement({ t }) {
                   {t("user:email")}
                 </Typography>
                 <TextField
-                  id="input-with-icon-textfield"
+                  id="uemail"
                   size="small"
                   placeholder={t("user:placeholderEmail")}
                   fullWidth
@@ -1258,7 +1308,7 @@ export default function UserManagement({ t }) {
                 {t("user:firstName")}
               </Typography>
               <TextField
-                id="input-with-icon-textfield"
+                id="ufname"
                 size="small"
                 placeholder={t("user:placeholderFrist")}
                 fullWidth
@@ -1272,7 +1322,7 @@ export default function UserManagement({ t }) {
                 {t("user:lastName")}
               </Typography>
               <TextField
-                id="input-with-icon-textfield"
+                id="ulname"
                 size="small"
                 placeholder={t("user:placeholderLast")}
                 fullWidth
@@ -1293,7 +1343,7 @@ export default function UserManagement({ t }) {
                 {t("user:phone")}
               </Typography>
               <TextField
-                id="input-with-icon-textfield"
+                id="utel"
                 size="small"
                 type="number"
                 placeholder={t("user:placeholderPhone")}
@@ -1494,13 +1544,31 @@ export default function UserManagement({ t }) {
       <UserView
         open={openViewUser}
         close={handleCloseView}
-        userId={userId}
-        user={user}
+        userId={user?.user?.id}
+        user={user?.user?.username}
         t={t}
         emailUser={emailUser}
         phoneNumber={phoneNumber}
-        role={role}
+        role={user?.user?.role}
       />
     </Container>
   );
+};
+
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
 }
+
+export default connect(mapStateToProps, mapDispatchToProps)(UserManagement);

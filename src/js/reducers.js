@@ -6,6 +6,9 @@ const initialState = {
     zone: '',
     responsiveFontSizes: true,
     login: false,
+    loading: false,
+    token: '',
+
   };
   
   function rootReducer(state = initialState, action) {
@@ -47,6 +50,17 @@ const initialState = {
       });
     }
 
+    if (action.type === actionTypes.TOKEN_SUCCESS) {
+      return Object.assign({}, state, {
+        token: action.payload
+      });
+    }
+
+    if (action.type === actionTypes.LOADING) {
+      return Object.assign({}, state, {
+        loading: action.payload
+      });
+    }
 
 
 

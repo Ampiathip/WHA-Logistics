@@ -23,6 +23,12 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import IconButton from "@mui/material/IconButton";
 import PropTypes from "prop-types";
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+import apis from "../js/apis";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   contentHight: {
@@ -87,7 +93,7 @@ const ModalResetPassword = ({
   handleReset,
 }) => {
   //   const user = useSelector((state) => state.user);
-  //   const login = useSelector((state) => state.login);
+  const login = useSelector((state) => state.login);
   const dispatch = useDispatch();
   const classes = useStyles();
   const { t, i18n } = useTranslation(["home", "footer", "login"]);
@@ -102,9 +108,13 @@ const ModalResetPassword = ({
   // modal //
   const theme = useTheme();
   //   const [open, setOpen] = useState(false);
-  const fullScreen = useMediaQuery(theme.breakpoints.down("lg"));
+  const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  // useEffect(() => {
+
+  // },[login])
 
   const handleMouseDownPassword = (event) => {
     event.preventDefault();

@@ -6,16 +6,21 @@ import SideBar from "./sideBar";
 import PropTypes from "prop-types";
 import { Grid, Container } from "@mui/material";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import {
+  Box,
+  CircularProgress,
+} from "@material-ui/core";
 
 const Layout = ({ children, type }) => {
   const dispatch = useDispatch();
   const matches = useMediaQuery("(min-width:1024px)");
+  const loading = useSelector((state) => state.loading);
 
   useEffect(() => {
     dispatch(addSidebar(type));
   }, [type]);
 
-  console.log("matches", matches);
+  console.log("matches", matches, loading);
 
   return (
     // <>
@@ -29,18 +34,26 @@ const Layout = ({ children, type }) => {
     //   </Grid>
     // </>
     <div>
-      <Header matches={matches} />
-      {/* <Container> */}
-      <Grid container>
-        {matches && (
-          <Grid item xs={2}>
-            <SideBar />
+      {loading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <Header matches={matches} />
+          {/* <Container> */}
+          <Grid container>
+            {matches && (
+              <Grid item xs={2}>
+                <SideBar />
+              </Grid>
+            )}
+            <Grid item xs={matches ? 10 : 12}>
+              {children}
+            </Grid>
           </Grid>
-        )}
-        <Grid item xs={matches ? 10 : 12}>
-          {children}
-        </Grid>
-      </Grid>
+        </>
+      )}
       {/* </Container> */}
       {/* </>
       )} */}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { addLogin } from "../js/actions";
+import { addLogin, addToken } from "../js/actions";
 import {
   Grid,
   Container,
@@ -149,8 +149,10 @@ function Login(props) {
       };
       await API.userLogin(body).then((response) => {
         const dataPayload = response.data;
+        console.log('dataPayload', dataPayload);
         dispatch(addLogin(dataPayload?.payload));
         navigate("/dashboard");
+        dispatch(addToken(dataPayload?.token))
         setIsLoading(false);
       });
     } catch (error) {

@@ -13,15 +13,23 @@ const getAPI = () => {
   let tokenAPI;
 
   const connectTokenAPI = (token) => {
+    // Declare tokenAPI using let
+
+    // Create the Axios instance
     tokenAPI = axios.create({
       baseURL: process.env.REACT_APP_API_URL,
       headers: {
-      "Content-Type": "application/json",
-      "token": helper.decryptData(token)
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "authtoken": token
+        // "authtoken" : helper.decryptData(token)
       },
       timeout: 85000
     });
-  }
+  
+    // Return the Axios instance so it can be used elsewhere
+    return tokenAPI;
+  };
 
   /* =============== Contents API ============== */
 
@@ -37,6 +45,16 @@ const getAPI = () => {
     return api.post(`/api/login`, body)
   }
 
+  const userRegister = (body) => {
+    console.log('bodyReg', body);
+    return api.post(`/api/register`, body)
+  }
+
+  const getUserData = () => {
+    return tokenAPI.get(`/api/users`)
+  }
+
+
   /* ============= Master Data ============== */
 
   
@@ -49,6 +67,8 @@ const getAPI = () => {
 
     forgotPassword,
     userLogin,
+    userRegister,
+    getUserData,
   }
 }
 export default  {

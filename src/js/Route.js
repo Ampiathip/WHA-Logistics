@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import { connect } from "react-redux";
 import PageNotFound from "../pages/PageNotFound";
 import Dashboard from "../pages/Dashboard";
 import HistoricalData from "../pages/HistoricalData";
@@ -17,27 +18,42 @@ import Zone from "../pages/Zone";
 import ZoneDetail from "../pages/zoneDetail";
 import SystemOverview from "../pages/SystemOverview";
 
-const Routers = () => {
+const Routers = (props) => {
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/floorDiagram" element={<FloorDiagram />} />
-      <Route path="/historicalData" element={<HistoricalData />} />
-      <Route path="/systemOverview" element={<SystemOverview />} />
-      <Route path="/divices" element={<Diveices />} />
-      <Route path="/parameter" element={<Parameter />} />
-      <Route path="/user" element={<User />} />
-      <Route path="/building" element={<Building />} />
-      <Route path="/buildingFloorDetail" element={<BuildingFloor />} />
-      <Route path="/buildingFloorUnitDetail" element={<BuildingFloorUnit />} />
-      <Route path="/gateway" element={<Gateway />} />
-      <Route path="/gatewayDeviceDetail" element={<GatewayDeviceDetail />} />
-      <Route path="/zone" element={<Zone />} />
-      <Route path="/zoneDetail" element={<ZoneDetail />} />
-      <Route element={PageNotFound} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/floorDiagram" element={<FloorDiagram />} />
+        <Route path="/historicalData" element={<HistoricalData />} />
+        <Route path="/systemOverview" element={<SystemOverview />} />
+        <Route path="/divices" element={<Diveices />} />
+        <Route path="/parameter" element={<Parameter />} />
+        <Route path="/user" element={<User />} />
+        <Route path="/building" element={<Building />} />
+        <Route path="/buildingFloorDetail" element={<BuildingFloor />} />
+        <Route
+          path="/buildingFloorUnitDetail"
+          element={<BuildingFloorUnit />}
+        />
+        <Route path="/gateway" element={<Gateway />} />
+        <Route path="/gatewayDeviceDetail" element={<GatewayDeviceDetail />} />
+        <Route path="/zone" element={<Zone />} />
+        <Route path="/zoneDetail" element={<ZoneDetail />} />
+        <Route element={PageNotFound} />
+      </Routes>
+    </>
   );
 };
 
-export default Routers;
+const mapStateToProps = (state) => {
+  return {
+    loading: state.loading,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {};
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Routers);

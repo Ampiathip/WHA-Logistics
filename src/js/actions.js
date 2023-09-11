@@ -6,9 +6,14 @@ export const actionTypes = {
     AUTHEN_LOGIN: 'AUTHEN_LOGIN',
     LOG_OUT: 'LOG_OUT',
     LOG_OUT_SUCCESS: 'LOG_OUT_SUCCESS',
+    LOADING: 'LOADING',
     SIDE_BAR: 'SIDE_BAR',
     THEME: 'THEME',
-    ZONE: 'ZONE,'
+    ZONE: 'ZONE',
+    TOKEN: 'TOKEN',
+    TOKEN_SUCCESS: 'TOKEN_SUCCESS',
+    CHECK_TOKEN: 'CHECK_TOKEN',
+
 }
 
 export function failure(error) {
@@ -38,6 +43,15 @@ export function addZone(payload) {
     return { type: actionTypes.ZONE, payload }
 };
 
+export function addToken(payload) {
+    console.log("actionsToken", payload);
+    return { type: actionTypes.TOKEN, payload }
+};
+
+export function checkToken() {
+    return { type: actionTypes.CHECK_TOKEN}
+};
+
 export function logout(payload) {
     return { type: actionTypes.LOG_OUT, payload }
 };
@@ -48,5 +62,9 @@ export function checkLogin() {
 
 export function checkAuthen() {
     return { type: actionTypes.AUTHEN_LOGIN}
+};
+
+export function loading(payload) {
+    return { type: actionTypes.LOADING, payload }
 };
 

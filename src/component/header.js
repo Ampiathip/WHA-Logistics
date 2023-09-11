@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { logout, checkLogin } from "../js/actions";
+import React, { useState, useEffect, useMemo } from "react";
+import { useDispatch, useSelector, connect } from "react-redux";
+import { logout, checkLogin, checkAuthen, loading } from "../js/actions";
 import {
   makeStyles,
   Grid,
@@ -12,6 +12,8 @@ import {
   AppBar,
   Toolbar,
   Menu,
+  Box,
+  CircularProgress,
 } from "@material-ui/core";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -55,8 +57,9 @@ function Header({ type, matches }) {
   const user = useSelector((state) => state.user);
   const login = useSelector((state) => state.login);
   const sideBar = useSelector((state) => state.sidebar);
-  const [select, setSelect] = useState("none");
+  const [selectBuilding, setSelectBuilding] = useState("");
   const [openViewUser, setOpenViewUser] = useState(false);
+  const [building, setBuilding] = useState([]);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -64,6 +67,21 @@ function Header({ type, matches }) {
   useEffect(() => {
     dispatch(checkLogin());
   }, [login]);
+
+  useEffect(() => {
+    if (user && user?.building) {
+      setBuilding(user?.building);
+      getBuildingUser();
+    }
+  }, [user, building, selectBuilding]);
+
+  const getBuildingUser = () => {
+    if (building.length > 0) {
+      building.map((item) => {
+        setSelectBuilding(item.id);
+      });
+    }
+  };
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -73,8 +91,8 @@ function Header({ type, matches }) {
     setAnchorEl(null);
   };
 
-  const hideOccModal = (e) => {
-    setSelect(e.target.value);
+  const handleBuilding = (e) => {
+    setSelectBuilding(e.target.value);
   };
 
   // view user //
@@ -87,14 +105,20 @@ function Header({ type, matches }) {
   };
 
   const handleLogout = () => {
+    // dispatch(loading(true))
     MySwal.fire({
       icon: "warning",
       confirmButtonText: "ตกลง",
       cancelButtonText: "ยกเลิก",
       showCancelButton: true,
       text: "คุณต้องการออกจากระบบ",
-    }).then(() => {
-      dispatch(logout(false));
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // dispatch(loading(false))
+        dispatch(logout(false));
+      } else if (result.isDismissed) {
+        // dispatch(loading(false))
+      }
     });
   };
 
@@ -130,15 +154,24 @@ function Header({ type, matches }) {
                     <Select
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
-                      value={select}
-                      onChange={(e) => hideOccModal(e)}
+                      value={selectBuilding}
+                      onChange={(e) => handleBuilding(e)}
                     >
                       <MenuItem value={"none"}>
-                        {user?.building[0]?.name}
+                        {"Select Building name"}
                       </MenuItem>
-                      {/* <MenuItem value={10}>Ten</MenuItem>
-                <MenuItem value={20}>Twenty</MenuItem>
-                <MenuItem value={30}>Thirty</MenuItem> */}
+                      {building.length > 0 &&
+                        building.map((item) => {
+                          return (
+                            <MenuItem
+                              id={"buildingNameSelect-" + item.id}
+                              key={item.id}
+                              value={item.id}
+                            >
+                              {item.name}
+                            </MenuItem>
+                          );
+                        })}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -195,4 +228,20 @@ function Header({ type, matches }) {
   );
 }
 
-export default Header;
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Header);
