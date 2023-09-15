@@ -26,6 +26,7 @@ import PropTypes from "prop-types";
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import apis from "../js/apis";
+import Validate from "./validate";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -49,17 +50,10 @@ const useStyles = makeStyles((theme) => ({
     marginTop: 25,
   },
   backGround: {
-    backgroundColor: "#F5F9FF",
-  },
-  backGroundLogin: {
-    backgroundColor: "#ffffff",
-    padding: 20,
-  },
-  btnLogColor: {
-    backgroundColor: "#000",
-    color: "#fff",
+    backgroundColor: "#f5f5f5",
+    color: "#000",
     "&:hover": {
-      backgroundColor: "#000",
+      backgroundColor: "#f5f5f5",
       boxShadow: `none`,
     },
   },
@@ -91,6 +85,8 @@ const ModalResetPassword = ({
   confrimPassword,
   handleConfrimChange,
   handleReset,
+  isValidateForget,
+  messageForget,
 }) => {
   //   const user = useSelector((state) => state.user);
   const login = useSelector((state) => state.login);
@@ -200,7 +196,9 @@ const ModalResetPassword = ({
                     </IconButton>
                   </InputAdornment>
                 }
+                error={isValidateForget}
               />
+              {isValidateForget && <Validate errorText={messageForget}/>}
             </FormControl>
           </Grid>
         </DialogContent>
@@ -210,8 +208,9 @@ const ModalResetPassword = ({
           </Button> */}
           <Button
             onClick={handleReset}
+            disabled={isValidateForget}
             autoFocus
-            className={classes.backGroundReset}
+            className={isValidateForget ? classes.backGround : classes.backGroundReset}
           >
             {t("login:btnReset")}
           </Button>

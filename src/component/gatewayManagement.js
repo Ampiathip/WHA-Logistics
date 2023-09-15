@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, connect } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
@@ -34,6 +34,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -53,6 +54,21 @@ import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import _, { stubFalse } from "lodash";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import Validate from "./validate";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+} from "../js/actions";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -162,66 +178,6 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "flex-end",
   },
 }));
-
-function createData(name, calories, fat, carbs, power, protein, unit) {
-  return {
-    name,
-    calories,
-    fat,
-    carbs,
-    power,
-    protein,
-    unit,
-  };
-}
-
-const rows = [
-  createData(1, "Gateway 1", "JCA GATEWAY", "Building 1", 20, 20, "2022-01-01"),
-  createData(2, "Gateway 2", "JCA GATEWAY", "Building 2", 20, 20, "2022-01-01"),
-  createData(3, "Gateway 3", "JCA GATEWAY", "Building 3", 20, 20, "2022-01-01"),
-  createData(4, "Gateway 4", "JCA GATEWAY", "Building 4", 20, 20, "2022-01-01"),
-  createData(5, "Gateway 5", "JCA GATEWAY", "Building 5", 20, 20, "2022-01-01"),
-  createData(6, "Gateway 6", "JCA GATEWAY", "Building 6", 20, 20, "2022-01-01"),
-  createData(7, "Gateway 7", "JCA GATEWAY", "Building 7", 20, 20, "2022-01-01"),
-  createData(8, "Gateway 8", "JCA GATEWAY", "Building 8", 20, 20, "2022-01-01"),
-  createData(9, "Gateway 9", "JCA GATEWAY", "Building 9", 20, 20, "2022-01-01"),
-  createData(
-    10,
-    "Gateway 10",
-    "JCA GATEWAY",
-    "Building 10",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    11,
-    "Gateway 11",
-    "JCA GATEWAY",
-    "Building 11",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    12,
-    "Gateway 12",
-    "JCA GATEWAY",
-    "Building 12",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    13,
-    "Gateway 13",
-    "JCA GATEWAY",
-    "Building 13",
-    20,
-    20,
-    "2022-01-01"
-  ),
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -425,7 +381,7 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTable({ t }) {
+const GatewayManagement = ({ t, login }) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -435,20 +391,303 @@ export default function EnhancedTable({ t }) {
   const [gatewayName, setGatewayName] = useState("");
   const [deviceBrand, setDeviceBrand] = useState("");
 
+  const dispatch = useDispatch();
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
+  const token = useSelector((state) => state.token);
+  const user = useSelector((state) => state.user);
   const theme = useTheme();
   const navigate = useNavigate();
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [openAdd, setOpenAdd] = useState(false);
-  const [file, setFile] = useState(null);
-  const [communicationType, setCommunicationType] = useState("none");
-  const [building, setBuilding] = useState("none");
+  const [file, setFile] = useState("");
+  const [communicationType, setCommunicationType] = useState([]);
+  const [communicationTypeSelect, setCommunicationTypeSelect] =
+    useState("none");
+  const [building, setBuilding] = useState([]);
+  const [buildingSelect, setBuildingSelect] = useState("none");
 
-  const handleClickOpen = () => {
+  const [openView, setOpenView] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [isValidate, setIsValidate] = useState(true);
+  const [isIdEdit, setIsIdEdit] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
+  };
+
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token)) {
+      getGateway();
+      getCommunicationData();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (user && user?.building) {
+      setBuilding(user?.building);
+    }
+  }, [user, building]);
+
+  const getGateway = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getGatewayData().then((response) => {
+        const dataPayload = response.data;
+        setRows(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  // get getCommunicationData //
+  const getCommunicationData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getCommunicationData().then((response) => {
+        const dataPayload = response.data;
+        setCommunicationType(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleValidate = (type) => {
+    let isValidate = true;
+
+    if (type === "edit") {
+      if (
+        _.isEmpty(gatewayName) ||
+        _.isEmpty(buildingSelect) ||
+        _.isEmpty(deviceBrand) ||
+        _.isEmpty(communicationTypeSelect) ||
+        _.isEmpty(file)
+      ) {
+        isValidate = false;
+      }
+      console.log("isValidateEdit", isValidate);
+      setIsValidate(isValidate);
+    } else {
+      if (
+        _.isEmpty(gatewayName) ||
+        _.isEmpty(buildingSelect) ||
+        _.isEmpty(deviceBrand) ||
+        _.isEmpty(communicationTypeSelect) ||
+        _.isNull(file)
+      ) {
+        isValidate = false;
+      }
+      console.log("isValidate", isValidate);
+      setIsValidate(isValidate);
+    }
+
+    if (isValidate) {
+      if (type === "edit") {
+        gatewayUpdate(isIdEdit);
+      } else {
+        gatewayRegister();
+      }
+    }
+  };
+
+  const gatewayRegister = async () => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result; // Extract the base64 data
+        const body = {
+          name: gatewayName,
+          band: deviceBrand,
+          communication_id: communicationTypeSelect,
+          installation_date: "",
+          description: "",
+          building_id: buildingSelect,
+          file: base64File, // Include the Base64 encoded file
+        };
+        await API.connectTokenAPI(token);
+        await API.gatewayRegister(body).then((response) => {
+          const dataPayload = response.data;
+          console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getGateway();
+            handleCloseAdd();
+          }
+          setIsLoading(false);
+        });
+      };
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleCloseAdd();
+      setIsLoading(false);
+    }
+  };
+
+  const gatewayUpdate = async (id) => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result; // Extract the base64 data
+        const body = {
+          name: gatewayName,
+          band: deviceBrand,
+          communication_id: communicationTypeSelect,
+          installation_date: "",
+          description: "",
+          building_id: buildingSelect,
+          file: base64File, // Include the Base64 encoded file
+          fileOld: "",
+        };
+        await API.connectTokenAPI(token);
+        await API.gatewayUpdate(id, body).then((response) => {
+          const dataPayload = response.data;
+          // console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getGateway();
+            handleClose();
+          }
+          setIsLoading(false);
+        });
+      };
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleClose();
+      setIsLoading(false);
+    }
+  };
+
+  const getGatewayView = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getGatewayView(id).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("9999=======item", item);
+            setGatewayName(item.name);
+            setBuildingSelect(
+              building.find((f) => f.name === item.building_name).id
+            );
+            setCommunicationTypeSelect(
+              communicationType.find(
+                (f) => f.communication === item.communication
+              ).id
+            );
+            setDeviceBrand(item.band);
+            setFile(item.file);
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const gatewayDelete = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.gatewayDelete(id).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          getGateway();
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // delete Data //
+  const handleClickDeleteData = (event, id) => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        gatewayDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  const handleClickOpen = (event, id) => {
     setOpen(true);
+    getGatewayView(id);
+    setIsIdEdit(id);
   };
 
   const handleClose = () => {
@@ -515,7 +754,7 @@ export default function EnhancedTable({ t }) {
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
       ),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, rows]
   );
 
   const handleDeviceBrand = (event) => {
@@ -534,19 +773,37 @@ export default function EnhancedTable({ t }) {
     setOpenAdd(false);
   };
 
+  const handleOpenView = (event, id) => {
+    setOpenView(true);
+    getGatewayView(id);
+  };
+
+  const handleCloseView = () => {
+    setOpenView(false);
+  };
+
   const handleUploadFile = (e) => {
     // setFile(e.target.files[0]);
-    if (e.target.files.length > 0) {
-      setFile(URL.createObjectURL(e.target.files[0]));
+    e.preventDefault();
+    const fileTypeArray = ["image/png", "image/jpg", "image/jpeg"];
+    let reader = new window.FileReader();
+    let file = e.target.files[0];
+
+    if (fileTypeArray.includes(file.type)) {
+      reader.onloadend = () => {
+        setFile(file);
+        setImagePreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleCommunicationType = (event) => {
-    setCommunicationType(event.target.value);
+    setCommunicationTypeSelect(event.target.value);
   };
 
   const handleBuilding = (event) => {
-    setBuilding(event.target.value);
+    setBuildingSelect(event.target.value);
   };
 
   const openPageDeviceDetail = () => {
@@ -555,75 +812,87 @@ export default function EnhancedTable({ t }) {
 
   return (
     <Container className={classes.marginRow}>
-      <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon className={classes.alignSelf} />
-        <Typography variant="h6"> / {sideBar}</Typography>
-      </Grid>
-      <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
-        <Grid item md={5} className={classes.marginRow}>
-          <TextField
-            id="input-with-icon-textfield"
-            size="small"
-            placeholder={t("gateway:search")}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-          />
-        </Grid>
-        <Grid item md={2} className={clsx(classes.marginRow)}>
-          <Button
-            onClick={handleClickOpenAdd}
-            autoFocus
-            // fullWidth
-            className={clsx(classes.backGroundConfrim, classes.width)}
-            variant="outlined"
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <Grid item className={classes.flexRow}>
+            <HomeOutlinedIcon className={classes.alignSelf} />
+            <Typography variant="h6"> / {sideBar}</Typography>
+          </Grid>
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRow, classes.justContent)}
           >
-            {t("gateway:btnAdd")}
-          </Button>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ width: "100%" }} className={classes.marginRow}>
-        <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
-            >
-              <EnhancedTableHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                //   onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-                classes={classes}
+            <Grid item md={5} className={classes.marginRow}>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("gateway:search")}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchOutlinedIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
               />
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+            </Grid>
+            <Grid item md={2} className={clsx(classes.marginRow)}>
+              <Button
+                onClick={handleClickOpenAdd}
+                autoFocus
+                // fullWidth
+                className={clsx(classes.backGroundConfrim, classes.width)}
+                variant="outlined"
+              >
+                {t("gateway:btnAdd")}
+              </Button>
+            </Grid>
+          </Grid>
 
-                  return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleClick(event, row.name)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.name}
-                      selected={isItemSelected}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      {/* <TableCell padding="checkbox">
+          <Box sx={{ width: "100%" }} className={classes.marginRow}>
+            <Paper sx={{ width: "100%", mb: 2 }}>
+              {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
+              <TableContainer>
+                <Table
+                  sx={{ minWidth: 750 }}
+                  aria-labelledby="tableTitle"
+                  size={dense ? "small" : "medium"}
+                >
+                  <EnhancedTableHead
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    //   onSelectAllClick={handleSelectAllClick}
+                    onRequestSort={handleRequestSort}
+                    rowCount={rows.length}
+                    classes={classes}
+                  />
+                  <TableBody>
+                    {visibleRows.map((row, index) => {
+                      const isItemSelected = isSelected(row.name);
+                      const labelId = `enhanced-table-checkbox-${index}`;
+
+                      console.log("=====>>>>", row);
+
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) => handleClick(event, row.name)}
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.name}
+                          selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          {/* <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
@@ -632,93 +901,108 @@ export default function EnhancedTable({ t }) {
                         }}
                       />
                     </TableCell> */}
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                        className={classes.fontSixeCell}
-                        align="center"
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            className={classes.fontSixeCell}
+                            align="center"
+                          >
+                            {row.id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.band}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.building_name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.communication}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.device_count}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.installation_date}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            <FeedOutlinedIcon
+                              className={classes.marginIcon}
+                              onClick={openPageDeviceDetail}
+                            />
+                            <VisibilityOutlinedIcon
+                              className={classes.marginIcon}
+                              ฃ
+                              onClick={(event) => handleOpenView(event, row.id)}
+                            />
+                            <SettingsOutlinedIcon
+                              onClick={(event) =>
+                                handleClickOpen(event, row.id)
+                              }
+                            />
+                            <DeleteOutlineOutlinedIcon
+                              onClick={(event) => {
+                                handleClickDeleteData(event, row.id);
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {emptyRows > 0 && (
+                      <TableRow
+                        style={{
+                          height: (dense ? 33 : 53) * emptyRows,
+                        }}
                       >
-                        {row.name}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.calories}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.fat}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.carbs}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.power}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.protein}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.unit}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        <FeedOutlinedIcon className={classes.marginIcon} onClick={openPageDeviceDetail}/>
-                        <VisibilityOutlinedIcon
-                          className={classes.marginIcon}
-                        />
-                        <SettingsOutlinedIcon onClick={handleClickOpen} />
-                        <DeleteOutlineOutlinedIcon />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: (dense ? 33 : 53) * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
-        {/* <FormControlLabel
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+            {/* <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
       /> */}
-      </Box>
+          </Box>
+        </>
+      )}
 
       {/* Modal Edit*/}
       <Dialog
@@ -735,152 +1019,182 @@ export default function EnhancedTable({ t }) {
           <Typography variant="h3">{t("gateway:edit")}</Typography>
         </DialogTitle>
         <DialogContent>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="pb-3">
-              {t("gateway:gatewayName")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:gatewayName")}
-              fullWidth
-              variant="outlined"
-              value={gatewayName}
-              onChange={handleGatewayName}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:building")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={building}
-                placeholder={t("gateway:selectCommunication")}
-                onChange={handleBuilding}
-              >
-                <MenuItem value="none">{t("gateway:select")}</MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:deviceBrand")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:deviceBrand")}
-              fullWidth
-              variant="outlined"
-              value={deviceBrand}
-              onChange={handleDeviceBrand}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:communicationType")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={communicationType}
-                placeholder={t("gateway:selectCommunication")}
-                onChange={handleCommunicationType}
-              >
-                <MenuItem value="none">
-                  {t("gateway:selectCommunication")}
-                </MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:upload")}
-            </Typography>
-            <Grid
-              item
-              md={12}
-              //   className={clsx(classes.flexRow, classes.justContentCenter)}
-            >
-              <input
-                className={classes.input}
-                id={"contained-button-file"}
-                type="file"
-                accept="image/jpeg,image/png,application/pdf,image/tiff"
-                // multiple={isMultiple}
-                onChange={handleUploadFile}
-                onClick={(e) => {
-                  console.log("aaaaa");
-                }}
-              />
-              <label
-                htmlFor={"contained-button-file"}
-                className={clsx(
-                  classes.flexRow,
-                  classes.justContentCenter,
-                  classes.width
-                )}
-              >
-                <Card
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="pb-3">
+                  {t("gateway:gatewayName")}
+                </Typography>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("gateway:gatewayName")}
+                  fullWidth
                   variant="outlined"
-                  style={{ width: 200, height: 200 }}
-                  className={clsx(classes.boxUpload)}
+                  value={gatewayName}
+                  onChange={handleGatewayName}
+                />
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("gateway:building")}
+                </Typography>
+                <FormControl variant="outlined" size="small" fullWidth>
+                  <Select
+                    labelId="demo-select-small-label"
+                    id="demo-select-small"
+                    value={building.length > 0 ? buildingSelect : "none"}
+                    placeholder={t("gateway:selectCommunication")}
+                    onChange={handleBuilding}
+                  >
+                    <MenuItem value="none">{t("gateway:select")}</MenuItem>
+                    {building.length > 0 &&
+                      building.map((item) => {
+                        return (
+                          <MenuItem
+                            id={"buildingNameSelect-" + item.id}
+                            key={item.id}
+                            value={item.id}
+                          >
+                            {item.name}
+                          </MenuItem>
+                        );
+                      })}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("gateway:deviceBrand")}
+                </Typography>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("gateway:deviceBrand")}
+                  fullWidth
+                  variant="outlined"
+                  value={deviceBrand}
+                  onChange={handleDeviceBrand}
+                />
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("gateway:communicationType")}
+                </Typography>
+                <FormControl variant="outlined" size="small" fullWidth>
+                  <Select
+                    labelId="demo-select-small-label"
+                    id="demo-select-small"
+                    value={
+                      communicationType.length > 0
+                        ? communicationTypeSelect
+                        : "none"
+                    }
+                    placeholder={t("gateway:selectCommunication")}
+                    onChange={handleCommunicationType}
+                  >
+                    <MenuItem value="none">
+                      {t("gateway:selectCommunication")}
+                    </MenuItem>
+                    {communicationType.length > 0 &&
+                      communicationType.map((item) => {
+                        return (
+                          <MenuItem
+                            id={"selectCommunication-" + item.id}
+                            key={item.id}
+                            value={item.id}
+                          >
+                            {item.communication}
+                          </MenuItem>
+                        );
+                      })}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("gateway:upload")}
+                </Typography>
+                <Grid
+                  item
+                  md={12}
+                  //   className={clsx(classes.flexRow, classes.justContentCenter)}
                 >
-                  {file ? (
-                    <img
-                      src={file}
-                      alt="img-upload"
-                      className={classes.imgWidth}
-                    />
-                  ) : (
-                    <CardContent
-                      className={clsx(classes.textCenter, classes.marginTopBox)}
+                  <input
+                    className={classes.input}
+                    id={"contained-button-file"}
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf,image/tiff"
+                    // multiple={isMultiple}
+                    onChange={handleUploadFile}
+                    onClick={(e) => {
+                      console.log("aaaaa");
+                    }}
+                  />
+                  <label
+                    htmlFor={"contained-button-file"}
+                    className={clsx(
+                      classes.flexRow,
+                      classes.justContentCenter,
+                      classes.width
+                    )}
+                  >
+                    <Card
+                      variant="outlined"
+                      style={{ width: 200, height: 200 }}
+                      className={clsx(classes.boxUpload)}
                     >
-                      <Typography> +</Typography>
-                      <Typography> upload</Typography>
-                    </CardContent>
-                  )}
-                </Card>
-              </label>
-            </Grid>
-          </Grid>
-          {/* <DialogContentText>
-            Let Google help apps determine location. This means sending
-            anonymous location data to Google, even when no apps are running.
-          </DialogContentText> */}
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-          >
-            <Grid item md={3}>
-              <Button
-                onClick={handleClose}
-                className={clsx(classes.backGroundCancel)}
-                variant="outlined"
+                      {file ? (
+                        <img
+                          src={file}
+                          alt="img-upload"
+                          className={classes.imgWidth}
+                        />
+                      ) : (
+                        <CardContent
+                          className={clsx(
+                            classes.textCenter,
+                            classes.marginTopBox
+                          )}
+                        >
+                          <Typography> +</Typography>
+                          <Typography> upload</Typography>
+                        </CardContent>
+                      )}
+                    </Card>
+                  </label>
+                </Grid>
+              </Grid>
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
               >
-                {t("building:btnCancel")}
-              </Button>
-            </Grid>
-            <Grid item md={3} className={classes.boxMargin}>
-              <Button
-                className={clsx(classes.backGroundConfrim)}
-                variant="outlined"
-              >
-                {t("building:btnAddModal")}
-              </Button>
-            </Grid>
-          </Grid>
+                <Grid item md={3}>
+                  <Button
+                    onClick={handleClose}
+                    className={clsx(classes.backGroundCancel)}
+                    variant="outlined"
+                  >
+                    {t("building:btnCancel")}
+                  </Button>
+                </Grid>
+                <Grid item md={3} className={classes.boxMargin}>
+                  <Button
+                    className={clsx(classes.backGroundConfrim)}
+                    variant="outlined"
+                    onClick={() => handleValidate('edit')}
+                  >
+                    {t("building:btnAddModal")}
+                  </Button>
+                </Grid>
+              </Grid>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -922,14 +1236,23 @@ export default function EnhancedTable({ t }) {
               <Select
                 labelId="demo-select-small-label"
                 id="demo-select-small"
-                value={building}
+                value={building.length > 0 ? buildingSelect : "none"}
                 placeholder={t("gateway:selectCommunication")}
                 onChange={handleBuilding}
               >
                 <MenuItem value="none">{t("gateway:select")}</MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
+                {building.length > 0 &&
+                  building.map((item) => {
+                    return (
+                      <MenuItem
+                        id={"buildingNameSelect-" + item.id}
+                        key={item.id}
+                        value={item.id}
+                      >
+                        {item.name}
+                      </MenuItem>
+                    );
+                  })}
               </Select>
             </FormControl>
           </Grid>
@@ -955,16 +1278,29 @@ export default function EnhancedTable({ t }) {
               <Select
                 labelId="demo-select-small-label"
                 id="demo-select-small"
-                value={communicationType}
+                value={
+                  communicationType.length > 0
+                    ? communicationTypeSelect
+                    : "none"
+                }
                 placeholder={t("gateway:selectCommunication")}
                 onChange={handleCommunicationType}
               >
                 <MenuItem value="none">
                   {t("gateway:selectCommunication")}
                 </MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
+                {communicationType.length > 0 &&
+                  communicationType.map((item) => {
+                    return (
+                      <MenuItem
+                        id={"selectCommunication-" + item.id}
+                        key={item.id}
+                        value={item.id}
+                      >
+                        {item.communication}
+                      </MenuItem>
+                    );
+                  })}
               </Select>
             </FormControl>
           </Grid>
@@ -1001,9 +1337,9 @@ export default function EnhancedTable({ t }) {
                   style={{ width: 200, height: 200 }}
                   className={clsx(classes.boxUpload)}
                 >
-                  {file ? (
+                  {imagePreviewUrl ? (
                     <img
-                      src={file}
+                      src={imagePreviewUrl}
                       alt="img-upload"
                       className={classes.imgWidth}
                     />
@@ -1041,21 +1377,118 @@ export default function EnhancedTable({ t }) {
               <Button
                 className={clsx(classes.backGroundConfrim)}
                 variant="outlined"
+                onClick={handleValidate}
               >
                 {t("building:btnAddModal")}
               </Button>
             </Grid>
           </Grid>
         </DialogContent>
-        {/* <DialogActions>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnCancel")}
-          </Button>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnAddModal")}
-          </Button>
-        </DialogActions> */}
+      </Dialog>
+
+      {/* Modal View */}
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openView}
+        onClose={handleCloseView}
+        aria-labelledby="responsive-dialog-title-view"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle
+          id="responsive-dialog-title-view"
+          className={clsx(
+            classes.flexRow,
+            classes.justContent,
+            classes.borderBottom
+          )}
+        >
+          <Typography variant="h3">{gatewayName}</Typography>
+          <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
+        </DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(
+                  classes.alignItem,
+                  classes.marginRow,
+                  classes.flexRow
+                )}
+              >
+                <Grid item md={3} className={classes.borderImg}>
+                  <img src={file} alt="img-test" className={classes.imgWidth} />
+                </Grid>
+                <Grid item md={9}>
+                  <Grid
+                    item
+                    className={clsx(classes.boxMargin, classes.marginRow)}
+                  >
+                    <Typography variant="h5">
+                      {gatewayName ? gatewayName : "-"}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5">{t("gateway:building")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {buildingSelect ? buildingSelect : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5">
+                {t("gateway:deviceBrand")}
+                </Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {deviceBrand ? deviceBrand : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("gateway:communicationType")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {communicationTypeSelect ? communicationTypeSelect : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </>
+          )}
+        </DialogContent>
       </Dialog>
     </Container>
   );
+};
+
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
 }
+
+export default connect(mapStateToProps, mapDispatchToProps)(GatewayManagement);

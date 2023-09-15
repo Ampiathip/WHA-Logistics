@@ -39,6 +39,7 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 import FeedOutlinedIcon from "@mui/icons-material/FeedOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -169,6 +170,9 @@ const useStyles = makeStyles((theme) => ({
   },
   width: {
     width: "100%",
+  },
+  paddingIcon: {
+    padding: "0px !important",
   },
 }));
 
@@ -400,7 +404,7 @@ const UserManagement = ({ t, login }) => {
   const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [fitterSelect, setFitterSelect] = useState("none");
-  const [userId, setUserId] = useState("1234");
+  const [userId, setUserId] = useState("");
   const [emailUser, setEmailUser] = useState("");
   const [fristName, setFristName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -410,7 +414,7 @@ const UserManagement = ({ t, login }) => {
   const [rePassword, setRePassword] = useState("");
   const [active, setActive] = useState(null);
   const [selectInput, setSelectInput] = useState("none");
-  const [activeEdit, setActiveEdit] = useState(false);
+  // const [activeEdit, setActiveEdit] = useState(false);
 
   // modal reset //
   const [openResetPass, setOpenResetPass] = useState(false);
@@ -432,14 +436,29 @@ const UserManagement = ({ t, login }) => {
   const [rows, setRows] = useState([]);
   const [isValidate, setIsValidate] = useState(true);
   const [isValidateEmail, setIsValidateEmail] = useState(true);
-  const [isValidatePass, setIsValidatePass] = useState(true);
-  const [alertShow, setAlertShow] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageEmail, setMessageEmail] = useState("");
+  const [messagePhone, setMessagePhone] = useState("");
+  const [messagePass, setMessagePass] = useState("");
+  const [messagePassRe, setMessagePassRe] = useState("");
+  const [isValidateEdit, setIsValidateEdit] = useState(true);
+  const [isIdEdit, setIsIdEdit] = useState("");
+
+  // validate pass forget //
+  const [isValidateForget, setIsValidateForget] = useState(false);
+  const [messageForget, setMessageForget] = useState("");
+
+  // user view //
+  // const [userView, setUserView] = useState([]);
+
+  let emailPattern =
+    /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
   useEffect(() => {
     dispatch(checkToken());
-    API.connectTokenAPI(token);
-    getUser();
+    if (!_.isEmpty(token)) {
+      getUser();
+    }
     console.log("token", token, login);
   }, [token]);
 
@@ -449,21 +468,20 @@ const UserManagement = ({ t, login }) => {
     }
   }, [user, userId]);
 
-  useEffect(() => {
-    if (!isValidateEmail) {
-      handleValidate();
-    }
-    
-  }, [
-    emailUser,
-    fristName,
-    lastName,
-    phoneNumber,
-    password,
-    rePassword,
-    active,
-    isValidateEmail,
-  ]);
+  // useEffect(() => {
+  //   if (!isValidate) {
+  //     handleValidate();
+  //   }
+  // }, [
+  //   emailUser,
+  //   fristName,
+  //   lastName,
+  //   phoneNumber,
+  //   password,
+  //   rePassword,
+  //   active,
+  //   isValidate,
+  // ]);
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -476,10 +494,10 @@ const UserManagement = ({ t, login }) => {
   const getUser = async () => {
     setIsLoading(true);
     try {
+      await API.connectTokenAPI(token);
       await API.getUserData().then((response) => {
         const dataPayload = response.data;
         setRows(dataPayload);
-        // console.log("9999=======", response);
         setIsLoading(false);
       });
     } catch (error) {
@@ -508,14 +526,13 @@ const UserManagement = ({ t, login }) => {
 
   const handleValidate = () => {
     let isValidate = true;
-    let emailPattern =
-      /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    // let emailPattern =
+    //   /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (!_.isEmpty(emailUser)) {
       if (!emailPattern.test(emailUser)) {
         console.log("email format1");
         isValidate = false;
-        setMessage("กรุณากรอกรูปแบบอีเมลให้ถูกต้อง");
-        setIsValidateEmail(false);
+        setMessageEmail("กรุณากรอกรูปแบบอีเมลให้ถูกต้อง");
       }
     }
 
@@ -531,22 +548,21 @@ const UserManagement = ({ t, login }) => {
       isValidate = false;
       setMessage("กรุณาระบุข้อมูล");
     }
-    if (!_.isEmpty(password) && password.replace(/\D/g, "").length < 6) {
-      isValidate = false;
-      setMessage("รหัสผ่านต้องมากกว่าหรือเท่ากับ 6 ตัวอักษร");
-    }
+    // if (!_.isEmpty(password) && password.replace(/\D/g, "").length < 6) {
+    //   isValidate = false;
+    //   setMessagePass("รหัสผ่านต้องมากกว่าหรือเท่ากับ 6 ตัวอักษร");
+    // }
 
     if (!_.isEmpty(password) && !_.isEmpty(rePassword)) {
       if (password !== rePassword) {
         isValidate = false;
-        setMessage("กรุณากรอกรหัสผ่านกับยืนยันรหัสผ่านให้ตรงกัน");
-        setIsValidatePass(false);
+        setMessagePassRe("กรุณากรอกรหัสผ่านกับยืนยันรหัสผ่านให้ตรงกัน");
       }
     }
 
-    if (!_.isEmpty(phoneNumber) && phoneNumber.replace(/-/gi, "").length < 9) {
+    if (!_.isEmpty(phoneNumber) && phoneNumber.length < 9) {
       isValidate = false;
-      setMessage("กรุณาระบุหมายเลขโทรศัพท์ให้ครบจำนวน");
+      setMessagePhone("กรุณาระบุหมายเลขโทรศัพท์ให้ครบจำนวน");
     }
 
     console.log("isValidate", isValidate, message);
@@ -561,7 +577,7 @@ const UserManagement = ({ t, login }) => {
 
     try {
       const body = {
-        username: userId,
+        username: emailUser,
         password: password,
         first_name: fristName,
         last_name: lastName,
@@ -569,14 +585,49 @@ const UserManagement = ({ t, login }) => {
         enabled: active,
         position: "",
         department: "",
+        // role: "",
       };
+      await API.connectTokenAPI(token);
+      await API.userRegister(body).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          getUser();
+          handleCloseAddUser();
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleCloseAddUser();
+      setIsLoading(false);
+    }
+  };
 
-      console.log("888888====", body);
-      // await API.userRegister(body).then((response) => {
-      //   const dataPayload = response.data;
-      //   console.log("dataPayload", dataPayload);
-      //   setIsLoading(false);
-      // });
+  const userDelete = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.userDelete(id).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          getUser();
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
     } catch (error) {
       console.log(error);
       const response = error.response;
@@ -585,8 +636,125 @@ const UserManagement = ({ t, login }) => {
     }
   };
 
+  const userViewData = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getUserView(id).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("9999=======item", item);
+            setEmailUser(item.username);
+            setFristName(item.first_name);
+            setLastName(item.last_name);
+            setActive(item.remark);
+            setPhoneNumber(item.phone_number);
+            setRole(item.role);
+          });
+        // setUserView(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // update user //
+
+  const handleValidateEdit = (id) => {
+    let isValidate = true;
+    // let emailPattern =
+    //   /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!_.isEmpty(emailUser)) {
+      if (!emailPattern.test(emailUser)) {
+        console.log("email format1");
+        isValidate = false;
+        setMessageEmail("กรุณากรอกรูปแบบอีเมลให้ถูกต้อง");
+      }
+    }
+
+    if (
+      _.isEmpty(emailUser) ||
+      _.isEmpty(fristName) ||
+      _.isEmpty(lastName) ||
+      _.isEmpty(phoneNumber) ||
+      _.isNull(active)
+    ) {
+      isValidate = false;
+      setMessage("กรุณาระบุข้อมูล");
+    }
+
+    if (!_.isEmpty(phoneNumber) && phoneNumber.length < 9) {
+      isValidate = false;
+      setMessagePhone("กรุณาระบุหมายเลขโทรศัพท์ให้ครบจำนวน");
+    }
+
+    console.log("isValidateEdit===", isValidate, message, id);
+    setIsValidateEdit(isValidate);
+    if (isValidate) {
+      userUpdate(id);
+    }
+  };
+
+  const userUpdate = async (id) => {
+    setIsLoading(true);
+    try {
+      const body = {
+        username: emailUser,
+        // password: password,
+        first_name: fristName,
+        last_name: lastName,
+        phone_number: phoneNumber,
+        enabled: active,
+        position: "",
+        department: "",
+        role: "",
+        remark: "",
+      };
+      await API.connectTokenAPI(token);
+      await API.userUpdate(id, body).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          getUser();
+          handleCloseEditUser();
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleCloseEditUser();
+      setIsLoading(false);
+    }
+  };
+
   const handleClickOpenAddUser = () => {
     setOpenAddUser(true);
+    setIsValidate(true);
+    setMessage('');
+    setMessagePassRe('');
+    setMessagePhone('');
+    setMessageEmail('');
+    setEmailUser("");
+    setFristName("");
+    setLastName("");
+    setRole("");
+    setPassword("");
+    setPhoneNumber("");
+    setRePassword("");
+    setActive(null);
   };
 
   const handleCloseAddUser = () => {
@@ -594,8 +762,10 @@ const UserManagement = ({ t, login }) => {
   };
 
   // Edit //
-  const handleClickOpenEditUser = () => {
+  const handleClickOpenEditUser = (event, id) => {
     setOpenEditUser(true);
+    setIsIdEdit(id);
+    userViewData(id);
   };
 
   const handleCloseEditUser = () => {
@@ -603,8 +773,57 @@ const UserManagement = ({ t, login }) => {
   };
 
   // view user //
-  const handleClickOpenView = () => {
+  const handleClickOpenView = async (event, id) => {
     setOpenViewUser(true);
+    userViewData(id);
+  };
+
+  // delete Data //
+  const handleClickDeleteData = (event, id) => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        userDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  // update Forget //
+  const userUpdateForget = async (id) => {
+    setIsLoading(true);
+    try {
+      const body = {
+        password: newPassWord,
+      };
+      await API.connectTokenAPI(token);
+      await API.forgotPassword(id, body).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          getUser();
+          setOpenResetPass(false);
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setOpenResetPass(false);
+      setIsLoading(false);
+    }
   };
 
   const handleCloseView = () => {
@@ -681,6 +900,11 @@ const UserManagement = ({ t, login }) => {
 
   const handleEmailUserChange = (event) => {
     setEmailUser(event.target.value.trim());
+    if (!emailPattern.test(event.target.value.trim())) {
+      setIsValidateEmail(false);
+    } else {
+      setIsValidateEmail(true);
+    }
   };
 
   const handleFristNameChange = (event) => {
@@ -715,9 +939,9 @@ const UserManagement = ({ t, login }) => {
     setActive(event.target.checked);
   };
 
-  const onSelectClickActiveEdit = (event) => {
-    setActiveEdit(event.target.checked);
-  };
+  // const onSelectClickActiveEdit = (event) => {
+  //   setActiveEdit(event.target.checked);
+  // };
 
   const handleSelectInputChange = (event) => {
     setSelectInput(event.target.value);
@@ -730,7 +954,14 @@ const UserManagement = ({ t, login }) => {
   };
 
   const handleCloseResetPass = () => {
-    setOpenResetPass(false);
+    if (newPassWord !== confrimPassword) {
+      setIsValidateForget(true);
+      setMessageForget("กรุณากรอกรหัสผ่านกับยืนยันรหัสผ่านให้ตรงกัน");
+    } else {
+      setIsValidateForget(false);
+      setMessageForget("");
+      userUpdateForget(isIdEdit);
+    }
   };
 
   const handleNewPassChange = (event) => {
@@ -739,6 +970,13 @@ const UserManagement = ({ t, login }) => {
 
   const handleConfrimChange = (event) => {
     setConfrimPassword(event.target.value);
+    if (!_.isEmpty(newPassWord) && event.target.value === newPassWord) {
+      setIsValidateForget(false);
+      setMessageForget("");
+    } else {
+      setIsValidateForget(true);
+      setMessageForget("กรุณากรอกรหัสผ่านกับยืนยันรหัสผ่านให้ตรงกัน");
+    }
   };
   // close modal reset //
 
@@ -827,15 +1065,17 @@ const UserManagement = ({ t, login }) => {
                       const isItemSelected = isSelected(row.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
 
+                      // console.log("hhhhhhh====", row);
+
                       return (
                         <TableRow
                           hover
                           onClick={(event) => handleClick(event, row.name)}
                           role="checkbox"
-                          aria-checked={isItemSelected}
+                          // aria-checked={isItemSelected}
                           tabIndex={-1}
                           key={row.id}
-                          selected={isItemSelected}
+                          // selected={isItemSelected}
                           sx={{ cursor: "pointer" }}
                         >
                           {/* <TableCell padding="checkbox">
@@ -858,13 +1098,13 @@ const UserManagement = ({ t, login }) => {
                             )}
                             align="center"
                           >
-                            {row.id}
+                            {row.username}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.fist_name}
+                            {row.first_name}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -923,13 +1163,27 @@ const UserManagement = ({ t, login }) => {
                           </TableCell>
                           <TableCell
                             align="center"
-                            className={classes.fontSixeCell}
+                            className={clsx(
+                              classes.fontSixeCell,
+                              classes.paddingIcon
+                            )}
                           >
                             <BorderColorOutlinedIcon
                               className={classes.marginIcon}
-                              onClick={handleClickOpenEditUser}
+                              onClick={(event) => {
+                                handleClickOpenEditUser(event, row.id);
+                              }}
                             />
-                            <Visibility onClick={handleClickOpenView} />
+                            <Visibility
+                              onClick={(event) => {
+                                handleClickOpenView(event, row.id);
+                              }}
+                            />
+                            <DeleteOutlineOutlinedIcon
+                              onClick={(event) => {
+                                handleClickDeleteData(event, row.id);
+                              }}
+                            />
                           </TableCell>
                         </TableRow>
                       );
@@ -1034,12 +1288,15 @@ const UserManagement = ({ t, login }) => {
                   value={emailUser}
                   onChange={handleEmailUserChange}
                   error={
-                    (!isValidate && _.isEmpty(emailUser)) || !isValidateEmail
+                    (!isValidate && _.isEmpty(emailUser)) ||
+                    (!isValidate && !isValidateEmail)
                   }
                 />
-                {!isValidateEmail || _.isEmpty(emailUser) ? (
+                {_.isEmpty(emailUser) ? (
                   <Validate errorText={message} />
-                ) : null}
+                ) : (
+                  !isValidateEmail && <Validate errorText={messageEmail} />
+                )}
               </Grid>
             </Grid>
           </Grid>
@@ -1054,7 +1311,7 @@ const UserManagement = ({ t, login }) => {
                 {t("user:firstName")}
               </Typography>
               <TextField
-                labelId="ufname"
+                // labelId="ufname"
                 size="small"
                 placeholder={t("user:placeholderFrist")}
                 fullWidth
@@ -1070,7 +1327,7 @@ const UserManagement = ({ t, login }) => {
                 {t("user:lastName")}
               </Typography>
               <TextField
-                labelId="ulname"
+                // labelId="ulname"
                 size="small"
                 placeholder={t("user:placeholderLast")}
                 fullWidth
@@ -1093,7 +1350,7 @@ const UserManagement = ({ t, login }) => {
                 {t("user:phone")}
               </Typography>
               <TextField
-                labelId="utel"
+                // labelId="utel"
                 size="small"
                 // type="number"
                 placeholder={t("user:placeholderPhone")}
@@ -1102,11 +1359,16 @@ const UserManagement = ({ t, login }) => {
                 inputProps={{ maxLength: 10 }}
                 value={phoneNumber}
                 onChange={handlePhoneNumberChange}
-                error={!isValidate && _.isEmpty(phoneNumber)}
+                error={
+                  (!isValidate && _.isEmpty(phoneNumber)) ||
+                  (!isValidate && phoneNumber.length < 9)
+                }
               />
-              {_.isEmpty(phoneNumber) || phoneNumber < 10 ? (
+              {_.isEmpty(phoneNumber) ? (
                 <Validate errorText={message} />
-              ) : null}
+              ) : (
+                phoneNumber.length < 9 && <Validate errorText={messagePhone} />
+              )}
             </Grid>
             <Grid item md={6} className={classes.boxMargin}>
               <Typography variant="subtitle2" className="pb-3">
@@ -1114,7 +1376,7 @@ const UserManagement = ({ t, login }) => {
               </Typography>
               <FormControl variant="outlined" size="small" fullWidth>
                 <Select
-                  labelId="demo-select-small-label"
+                  // labelId="demo-select-small-label"
                   id="demo-select-small"
                   value={role}
                   placeholder={t("user:selectRole")}
@@ -1139,7 +1401,7 @@ const UserManagement = ({ t, login }) => {
                 {t("user:pass")}
               </Typography>
               <TextField
-                labelId="upassword"
+                // labelId="upassword"
                 size="small"
                 placeholder={t("user:placeholderPass")}
                 fullWidth
@@ -1150,14 +1412,15 @@ const UserManagement = ({ t, login }) => {
               />
               {!isValidate && _.isEmpty(password) ? (
                 <Validate errorText={message} />
-              ) : null}
+              ) : null }
+              {/* (password.length < 6 && <Validate errorText={messagePass} /> ) */}
             </Grid>
             <Grid item md={6} className={classes.boxMargin}>
               <Typography variant="subtitle2" className="pb-3">
                 {t("user:rePass")}
               </Typography>
               <TextField
-                labelId="ucfpassword"
+                // labelId="ucfpassword"
                 size="small"
                 placeholder={t("user:placeholderPass")}
                 fullWidth
@@ -1165,12 +1428,17 @@ const UserManagement = ({ t, login }) => {
                 value={rePassword}
                 onChange={handleRePasswordChange}
                 error={
-                  (!isValidate && _.isEmpty(rePassword)) || !isValidatePass
+                  (!isValidate && _.isEmpty(rePassword)) ||
+                  (!isValidate && password !== rePassword)
                 }
               />
-              {(!isValidate && _.isEmpty(rePassword)) || !isValidatePass ? (
+              {!isValidate && _.isEmpty(rePassword) ? (
                 <Validate errorText={message} />
-              ) : null}
+              ) : (
+                password !== rePassword && (
+                  <Validate errorText={messagePassRe} />
+                )
+              )}
             </Grid>
           </Grid>
 
@@ -1250,192 +1518,238 @@ const UserManagement = ({ t, login }) => {
           />
         </DialogTitle>
         <DialogContent>
-          <Grid
-            item
-            md={12}
-            className={clsx(
-              classes.flexRow,
-              classes.justContent,
-              classes.alignItem,
-              classes.marginRow
-            )}
-          >
-            <Grid item md={3} className={classes.borderImg}>
-              <img
-                src={process.env.PUBLIC_URL + "/img/Group.png"}
-                alt="img-test"
-                className={classes.imgWidth}
-              />
-            </Grid>
-            <Grid item md={9}>
-              <Grid item className={classes.boxMargin}>
-                <Typography variant="subtitle2" className="pb-3">
-                  {t("user:user")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  fullWidth
-                  variant="outlined"
-                  value={userId}
-                  disabled
-                />
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(
+                  classes.flexRow,
+                  classes.justContent,
+                  classes.alignItem,
+                  classes.marginRow
+                )}
+              >
+                <Grid item md={3} className={classes.borderImg}>
+                  <img
+                    src={process.env.PUBLIC_URL + "/img/Group.png"}
+                    alt="img-test"
+                    className={classes.imgWidth}
+                  />
+                </Grid>
+                <Grid item md={9}>
+                  <Grid item className={classes.boxMargin}>
+                    <Typography variant="subtitle2" className="pb-3">
+                      {t("user:user")}
+                    </Typography>
+                    <TextField
+                      id="input-with-icon-textfield"
+                      size="small"
+                      fullWidth
+                      variant="outlined"
+                      value={userId}
+                      disabled
+                    />
+                  </Grid>
+                  <Grid
+                    item
+                    className={clsx(classes.boxMargin, classes.marginRow)}
+                  >
+                    <Typography variant="subtitle2" className="pb-3">
+                      {t("user:email")}
+                    </Typography>
+                    <TextField
+                      // id="uemail"
+                      size="small"
+                      placeholder={t("user:placeholderEmail")}
+                      fullWidth
+                      variant="outlined"
+                      value={emailUser}
+                      onChange={handleEmailUserChange}
+                      error={
+                        (!isValidateEdit && _.isEmpty(emailUser)) ||
+                        (!isValidateEdit && !isValidateEmail)
+                      }
+                    />
+                    {!isValidateEdit && _.isEmpty(emailUser) ? (
+                      <Validate errorText={message} />
+                    ) : (
+                      !isValidateEdit &&
+                      !isValidateEmail && <Validate errorText={messageEmail} />
+                    )}
+                  </Grid>
+                </Grid>
               </Grid>
-              <Grid item className={clsx(classes.boxMargin, classes.marginRow)}>
-                <Typography variant="subtitle2" className="pb-3">
-                  {t("user:email")}
-                </Typography>
-                <TextField
-                  id="uemail"
-                  size="small"
-                  placeholder={t("user:placeholderEmail")}
-                  fullWidth
-                  variant="outlined"
-                  value={emailUser}
-                  onChange={handleEmailUserChange}
-                />
+
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRow, classes.marginRow)}
+              >
+                <Grid item md={6}>
+                  <Typography variant="subtitle2" className="pb-3">
+                    {t("user:firstName")}
+                  </Typography>
+                  <TextField
+                    // id="ufname"
+                    size="small"
+                    placeholder={t("user:placeholderFrist")}
+                    fullWidth
+                    variant="outlined"
+                    value={fristName}
+                    onChange={handleFristNameChange}
+                    error={!isValidateEdit && _.isEmpty(fristName)}
+                  />
+                  {!isValidateEdit && _.isEmpty(fristName) && (
+                    <Validate errorText={message} />
+                  )}
+                </Grid>
+                <Grid item md={6} className={classes.boxMargin}>
+                  <Typography variant="subtitle2" className="pb-3">
+                    {t("user:lastName")}
+                  </Typography>
+                  <TextField
+                    // id="ulname"
+                    size="small"
+                    placeholder={t("user:placeholderLast")}
+                    fullWidth
+                    variant="outlined"
+                    value={lastName}
+                    onChange={handleLastNameChange}
+                    error={!isValidateEdit && _.isEmpty(lastName)}
+                  />
+                  {!isValidateEdit && _.isEmpty(lastName) && (
+                    <Validate errorText={message} />
+                  )}
+                </Grid>
               </Grid>
-            </Grid>
-          </Grid>
 
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRow, classes.marginRow)}
-          >
-            <Grid item md={6}>
-              <Typography variant="subtitle2" className="pb-3">
-                {t("user:firstName")}
-              </Typography>
-              <TextField
-                id="ufname"
-                size="small"
-                placeholder={t("user:placeholderFrist")}
-                fullWidth
-                variant="outlined"
-                value={fristName}
-                onChange={handleFristNameChange}
-              />
-            </Grid>
-            <Grid item md={6} className={classes.boxMargin}>
-              <Typography variant="subtitle2" className="pb-3">
-                {t("user:lastName")}
-              </Typography>
-              <TextField
-                id="ulname"
-                size="small"
-                placeholder={t("user:placeholderLast")}
-                fullWidth
-                variant="outlined"
-                value={lastName}
-                onChange={handleLastNameChange}
-              />
-            </Grid>
-          </Grid>
-
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRow, classes.marginRow)}
-          >
-            <Grid item md={6}>
-              <Typography variant="subtitle2" className="pb-3">
-                {t("user:phone")}
-              </Typography>
-              <TextField
-                id="utel"
-                size="small"
-                type="number"
-                placeholder={t("user:placeholderPhone")}
-                fullWidth
-                variant="outlined"
-                value={phoneNumber}
-                onChange={handlePhoneNumberChange}
-              />
-            </Grid>
-            <Grid item md={6} className={classes.boxMargin}>
-              <Typography variant="subtitle2" className="pb-3">
-                {t("user:label")}
-              </Typography>
-              <FormControl variant="outlined" size="small" fullWidth>
-                <Select
-                  labelId="demo-select-small-label"
-                  id="demo-select-small"
-                  value={selectInput}
-                  placeholder={t("user:selectInput")}
-                  onChange={handleSelectInputChange}
-                >
-                  <MenuItem value="none">{t("user:selectInput")}</MenuItem>
-                  {/* <MenuItem value={10}>Ten</MenuItem>
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRow, classes.marginRow)}
+              >
+                <Grid item md={6}>
+                  <Typography variant="subtitle2" className="pb-3">
+                    {t("user:phone")}
+                  </Typography>
+                  <TextField
+                    // id="utel"
+                    size="small"
+                    // type="number"
+                    placeholder={t("user:placeholderPhone")}
+                    fullWidth
+                    variant="outlined"
+                    inputProps={{ maxLength: 10 }}
+                    value={phoneNumber}
+                    onChange={handlePhoneNumberChange}
+                    error={
+                      (!isValidateEdit && _.isEmpty(phoneNumber)) ||
+                      (!isValidateEdit && phoneNumber.length < 9)
+                    }
+                  />
+                  {!isValidateEdit && _.isEmpty(phoneNumber) ? (
+                    <Validate errorText={message} />
+                  ) : (
+                    !isValidateEdit &&
+                    phoneNumber.length < 9 && (
+                      <Validate errorText={messagePhone} />
+                    )
+                  )}
+                </Grid>
+                <Grid item md={6} className={classes.boxMargin}>
+                  <Typography variant="subtitle2" className="pb-3">
+                    {t("user:label")}
+                  </Typography>
+                  <FormControl variant="outlined" size="small" fullWidth>
+                    <Select
+                      // labelId="demo-select-small-label"
+                      id="demo-select-small"
+                      value={role}
+                      placeholder={t("user:selectInput")}
+                      onChange={handleRoleChange}
+                    >
+                      <MenuItem value="Admin">{t("user:selectInput")}</MenuItem>
+                      {/* <MenuItem value={10}>Ten</MenuItem>
                     <MenuItem value={20}>Twenty</MenuItem>
                     <MenuItem value={30}>Thirty</MenuItem> */}
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
 
-          <Grid item md={12} className={classes.marginRow}>
-            <Typography
-              variant="body1"
-              className={clsx(
-                classes.cuserPoint,
-                classes.textColor,
-                classes.paddingTop
-              )}
-              onClick={handleClickOpenResetPass}
-            >
-              {t("login:forgot")}
-            </Typography>
-          </Grid>
+              <Grid item md={3} className={classes.marginRow}>
+                <Typography
+                  variant="body1"
+                  className={clsx(
+                    classes.cuserPoint,
+                    classes.textColor,
+                    classes.paddingTop
+                  )}
+                  onClick={handleClickOpenResetPass}
+                >
+                  {t("login:forgot")}
+                </Typography>
+              </Grid>
 
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRow, classes.marginRow)}
-          >
-            <Grid item md={3} className={classes.marginRow}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    color="warning"
-                    checked={activeEdit}
-                    onChange={onSelectClickActiveEdit}
-                    inputProps={{
-                      "aria-label": "select active edit",
-                    }}
-                    l
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRow, classes.marginRow)}
+              >
+                <Grid item md={3} className={classes.marginRow}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        color="warning"
+                        checked={active}
+                        onChange={onSelectClickActive}
+                        inputProps={{
+                          "aria-label": "select active edit",
+                        }}
+                        l
+                      />
+                    }
+                    label={t("user:active")}
                   />
-                }
-                label={t("user:active")}
-              />
-            </Grid>
-            <Grid
-              item
-              md={9}
-              className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-            >
-              <Grid item md={3}>
-                <Button
-                  autoFocus
-                  onClick={handleCloseAddUser}
-                  fullWidth
-                  className={clsx(classes.backGroundCancel)}
+                  {!isValidateEdit && _.isNull(active) && (
+                    <Validate errorText={message} />
+                  )}
+                </Grid>
+                <Grid
+                  item
+                  md={9}
+                  className={clsx(classes.flexRowBtnModal, classes.marginRow)}
                 >
-                  {t("user:cancel")}
-                </Button>
+                  <Grid item md={3}>
+                    <Button
+                      autoFocus
+                      onClick={handleCloseEditUser}
+                      fullWidth
+                      className={clsx(classes.backGroundCancel)}
+                    >
+                      {t("user:cancel")}
+                    </Button>
+                  </Grid>
+                  <Grid item md={3} className={classes.boxMargin}>
+                    <Button
+                      autoFocus
+                      fullWidth
+                      onClick={() => handleValidateEdit(isIdEdit)}
+                      className={clsx(classes.backGroundConfrim)}
+                      variant="outlined"
+                    >
+                      {t("user:confrim")}
+                    </Button>
+                  </Grid>
+                </Grid>
               </Grid>
-              <Grid item md={3} className={classes.boxMargin}>
-                <Button
-                  autoFocus
-                  fullWidth
-                  className={clsx(classes.backGroundConfrim)}
-                  variant="outlined"
-                >
-                  {t("user:confrim")}
-                </Button>
-              </Grid>
-            </Grid>
-          </Grid>
+            </>
+          )}
         </DialogContent>
         {/* <DialogActions className={classes.paddingFoot}></DialogActions> */}
       </Dialog>
@@ -1444,12 +1758,14 @@ const UserManagement = ({ t, login }) => {
 
       <ModalResetPassword
         open={openResetPass}
-        close={handleCloseResetPass}
+        close={() => setOpenResetPass(false)}
         handleNewPassChange={handleNewPassChange}
         newPassWord={newPassWord}
         confrimPassword={confrimPassword}
         handleConfrimChange={handleConfrimChange}
         handleReset={handleCloseResetPass}
+        isValidateForget={isValidateForget}
+        messageForget={messageForget}
       />
 
       {/* Modal View */}
@@ -1544,12 +1860,13 @@ const UserManagement = ({ t, login }) => {
       <UserView
         open={openViewUser}
         close={handleCloseView}
-        userId={user?.user?.id}
-        user={user?.user?.username}
+        userId={userId}
+        user={emailUser}
         t={t}
         emailUser={emailUser}
         phoneNumber={phoneNumber}
-        role={user?.user?.role}
+        role={role}
+        loading={isLoading}
       />
     </Container>
   );

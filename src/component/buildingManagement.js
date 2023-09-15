@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, connect } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
@@ -31,6 +31,7 @@ import {
   InputAdornment,
   Card,
   CardContent,
+  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -50,6 +51,21 @@ import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import _, { stubFalse } from "lodash";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import Validate from "./validate";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+} from "../js/actions";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -159,34 +175,6 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "flex-end",
   },
 }));
-
-function createData(name, calories, fat, carbs, power, protein, unit) {
-  return {
-    name,
-    calories,
-    fat,
-    carbs,
-    power,
-    protein,
-    unit,
-  };
-}
-
-const rows = [
-  createData(1, "Building 1", 10, 220, 20, 20, 1120),
-  createData(2, "Building 2", 10, 220, 20, 20, 1120),
-  createData(3, "Building 3", 10, 220, 20, 20, 1120),
-  createData(4, "Building 4", 10, 220, 20, 20, 1120),
-  createData(5, "Building 5", 10, 220, 20, 20, 1120),
-  createData(6, "Building 6", 10, 220, 20, 20, 1120),
-  createData(7, "Building 7", 10, 220, 20, 20, 1120),
-  createData(8, "Building 8", 10, 220, 20, 20, 1120),
-  createData(9, "Building 9", 10, 220, 20, 20, 1120),
-  createData(10, "Building 10", 10, 220, 20, 20, 1120),
-  createData(11, "Building 11", 10, 220, 20, 20, 1120),
-  createData(12, "Building 12", 10, 220, 20, 20, 1120),
-  createData(13, "Building 13", 10, 220, 20, 20, 1120),
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -390,7 +378,7 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTable({ t }) {
+const BuildingManagement = ({ t, login }) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -398,22 +386,267 @@ export default function EnhancedTable({ t }) {
   const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [buildingName, setBuildingName] = useState("");
-  const [lattitude, setLattitude] = useState("");
-  const [longtitude, setLongtitude] = useState("");
-  const [area, setArea] = useState("");
+  const [lattitude, setLattitude] = useState();
+  const [longtitude, setLongtitude] = useState();
+  const [area, setArea] = useState();
 
+  const dispatch = useDispatch();
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
+  const token = useSelector((state) => state.token);
   const theme = useTheme();
   const navigate = useNavigate();
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [openAdd, setOpenAdd] = useState(false);
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState("");
+  const [openView, setOpenView] = useState(false);
 
-  const handleClickOpen = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [isValidate, setIsValidate] = useState(true);
+  const [isIdEdit, setIsIdEdit] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
+  };
+
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token)) {
+      getBuilding();
+    }
+    console.log("token", token, login);
+  }, [token]);
+
+  const getBuilding = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getBuildingData().then((response) => {
+        const dataPayload = response.data;
+        setRows(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const handleValidate = (type) => {
+    let isValidate = true;
+
+    if (type === "edit") {
+      if (
+        _.isEmpty(buildingName) ||
+        !lattitude ||
+        !longtitude ||
+        !area ||
+        _.isEmpty(file)
+      ) {
+        isValidate = false;
+      }
+      console.log("isValidateEdit", isValidate);
+      setIsValidate(isValidate);
+    } else {
+      if (
+        _.isEmpty(buildingName) ||
+        _.isEmpty(lattitude) ||
+        _.isEmpty(longtitude) ||
+        _.isEmpty(area) ||
+        _.isNull(file)
+      ) {
+        isValidate = false;
+      }
+      console.log("isValidate", isValidate);
+      setIsValidate(isValidate);
+    }
+
+    if (isValidate) {
+      if (type === "edit") {
+        buildingUpdate(isIdEdit);
+      } else {
+        buildingRegister();
+      }
+    }
+  };
+
+  const buildingRegister = async () => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result; // Extract the base64 data
+        const body = {
+          name: buildingName,
+          latitude: lattitude,
+          longitude: longtitude,
+          area: area,
+          file: base64File, // Include the Base64 encoded file
+        };
+        await API.connectTokenAPI(token);
+        await API.BuildingRegister(body).then((response) => {
+          const dataPayload = response.data;
+          console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getBuilding();
+            handleCloseAdd();
+          }
+          setIsLoading(false);
+        });
+      };
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleCloseAdd();
+      setIsLoading(false);
+    }
+  };
+
+  const buildingUpdate = async (id) => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result; // Extract the base64 data
+        const body = {
+          name: buildingName,
+          latitude: lattitude,
+          longitude: longtitude,
+          area: area,
+          file: base64File,
+          fileOld: "",
+        };
+        await API.connectTokenAPI(token);
+        await API.buildingUpdate(id, body).then((response) => {
+          const dataPayload = response.data;
+          // console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getBuilding();
+            handleClose();
+          }
+          setIsLoading(false);
+        });
+      };
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleClose();
+      setIsLoading(false);
+    }
+  };
+
+  const getBuildingView = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getBuildingView(id).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("9999=======item", item);
+            setBuildingName(item.name);
+            setLattitude(item.latitude);
+            setLongtitude(item.longitude);
+            setArea(item.area);
+            setFile(item.file);
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const buildingDelete = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.buildingDelete(id).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          getBuilding();
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // delete Data //
+  const handleClickDeleteData = (event, id) => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        buildingDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  const handleClickOpen = (event, id) => {
     setOpen(true);
+    getBuildingView(id);
+    setIsIdEdit(id);
   };
 
   const handleClose = () => {
@@ -480,37 +713,87 @@ export default function EnhancedTable({ t }) {
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
       ),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, rows]
   );
 
   const handleLongtitude = (event) => {
     setLongtitude(event.target.value);
+    if (_.isEmpty(event.target.value)) {
+      setIsValidate(false);
+    } else {
+      setIsValidate(true);
+    }
   };
 
   const handleArea = (event) => {
     setArea(event.target.value);
+    if (_.isEmpty(event.target.value)) {
+      setIsValidate(false);
+    } else {
+      setIsValidate(true);
+    }
   };
 
   const handleBuildingName = (event) => {
     setBuildingName(event.target.value);
+    if (_.isEmpty(event.target.value)) {
+      setIsValidate(false);
+    } else {
+      setIsValidate(true);
+    }
   };
 
   const handleLattitude = (event) => {
     setLattitude(event.target.value);
+    if (_.isEmpty(event.target.value)) {
+      setIsValidate(false);
+    } else {
+      setIsValidate(true);
+    }
   };
 
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
+    setIsValidate(true);
+    setBuildingName("");
+    setLattitude("");
+    setLongtitude("");
+    setFile("");
+    setArea("");
+    setImagePreviewUrl("");
   };
 
   const handleCloseAdd = () => {
     setOpenAdd(false);
   };
 
+  const handleOpenView = (event, id) => {
+    setOpenView(true);
+    getBuildingView(id);
+  };
+
+  const handleCloseView = () => {
+    setOpenView(false);
+  };
+
   const handleUploadFile = (e) => {
     // setFile(e.target.files[0]);
-    if (e.target.files.length > 0) {
-      setFile(URL.createObjectURL(e.target.files[0]));
+    // if (e.target.files.length > 0) {
+    //   setFile(URL.createObjectURL(e.target.files[0]));
+    // } else {
+    //   setIsValidate(false);
+    // }
+    e.preventDefault();
+    const fileTypeArray = ["image/png", "image/jpg", "image/jpeg"];
+    let reader = new window.FileReader();
+    let file = e.target.files[0];
+
+    if (fileTypeArray.includes(file.type)) {
+      reader.onloadend = () => {
+        setFile(file);
+        setImagePreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -518,80 +801,87 @@ export default function EnhancedTable({ t }) {
     navigate("/buildingFloorDetail");
   };
 
-
-
-
   return (
     <Container className={classes.marginRow}>
-      <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon className={classes.alignSelf} />
-        <Typography variant="h6"> / {sideBar}</Typography>
-      </Grid>
-      <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
-        <Grid item md={5} className={classes.marginRow}>
-          <TextField
-            id="input-with-icon-textfield"
-            size="small"
-            placeholder={t("building:search")}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-          />
-        </Grid>
-        <Grid item md={2} className={clsx(classes.marginRow)}>
-          <Button
-            onClick={handleClickOpenAdd}
-            autoFocus
-            // fullWidth
-            className={clsx(classes.backGroundConfrim, classes.width)}
-            variant="outlined"
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <Grid item className={classes.flexRow}>
+            <HomeOutlinedIcon className={classes.alignSelf} />
+            <Typography variant="h6"> / {sideBar}</Typography>
+          </Grid>
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRow, classes.justContent)}
           >
-            {t("building:btnAdd")}
-          </Button>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ width: "100%" }} className={classes.marginRow}>
-        <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
-            >
-              <EnhancedTableHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                //   onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-                classes={classes}
+            <Grid item md={5} className={classes.marginRow}>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("building:search")}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchOutlinedIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
               />
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+            </Grid>
+            <Grid item md={2} className={clsx(classes.marginRow)}>
+              <Button
+                onClick={handleClickOpenAdd}
+                autoFocus
+                // fullWidth
+                className={clsx(classes.backGroundConfrim, classes.width)}
+                variant="outlined"
+              >
+                {t("building:btnAdd")}
+              </Button>
+            </Grid>
+          </Grid>
 
-                  return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleClick(event, row.name)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.name}
-                      selected={isItemSelected}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      {/* <TableCell padding="checkbox">
+          <Box sx={{ width: "100%" }} className={classes.marginRow}>
+            <Paper sx={{ width: "100%", mb: 2 }}>
+              {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
+              <TableContainer>
+                <Table
+                  sx={{ minWidth: 750 }}
+                  aria-labelledby="tableTitle"
+                  size={dense ? "small" : "medium"}
+                >
+                  <EnhancedTableHead
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    //   onSelectAllClick={handleSelectAllClick}
+                    onRequestSort={handleRequestSort}
+                    rowCount={rows.length}
+                    classes={classes}
+                  />
+                  <TableBody>
+                    {visibleRows.map((row, index) => {
+                      const isItemSelected = isSelected(row.name);
+                      const labelId = `enhanced-table-checkbox-${index}`;
+
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) => handleClick(event, row.name)}
+                          role="checkbox"
+                          // aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.name}
+                          // selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          {/* <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
@@ -600,93 +890,107 @@ export default function EnhancedTable({ t }) {
                         }}
                       />
                     </TableCell> */}
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                        className={classes.fontSixeCell}
-                        align="center"
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            className={classes.fontSixeCell}
+                            align="center"
+                          >
+                            {row.id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.latitude}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.longitude}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.power}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.protein}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.unit}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            <FeedOutlinedIcon
+                              className={classes.marginIcon}
+                              onClick={openPageFlooreDetail}
+                            />
+                            <VisibilityOutlinedIcon
+                              className={classes.marginIcon}
+                              onClick={(event) => handleOpenView(event, row.id)}
+                            />
+                            <SettingsOutlinedIcon
+                              onClick={(event) =>
+                                handleClickOpen(event, row.id)
+                              }
+                            />
+                            <DeleteOutlineOutlinedIcon
+                              onClick={(event) => {
+                                handleClickDeleteData(event, row.id);
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {/* {emptyRows > 0 && (
+                      <TableRow
+                        style={{
+                          height: (dense ? 33 : 53) * emptyRows,
+                        }}
                       >
-                        {row.name}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.calories}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.fat}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.carbs}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.power}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.protein}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.unit}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        <FeedOutlinedIcon className={classes.marginIcon} onClick={openPageFlooreDetail} />
-                        <VisibilityOutlinedIcon
-                          className={classes.marginIcon}
-                        />
-                        <SettingsOutlinedIcon onClick={handleClickOpen} />
-                        <DeleteOutlineOutlinedIcon />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: (dense ? 33 : 53) * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
-        {/* <FormControlLabel
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )} */}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+            {/* <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
       /> */}
-      </Box>
+          </Box>
+        </>
+      )}
 
       {/* Modal Edit*/}
       <Dialog
@@ -703,140 +1007,177 @@ export default function EnhancedTable({ t }) {
           <Typography variant="h3">{t("building:edit")}</Typography>
         </DialogTitle>
         <DialogContent>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="pb-3">
-              {t("building:buildingName")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:buildingName")}
-              fullWidth
-              variant="outlined"
-              value={buildingName}
-              onChange={handleBuildingName}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:lattitude")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:lattitude")}
-              fullWidth
-              variant="outlined"
-              value={lattitude}
-              onChange={handleLattitude}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:longtitude")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:longtitude")}
-              fullWidth
-              variant="outlined"
-              value={longtitude}
-              onChange={handleLongtitude}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:area")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:area")}
-              fullWidth
-              variant="outlined"
-              value={area}
-              onChange={handleArea}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:upload")}
-            </Typography>
-            <Grid
-              item
-              md={12}
-              //   className={clsx(classes.flexRow, classes.justContentCenter)}
-            >
-              <input
-                className={classes.input}
-                id={"contained-button-file"}
-                type="file"
-                accept="image/jpeg,image/png,application/pdf,image/tiff"
-                // multiple={isMultiple}
-                onChange={handleUploadFile}
-                onClick={(e) => {
-                  console.log("aaaaa");
-                }}
-              />
-              <label
-                htmlFor={"contained-button-file"}
-                className={clsx(
-                  classes.flexRow,
-                  classes.justContentCenter,
-                  classes.width
-                )}
-              >
-                <Card
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="pb-3">
+                  {t("building:buildingName")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("building:buildingName")}
+                  fullWidth
                   variant="outlined"
-                  style={{ width: 200, height: 200 }}
-                  className={clsx(classes.boxUpload)}
+                  value={buildingName}
+                  onChange={handleBuildingName}
+                  error={!isValidate && _.isEmpty(buildingName)}
+                />
+                {!isValidate && _.isEmpty(buildingName) ? (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                ) : null}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("building:lattitude")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("building:lattitude")}
+                  fullWidth
+                  variant="outlined"
+                  value={lattitude}
+                  onChange={handleLattitude}
+                  error={lattitude ? false : !isValidate}
+                />
+                {lattitude ? (
+                  false
+                ) : !isValidate ? (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                ) : null}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("building:longtitude")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("building:longtitude")}
+                  fullWidth
+                  variant="outlined"
+                  value={longtitude}
+                  onChange={handleLongtitude}
+                  error={longtitude ? false : !isValidate}
+                />
+                {longtitude ? (
+                  false
+                ) : !isValidate ? (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                ) : null}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("building:area")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("building:area")}
+                  fullWidth
+                  variant="outlined"
+                  value={area}
+                  onChange={handleArea}
+                  error={area ? false : !isValidate}
+                />
+                {area ? (
+                  false
+                ) : !isValidate ? (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                ) : null}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("building:upload")}
+                </Typography>
+                <Grid
+                  item
+                  md={12}
+                  //   className={clsx(classes.flexRow, classes.justContentCenter)}
                 >
-                  {file ? (
-                    <img
-                      src={file}
-                      alt="img-upload"
-                      className={classes.imgWidth}
+                  <Grid item md={6}>
+                    <input
+                      className={classes.input}
+                      id={"contained-button-file"}
+                      type="file"
+                      accept="image/jpeg,image/png,application/pdf,image/tiff"
+                      // multiple={isMultiple}
+                      onChange={handleUploadFile}
+                      onClick={(e) => {
+                        console.log("aaaaa");
+                      }}
                     />
-                  ) : (
-                    <CardContent
-                      className={clsx(classes.textCenter, classes.marginTopBox)}
+                    <label
+                      htmlFor={"contained-button-file"}
+                      className={clsx(
+                        classes.flexRow,
+                        classes.justContentCenter,
+                        classes.width
+                      )}
                     >
-                      <Typography> +</Typography>
-                      <Typography> upload</Typography>
-                    </CardContent>
-                  )}
-                </Card>
-              </label>
-            </Grid>
-          </Grid>
-          {/* <DialogContentText>
-            Let Google help apps determine location. This means sending
-            anonymous location data to Google, even when no apps are running.
-          </DialogContentText> */}
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-          >
-            <Grid item md={3}>
-              <Button
-                onClick={handleClose}
-                className={clsx(classes.backGroundCancel)}
-                variant="outlined"
+                      <Card
+                        variant="outlined"
+                        style={{ width: 200, height: 200 }}
+                        className={clsx(classes.boxUpload)}
+                      >
+                        {file ? (
+                          <img
+                            src={`data:image/png;base64,${file}`}
+                            alt="img-upload"
+                            className={classes.imgWidth}
+                          />
+                        ) : (
+                          <CardContent
+                            className={clsx(
+                              classes.textCenter,
+                              classes.marginTopBox
+                            )}
+                          >
+                            <Typography> +</Typography>
+                            <Typography> upload</Typography>
+                          </CardContent>
+                        )}
+                      </Card>
+                    </label>
+                  </Grid>
+
+                  {!isValidate && _.isNull(file) ? (
+                    <Validate errorText={"กรุณาระบุข้อมูล"} />
+                  ) : null}
+                </Grid>
+              </Grid>
+
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
               >
-                {t("building:btnCancel")}
-              </Button>
-            </Grid>
-            <Grid item md={3} className={classes.boxMargin}>
-              <Button
-                className={clsx(classes.backGroundConfrim)}
-                variant="outlined"
-              >
-                {t("building:btnSave")}
-              </Button>
-            </Grid>
-          </Grid>
+                <Grid item md={3}>
+                  <Button
+                    onClick={handleClose}
+                    className={clsx(classes.backGroundCancel)}
+                    variant="outlined"
+                  >
+                    {t("building:btnCancel")}
+                  </Button>
+                </Grid>
+                <Grid item md={3} className={classes.boxMargin}>
+                  <Button
+                    className={clsx(classes.backGroundConfrim)}
+                    variant="outlined"
+                    onClick={() => handleValidate("edit")}
+                  >
+                    {t("building:btnSave")}
+                  </Button>
+                </Grid>
+              </Grid>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -861,56 +1202,72 @@ export default function EnhancedTable({ t }) {
               {t("building:buildingName")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("building:buildingName")}
               fullWidth
               variant="outlined"
               value={buildingName}
               onChange={handleBuildingName}
+              error={!isValidate && _.isEmpty(buildingName)}
             />
+            {!isValidate && _.isEmpty(buildingName) ? (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            ) : null}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("building:lattitude")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("building:lattitude")}
               fullWidth
               variant="outlined"
               value={lattitude}
               onChange={handleLattitude}
+              error={!isValidate && _.isEmpty(lattitude)}
             />
+            {!isValidate && _.isEmpty(lattitude) ? (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            ) : null}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("building:longtitude")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("building:longtitude")}
               fullWidth
               variant="outlined"
               value={longtitude}
               onChange={handleLongtitude}
+              error={!isValidate && _.isEmpty(longtitude)}
             />
+            {!isValidate && _.isEmpty(longtitude) ? (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            ) : null}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("building:area")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("building:area")}
               fullWidth
               variant="outlined"
               value={area}
               onChange={handleArea}
+              error={!isValidate && _.isEmpty(area)}
             />
+            {!isValidate && _.isEmpty(area) ? (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            ) : null}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -921,46 +1278,55 @@ export default function EnhancedTable({ t }) {
               md={12}
               //   className={clsx(classes.flexRow, classes.justContentCenter)}
             >
-              <input
-                className={classes.input}
-                id={"contained-button-file"}
-                type="file"
-                accept="image/jpeg,image/png,application/pdf,image/tiff"
-                // multiple={isMultiple}
-                onChange={handleUploadFile}
-                onClick={(e) => {
-                  console.log("aaaaa");
-                }}
-              />
-              <label
-                htmlFor={"contained-button-file"}
-                className={clsx(
-                  classes.flexRow,
-                  classes.justContentCenter,
-                  classes.width
-                )}
-              >
-                <Card
-                  variant="outlined"
-                  style={{ width: 200, height: 200 }}
-                  className={clsx(classes.boxUpload)}
-                >
-                  {file ? (
-                    <img
-                      src={file}
-                      alt="img-upload"
-                      className={classes.imgWidth}
-                    />
-                  ) : (
-                    <CardContent
-                      className={clsx(classes.textCenter, classes.marginTopBox)}
-                    >
-                      <Typography> +</Typography>
-                      <Typography> upload</Typography>
-                    </CardContent>
+              <Grid item md={6}>
+                <input
+                  className={classes.input}
+                  id={"contained-button-file"}
+                  type="file"
+                  accept="image/jpeg,image/png,application/pdf,image/tiff"
+                  // multiple={isMultiple}
+                  onChange={handleUploadFile}
+                  onClick={(e) => {
+                    console.log("aaaaa");
+                  }}
+                />
+                <label
+                  htmlFor={"contained-button-file"}
+                  className={clsx(
+                    classes.flexRow,
+                    classes.justContentCenter,
+                    classes.width
                   )}
-                </Card>
-              </label>
+                >
+                  <Card
+                    variant="outlined"
+                    style={{ width: 200, height: 200 }}
+                    className={clsx(classes.boxUpload)}
+                  >
+                    {imagePreviewUrl ? (
+                      <img
+                        src={imagePreviewUrl}
+                        alt="img-upload"
+                        className={classes.imgWidth}
+                      />
+                    ) : (
+                      <CardContent
+                        className={clsx(
+                          classes.textCenter,
+                          classes.marginTopBox
+                        )}
+                      >
+                        <Typography> +</Typography>
+                        <Typography> upload</Typography>
+                      </CardContent>
+                    )}
+                  </Card>
+                </label>
+              </Grid>
+
+              {!isValidate && _.isNull(file) ? (
+                <Validate errorText={"กรุณาระบุข้อมูล"} />
+              ) : null}
             </Grid>
           </Grid>
           {/* <DialogContentText>
@@ -985,21 +1351,117 @@ export default function EnhancedTable({ t }) {
               <Button
                 className={clsx(classes.backGroundConfrim)}
                 variant="outlined"
+                onClick={handleValidate}
               >
                 {t("building:btnAddModal")}
               </Button>
             </Grid>
           </Grid>
         </DialogContent>
-        {/* <DialogActions>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnCancel")}
-          </Button>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnAddModal")}
-          </Button>
-        </DialogActions> */}
+      </Dialog>
+
+      {/* Modal View */}
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openView}
+        onClose={handleCloseView}
+        aria-labelledby="responsive-dialog-title-view"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle
+          id="responsive-dialog-title-view"
+          className={clsx(
+            classes.flexRow,
+            classes.justContent,
+            classes.borderBottom
+          )}
+        >
+          <Typography variant="h3">{buildingName}</Typography>
+          <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
+        </DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(
+                  classes.alignItem,
+                  classes.marginRow,
+                  classes.flexRow
+                )}
+              >
+                <Grid item md={3} className={classes.borderImg}>
+                  <img src={file} alt="img-test" className={classes.imgWidth} />
+                </Grid>
+                <Grid item md={9}>
+                  <Grid
+                    item
+                    className={clsx(classes.boxMargin, classes.marginRow)}
+                  >
+                    <Typography variant="h5">
+                      {buildingName ? buildingName : "-"}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("building:lattitude")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {lattitude ? lattitude : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5">
+                  {" "}
+                  {t("building:longtitude")}
+                </Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {longtitude ? longtitude : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("building:area")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">{area ? area : "-"}</Typography>
+                </Grid>
+              </Grid>
+            </>
+          )}
+        </DialogContent>
       </Dialog>
     </Container>
   );
+};
+
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
 }
+
+export default connect(mapStateToProps, mapDispatchToProps)(BuildingManagement);

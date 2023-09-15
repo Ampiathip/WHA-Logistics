@@ -73,7 +73,7 @@ function Header({ type, matches }) {
       setBuilding(user?.building);
       getBuildingUser();
     }
-  }, [user, building, selectBuilding]);
+  }, [user, building]);
 
   const getBuildingUser = () => {
     if (building.length > 0) {
@@ -81,6 +81,7 @@ function Header({ type, matches }) {
         setSelectBuilding(item.id);
       });
     }
+    // console.log('building', building, user);
   };
 
   const handleClick = (event) => {

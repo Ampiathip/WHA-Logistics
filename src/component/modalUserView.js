@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 // import { useDispatch, useSelector } from "react-redux";
 // import PropTypes from "prop-types";
 import Typography from "@mui/material/Typography";
-import { makeStyles, Grid } from "@material-ui/core";
+import { makeStyles, Grid, CircularProgress, Box } from "@material-ui/core";
 import clsx from "clsx";
 import Dialog from "@mui/material/Dialog";
 // import DialogActions from "@mui/material/DialogActions";
@@ -112,10 +112,20 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function UserView({ t, open, close, userId, user, emailUser, phoneNumber, role, }) {
+export default function UserView({
+  t,
+  open,
+  close,
+  userId,
+  user,
+  emailUser,
+  phoneNumber,
+  role,
+  loading,
+}) {
   const classes = useStyles();
-//   const sideBar = useSelector((state) => state.sidebar);
-//   const user = useSelector((state) => state.user);
+  //   const sideBar = useSelector((state) => state.sidebar);
+  //   const user = useSelector((state) => state.user);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("xl"));
 
@@ -144,70 +154,88 @@ export default function UserView({ t, open, close, userId, user, emailUser, phon
           <CloseIcon onClick={close} className={classes.cuserPoint} />
         </DialogTitle>
         <DialogContent>
-          <Grid
-            item
-            md={12}
-            className={clsx(
-              classes.alignItem,
-              classes.marginRow,
-              classes.flexRow
-            )}
-          >
-            <Grid item md={3} className={classes.borderImg}>
-              <img
-                src={process.env.PUBLIC_URL + "/img/Group.png"}
-                alt="img-test"
-                className={classes.imgWidth}
-              />
-            </Grid>
-            <Grid item md={9}>
-              <Grid item className={classes.boxMargin}>
-                <Typography variant="h3">{userId}</Typography>
+          {loading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(
+                  classes.alignItem,
+                  classes.marginRow,
+                  classes.flexRow
+                )}
+              >
+                <Grid item md={3} className={classes.borderImg}>
+                  <img
+                    src={process.env.PUBLIC_URL + "/img/Group.png"}
+                    alt="img-test"
+                    className={classes.imgWidth}
+                  />
+                </Grid>
+                <Grid item md={9}>
+                  <Grid item className={classes.boxMargin}>
+                    <Typography variant="h3">{userId}</Typography>
+                  </Grid>
+                  <Grid
+                    item
+                    className={clsx(classes.boxMargin, classes.marginRow)}
+                  >
+                    <Typography variant="h5">{user ? user : "-"}</Typography>
+                  </Grid>
+                  <Grid
+                    item
+                    className={clsx(classes.boxMargin, classes.marginRow)}
+                  >
+                    <Typography variant="h6">{t("user:mock")}</Typography>
+                  </Grid>
+                </Grid>
               </Grid>
-              <Grid item className={clsx(classes.boxMargin, classes.marginRow)}>
-                <Typography variant="h5">{user}</Typography>
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5">{t("user:email")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {emailUser ? emailUser : "-"}
+                  </Typography>
+                </Grid>
               </Grid>
-              <Grid item className={clsx(classes.boxMargin, classes.marginRow)}>
-                <Typography variant="h6">{t("user:mock")}</Typography>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5">{t("user:phone")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {phoneNumber ? phoneNumber : "-"}
+                  </Typography>
+                </Grid>
               </Grid>
-            </Grid>
-          </Grid>
-          <Grid item md={12} className={clsx(classes.marginRow)}>
-            <Typography variant="h5">{t("user:email")}</Typography>
-            <Grid item className="mt-2">
-              <Typography variant="body1">{emailUser}</Typography>
-            </Grid>
-          </Grid>
 
-          <Grid item md={12} className={clsx(classes.marginRow)}>
-            <Typography variant="h5">{t("user:phone")}</Typography>
-            <Grid item className="mt-2">
-              <Typography variant="body1">{phoneNumber}</Typography>
-            </Grid>
-          </Grid>
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5">{t("user:role")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">{role ? role : "-"}</Typography>
+                </Grid>
+              </Grid>
 
-          <Grid item md={12} className={clsx(classes.marginRow)}>
-            <Typography variant="h5">{t("user:role")}</Typography>
-            <Grid item className="mt-2">
-              <Typography variant="body1">{role}</Typography>
-            </Grid>
-          </Grid>
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5">{t("user:position")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">{t("user:system")}</Typography>
+                </Grid>
+              </Grid>
 
-          <Grid item md={12} className={clsx(classes.marginRow)}>
-            <Typography variant="h5">{t("user:position")}</Typography>
-            <Grid item className="mt-2">
-              <Typography variant="body1">{t("user:system")}</Typography>
-            </Grid>
-          </Grid>
-
-          <Grid item md={12} className={clsx(classes.marginRow)}>
-            <Typography variant="h5">{t("user:department")}</Typography>
-            <Grid item md={3} className={clsx("mt-2", classes.borderText)}>
-              <Typography variant="body1">
-                {t(`user:department`) + `${" 1"}`}
-              </Typography>
-            </Grid>
-          </Grid>
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5">{t("user:department")}</Typography>
+                <Grid item md={3} className={clsx("mt-2", classes.borderText)}>
+                  <Typography variant="body1">
+                    {t(`user:department`) + `${" 1"}`}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>

@@ -116,6 +116,10 @@ function Login(props) {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+   // validate pass forget //
+   const [isValidateForget, setIsValidateForget] = useState(false);
+   const [messageForget, setMessageForget] = useState("");
+
   //   useEffect(() => {
   //     document.title = `You clicked ${data} times`;
   //   });
@@ -189,6 +193,13 @@ function Login(props) {
 
   const handleClose = () => {
     setOpen(false);
+    if (newPassWord !== confrimPassword) {
+      setIsValidateForget(true);
+      setMessageForget('กรุณากรอกรหัสผ่านกับยืนยันรหัสผ่านให้ตรงกัน')
+    } else {
+      setIsValidateForget(false);
+      setMessageForget('')
+    }
   };
 
   // const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -427,6 +438,8 @@ function Login(props) {
         confrimPassword={confrimPassword}
         handleConfrimChange={handleConfrimChange}
         handleReset={handleClose}
+        isValidateForget={isValidateForget}
+        messageForget={messageForget}
       />
     </Grid>
   );
