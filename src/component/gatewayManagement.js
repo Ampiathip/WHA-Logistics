@@ -495,10 +495,10 @@ const GatewayManagement = ({ t, login }) => {
     if (type === "edit") {
       if (
         _.isEmpty(gatewayName) ||
-        _.isEmpty(buildingSelect) ||
+        !buildingSelect ||
         _.isEmpty(deviceBrand) ||
-        _.isEmpty(communicationTypeSelect) ||
-        _.isEmpty(file)
+        !communicationTypeSelect ||
+        _.isEmpty(imagePreviewUrl)
       ) {
         isValidate = false;
       }
@@ -507,10 +507,10 @@ const GatewayManagement = ({ t, login }) => {
     } else {
       if (
         _.isEmpty(gatewayName) ||
-        _.isEmpty(buildingSelect) ||
+        !buildingSelect ||
         _.isEmpty(deviceBrand) ||
-        _.isEmpty(communicationTypeSelect) ||
-        _.isNull(file)
+        !communicationTypeSelect ||
+        _.isEmpty(imagePreviewUrl)
       ) {
         isValidate = false;
       }
@@ -538,7 +538,7 @@ const GatewayManagement = ({ t, login }) => {
           name: gatewayName,
           band: deviceBrand,
           communication_id: communicationTypeSelect,
-          installation_date: "",
+          installation_date: new Date(),
           description: "",
           building_id: buildingSelect,
           file: base64File, // Include the Base64 encoded file
@@ -579,7 +579,7 @@ const GatewayManagement = ({ t, login }) => {
           name: gatewayName,
           band: deviceBrand,
           communication_id: communicationTypeSelect,
-          installation_date: "",
+          installation_date: new Date(),
           description: "",
           building_id: buildingSelect,
           file: base64File, // Include the Base64 encoded file
@@ -616,21 +616,24 @@ const GatewayManagement = ({ t, login }) => {
       await API.connectTokenAPI(token);
       await API.getGatewayView(id).then((response) => {
         const dataPayload = response.data;
-        // console.log("dataPayload", response, dataPayload);
+        console.log("dataPayload", response, dataPayload);
         dataPayload.length > 0 &&
           dataPayload.map((item) => {
-            console.log("9999=======item", item);
+            console.log("9999=======item", item, building);
             setGatewayName(item.name);
             setBuildingSelect(
-              building.find((f) => f.name === item.building_name).id
+              item.building_name &&
+                building.find((f) => f.name === item.building_name).id
             );
             setCommunicationTypeSelect(
-              communicationType.find(
-                (f) => f.communication === item.communication
-              ).id
+              item.communication &&
+                communicationType.find(
+                  (f) => f.communication === item.communication
+                ).id
             );
             setDeviceBrand(item.band);
-            setFile(item.file);
+            // setFile(item.file);
+            setImagePreviewUrl(item.file);
           });
         setIsLoading(false);
       });
@@ -688,6 +691,7 @@ const GatewayManagement = ({ t, login }) => {
     setOpen(true);
     getGatewayView(id);
     setIsIdEdit(id);
+    setIsValidate(true);
   };
 
   const handleClose = () => {
@@ -767,6 +771,12 @@ const GatewayManagement = ({ t, login }) => {
 
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
+    setGatewayName("");
+    setBuildingSelect("none");
+    setCommunicationTypeSelect("none");
+    setDeviceBrand("");
+    setImagePreviewUrl("");
+    setIsValidate(true);
   };
 
   const handleCloseAdd = () => {
@@ -806,8 +816,9 @@ const GatewayManagement = ({ t, login }) => {
     setBuildingSelect(event.target.value);
   };
 
-  const openPageDeviceDetail = () => {
-    navigate("/gatewayDeviceDetail");
+  const openPageDeviceDetail = (event, id) => {
+    // navigate("/gatewayDeviceDetail");
+    navigate('/gatewayDeviceDetail', { state: { id: id } });
   };
 
   return (
@@ -878,8 +889,6 @@ const GatewayManagement = ({ t, login }) => {
                     {visibleRows.map((row, index) => {
                       const isItemSelected = isSelected(row.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
-
-                      console.log("=====>>>>", row);
 
                       return (
                         <TableRow
@@ -953,7 +962,7 @@ const GatewayManagement = ({ t, login }) => {
                           >
                             <FeedOutlinedIcon
                               className={classes.marginIcon}
-                              onClick={openPageDeviceDetail}
+                              onClick={(event) => openPageDeviceDetail(event, row.id)}
                             />
                             <VisibilityOutlinedIcon
                               className={classes.marginIcon}
@@ -1037,7 +1046,11 @@ const GatewayManagement = ({ t, login }) => {
                   variant="outlined"
                   value={gatewayName}
                   onChange={handleGatewayName}
+                  error={_.isEmpty(gatewayName) && !isValidate}
                 />
+                {_.isEmpty(gatewayName) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
               </Grid>
               <Grid item md={12}>
                 <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1050,6 +1063,7 @@ const GatewayManagement = ({ t, login }) => {
                     value={building.length > 0 ? buildingSelect : "none"}
                     placeholder={t("gateway:selectCommunication")}
                     onChange={handleBuilding}
+                    error={_.isEmpty(buildingSelect) && !isValidate}
                   >
                     <MenuItem value="none">{t("gateway:select")}</MenuItem>
                     {building.length > 0 &&
@@ -1066,6 +1080,9 @@ const GatewayManagement = ({ t, login }) => {
                       })}
                   </Select>
                 </FormControl>
+                {_.isEmpty(buildingSelect) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
               </Grid>
               <Grid item md={12}>
                 <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1079,7 +1096,11 @@ const GatewayManagement = ({ t, login }) => {
                   variant="outlined"
                   value={deviceBrand}
                   onChange={handleDeviceBrand}
+                  error={_.isEmpty(deviceBrand) && !isValidate}
                 />
+                {_.isEmpty(deviceBrand) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
               </Grid>
               <Grid item md={12}>
                 <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1096,6 +1117,7 @@ const GatewayManagement = ({ t, login }) => {
                     }
                     placeholder={t("gateway:selectCommunication")}
                     onChange={handleCommunicationType}
+                    error={_.isEmpty(communicationTypeSelect) && !isValidate}
                   >
                     <MenuItem value="none">
                       {t("gateway:selectCommunication")}
@@ -1114,6 +1136,9 @@ const GatewayManagement = ({ t, login }) => {
                       })}
                   </Select>
                 </FormControl>
+                {_.isEmpty(communicationTypeSelect) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
               </Grid>
               <Grid item md={12}>
                 <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1148,9 +1173,9 @@ const GatewayManagement = ({ t, login }) => {
                       style={{ width: 200, height: 200 }}
                       className={clsx(classes.boxUpload)}
                     >
-                      {file ? (
+                      {imagePreviewUrl ? (
                         <img
-                          src={file}
+                          src={imagePreviewUrl}
                           alt="img-upload"
                           className={classes.imgWidth}
                         />
@@ -1168,6 +1193,9 @@ const GatewayManagement = ({ t, login }) => {
                     </Card>
                   </label>
                 </Grid>
+                {_.isEmpty(file) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
               </Grid>
               <Grid
                 item
@@ -1187,7 +1215,7 @@ const GatewayManagement = ({ t, login }) => {
                   <Button
                     className={clsx(classes.backGroundConfrim)}
                     variant="outlined"
-                    onClick={() => handleValidate('edit')}
+                    onClick={() => handleValidate("edit")}
                   >
                     {t("building:btnAddModal")}
                   </Button>
@@ -1226,7 +1254,11 @@ const GatewayManagement = ({ t, login }) => {
               variant="outlined"
               value={gatewayName}
               onChange={handleGatewayName}
+              error={_.isEmpty(gatewayName) && !isValidate}
             />
+            {_.isEmpty(gatewayName) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1239,6 +1271,7 @@ const GatewayManagement = ({ t, login }) => {
                 value={building.length > 0 ? buildingSelect : "none"}
                 placeholder={t("gateway:selectCommunication")}
                 onChange={handleBuilding}
+                error={buildingSelect === "none" && !isValidate}
               >
                 <MenuItem value="none">{t("gateway:select")}</MenuItem>
                 {building.length > 0 &&
@@ -1255,6 +1288,9 @@ const GatewayManagement = ({ t, login }) => {
                   })}
               </Select>
             </FormControl>
+            {buildingSelect === "none" && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1268,7 +1304,11 @@ const GatewayManagement = ({ t, login }) => {
               variant="outlined"
               value={deviceBrand}
               onChange={handleDeviceBrand}
+              error={_.isEmpty(deviceBrand) && !isValidate}
             />
+            {_.isEmpty(deviceBrand) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1285,6 +1325,7 @@ const GatewayManagement = ({ t, login }) => {
                 }
                 placeholder={t("gateway:selectCommunication")}
                 onChange={handleCommunicationType}
+                error={communicationTypeSelect === "none" && !isValidate}
               >
                 <MenuItem value="none">
                   {t("gateway:selectCommunication")}
@@ -1303,6 +1344,9 @@ const GatewayManagement = ({ t, login }) => {
                   })}
               </Select>
             </FormControl>
+            {communicationTypeSelect === "none" && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1354,6 +1398,9 @@ const GatewayManagement = ({ t, login }) => {
                 </Card>
               </label>
             </Grid>
+            {_.isEmpty(imagePreviewUrl) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           {/* <DialogContentText>
             Let Google help apps determine location. This means sending
@@ -1443,15 +1490,13 @@ const GatewayManagement = ({ t, login }) => {
                 <Typography variant="h5">{t("gateway:building")}</Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
-                    {buildingSelect ? buildingSelect : "-"}
+                    { buildingSelect ? buildingSelect : "-"}
                   </Typography>
                 </Grid>
               </Grid>
 
               <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5">
-                {t("gateway:deviceBrand")}
-                </Typography>
+                <Typography variant="h5">{t("gateway:deviceBrand")}</Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
                     {deviceBrand ? deviceBrand : "-"}
@@ -1460,7 +1505,10 @@ const GatewayManagement = ({ t, login }) => {
               </Grid>
 
               <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5"> {t("gateway:communicationType")}</Typography>
+                <Typography variant="h5">
+                  {" "}
+                  {t("gateway:communicationType")}
+                </Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
                     {communicationTypeSelect ? communicationTypeSelect : "-"}

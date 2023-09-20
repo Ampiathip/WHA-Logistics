@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, connect } from "react-redux";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -28,12 +28,14 @@ import {
   Container,
   TextField,
   InputAdornment,
+  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 import FeedOutlinedIcon from "@mui/icons-material/FeedOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -45,6 +47,21 @@ import { useTheme } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
 import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
 import { Height } from "@mui/icons-material";
+import _, { stubFalse } from "lodash";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import Validate from "./validate";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+} from "../js/actions";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -69,7 +86,9 @@ const useStyles = makeStyles((theme) => ({
     marginRight: 5,
   },
   imgWidth: {
-    width: "-webkit-fill-available",
+    // width: "inherit",
+    width: "150px",
+    height: "150px",
   },
   justContent: {
     justifyContent: "space-between",
@@ -125,36 +144,26 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   width: {
-    width: '100%',
+    width: "100%",
+  },
+  input: {
+    display: "none",
+  },
+  flexRowBtnModal: {
+    display: "flex",
+    justifyContent: "flex-end",
+  },
+  backGroundCancel: {
+    width: "100%",
+    backgroundColor: "#fff !important",
+    color: "#000 !important",
+    borderColor: "#000 !important",
+    "&:hover": {
+      backgroundColor: "#fff !important",
+      boxShadow: `none`,
+    },
   },
 }));
-
-function createData(name, calories, fat, carbs, power, protein) {
-  return {
-    name,
-    calories,
-    fat,
-    carbs,
-    power,
-    protein,
-  };
-}
-
-const rows = [
-  createData(1, "MDB_1", 10, 220, 20, 1120),
-  createData(2, "MDB_2", 10, 220, 20, 1120),
-  createData(3, "MDB_3", 10, 220, 20, 1120),
-  createData(4, "MDB_4", 10, 220, 20, 1120),
-  createData(5, "MDB_5", 10, 220, 20, 1120),
-  createData(6, "MDB_6", 10, 220, 20, 1120),
-  createData(7, "MDB_7", 10, 220, 20, 1120),
-  createData(8, "MDB_8", 10, 220, 20, 1120),
-  createData(9, "MDB_9", 10, 220, 20, 1120),
-  createData(10, "MDB_10", 10, 220, 20, 1120),
-  createData(11, "MDB_11", 10, 220, 20, 1120),
-  createData(12, "MDB_12", 10, 220, 20, 1120),
-  createData(13, "MDB_13", 10, 220, 20, 1120),
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -352,7 +361,7 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTable({ t }) {
+const DeviceManagement = ({ t, login }) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -366,14 +375,228 @@ export default function EnhancedTable({ t }) {
   const [band, setBand] = useState("");
   const [series, setSeries] = useState("");
   const [remark, setRemark] = useState("");
+  const [file, setFile] = useState("");
 
+  const dispatch = useDispatch();
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
+  const token = useSelector((state) => state.token);
+  const user = useSelector((state) => state.user);
   const theme = useTheme();
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("xl"));
   const [openAdd, setOpenAdd] = useState(false);
+
+  const [openView, setOpenView] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [isValidate, setIsValidate] = useState(true);
+  const [isIdEdit, setIsIdEdit] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
+  };
+
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token)) {
+      getDevice();
+    }
+  }, [token]);
+
+  const getDevice = async () => {
+    setIsLoading(true);
+    try {
+      const boby = {
+        listGatewayID: [1, 2, 3],
+      };
+      await API.connectTokenAPI(token);
+      await API.getDeviceData(boby).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", dataPayload);
+        setRows(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const deviceRegister = async () => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result; // Extract the base64 data
+        const body = {
+          deviceName: meterName,
+          gatewayID: "",
+          deviceBand: band,
+          model: series,
+          serialNumber: numberSN,
+          installationDate: installation,
+          communicationType: "",
+          description: remark,
+          file: base64File, // Include the Base64 encoded file
+        };
+        await API.connectTokenAPI(token);
+        await API.deviceRegister(body).then((response) => {
+          const dataPayload = response.data;
+          console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getDevice();
+            handleCloseAdd();
+          }
+          setIsLoading(false);
+        });
+      };
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleCloseAdd();
+      setIsLoading(false);
+    }
+  };
+
+  const deviceUpdate = async (id) => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result; // Extract the base64 data
+        const body = {
+          deviceName: meterName,
+          gatewayID: "",
+          deviceBand: band,
+          model: series,
+          serialNumber: numberSN,
+          installationDate: installation,
+          communicationType: "",
+          description: remark,
+          file: base64File, // Include the Base64 encoded file
+        };
+        await API.connectTokenAPI(token);
+        await API.deviceUpdate(id, body).then((response) => {
+          const dataPayload = response.data;
+          // console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getDevice();
+            handleClose();
+          }
+          setIsLoading(false);
+        });
+      };
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleClose();
+      setIsLoading(false);
+    }
+  };
+
+  const deviceView = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getDeviceView(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("9999=======item", item);
+            // setFile(item.file);
+            setImagePreviewUrl(item.file);
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const deviceDelete = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.deviceDelete(id).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          getDevice();
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // delete Data //
+  const handleClickDeleteData = (event, id) => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deviceDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -443,7 +666,7 @@ export default function EnhancedTable({ t }) {
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
       ),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, rows]
   );
 
   const handleMeterIdChange = (event) => {
@@ -480,6 +703,22 @@ export default function EnhancedTable({ t }) {
 
   const handleCloseAdd = () => {
     setOpenAdd(false);
+  };
+
+  const handleUploadFile = (e) => {
+    // setFile(e.target.files[0]);
+    e.preventDefault();
+    const fileTypeArray = ["image/png", "image/jpg", "image/jpeg"];
+    let reader = new window.FileReader();
+    let file = e.target.files[0];
+
+    if (fileTypeArray.includes(file.type)) {
+      reader.onloadend = () => {
+        setFile(file);
+        setImagePreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -607,6 +846,11 @@ export default function EnhancedTable({ t }) {
                       >
                         <FeedOutlinedIcon className={classes.marginIcon} />
                         <BorderColorOutlinedIcon onClick={handleClickOpen} />
+                        <DeleteOutlineOutlinedIcon
+                          onClick={(event) => {
+                            handleClickDeleteData(event, row.id);
+                          }}
+                        />
                       </TableCell>
                     </TableRow>
                   );
@@ -685,11 +929,41 @@ export default function EnhancedTable({ t }) {
               )}
             >
               <Grid item md={5} className={classes.borderImg}>
-                <img
-                  src={process.env.PUBLIC_URL + "/img/Group.png"}
-                  alt="img-test"
-                  className={classes.imgWidth}
-                />
+                <Grid item md={12}>
+                  <input
+                    className={classes.input}
+                    id={"contained-button-file"}
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf,image/tiff"
+                    // multiple={isMultiple}
+                    onChange={handleUploadFile}
+                    onClick={(e) => {
+                      console.log("aaaaa");
+                    }}
+                  />
+                  <label
+                    htmlFor={"contained-button-file"}
+                    className={clsx(
+                      classes.flexRow,
+                      classes.justContentCenter,
+                      classes.width
+                    )}
+                  >
+                    {imagePreviewUrl ? (
+                      <img
+                        src={imagePreviewUrl}
+                        alt="img-upload"
+                        className={classes.imgWidth}
+                      />
+                    ) : (
+                      <img
+                        src={process.env.PUBLIC_URL + "/img/Group.png"}
+                        alt="img-test"
+                        className={classes.imgWidth}
+                      />
+                    )}
+                  </label>
+                </Grid>
               </Grid>
               <Grid item md={7}>
                 <Grid item className={classes.boxMargin}>
@@ -796,6 +1070,30 @@ export default function EnhancedTable({ t }) {
                 value={remark}
                 onChange={handleRemarkChange}
               />
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+            >
+              <Grid item md={3}>
+                <Button
+                  onClick={handleCloseAdd}
+                  className={clsx(classes.backGroundCancel)}
+                  variant="outlined"
+                >
+                  {t("building:btnCancel")}
+                </Button>
+              </Grid>
+              <Grid item md={3} className={clsx('mb-4', classes.boxMargin)}>
+                <Button
+                  className={clsx(classes.backGroundConfrim)}
+                  variant="outlined"
+                  // onClick={handleValidate}
+                >
+                  {t("building:btnAddModal")}
+                </Button>
+              </Grid>
             </Grid>
           </Box>
           <Box className={clsx(classes.backgroundBox)}>
@@ -1344,7 +1642,10 @@ export default function EnhancedTable({ t }) {
             />
             {t("diveices:realtime")}
           </Typography>
-          <CloseIcon onClick={handleCloseAdd} className={clsx(classes.cursor)} />
+          <CloseIcon
+            onClick={handleCloseAdd}
+            className={clsx(classes.cursor)}
+          />
         </DialogTitle>
         <DialogContent
           className={clsx(
@@ -1363,14 +1664,44 @@ export default function EnhancedTable({ t }) {
                 classes.alignItem
               )}
             >
-              <Grid item md={5} className={classes.borderImg}>
-                <img
-                  src={process.env.PUBLIC_URL + "/img/Group.png"}
-                  alt="img-test"
-                  className={classes.imgWidth}
-                />
+              <Grid item md={6} className={classes.borderImg}>
+                <Grid item md={12}>
+                  <input
+                    className={classes.input}
+                    id={"contained-button-file"}
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf,image/tiff"
+                    // multiple={isMultiple}
+                    onChange={handleUploadFile}
+                    onClick={(e) => {
+                      console.log("aaaaa");
+                    }}
+                  />
+                  <label
+                    htmlFor={"contained-button-file"}
+                    className={clsx(
+                      classes.flexRow,
+                      classes.justContentCenter,
+                      classes.width
+                    )}
+                  >
+                    {imagePreviewUrl ? (
+                      <img
+                        src={imagePreviewUrl}
+                        alt="img-upload"
+                        className={classes.imgWidth}
+                      />
+                    ) : (
+                      <img
+                        src={process.env.PUBLIC_URL + "/img/Group.png"}
+                        alt="img-test"
+                        className={classes.imgWidth}
+                      />
+                    )}
+                  </label>
+                </Grid>
               </Grid>
-              <Grid item md={7}>
+              <Grid item md={6}>
                 <Grid item className={classes.boxMargin}>
                   <Typography variant="subtitle2" className="pb-3">
                     {t("diveices:meter")}
@@ -1475,6 +1806,30 @@ export default function EnhancedTable({ t }) {
                 value={remark}
                 onChange={handleRemarkChange}
               />
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+            >
+              <Grid item md={3}>
+                <Button
+                  onClick={handleCloseAdd}
+                  className={clsx(classes.backGroundCancel)}
+                  variant="outlined"
+                >
+                  {t("building:btnCancel")}
+                </Button>
+              </Grid>
+              <Grid item md={3} className={clsx('mb-4', classes.boxMargin)}>
+                <Button
+                  className={clsx(classes.backGroundConfrim)}
+                  variant="outlined"
+                  // onClick={handleValidate}
+                >
+                  {t("building:btnAddModal")}
+                </Button>
+              </Grid>
             </Grid>
           </Box>
           <Box className={clsx(classes.backgroundBox)}>
@@ -1995,7 +2350,24 @@ export default function EnhancedTable({ t }) {
           </Button>
         </DialogActions> */}
       </Dialog>
-
     </Container>
   );
+};
+
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
 }
+
+export default connect(mapStateToProps, mapDispatchToProps)(DeviceManagement);

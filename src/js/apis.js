@@ -90,6 +90,46 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/building/remove/${id}`);
   };
 
+  /* ============== Floor API ================ */
+
+  const FloorRegister = (body) => {
+    return tokenAPI.post(`/api/floor/add`, body);
+  };
+
+  const getFloorList = (id = 0) => {
+    return tokenAPI.get(`/api/floor/list/${id}`);
+  };
+
+  const floorUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/floor/update/${id}`, body);
+  };
+
+  const floorDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/floor/remove/${id}`);
+  };
+
+  /* ============== Unit API ================ */
+
+  const UnitRegister = (body) => {
+    return tokenAPI.post(`/api/unit/add`, body);
+  };
+
+  const getUnitList = (id = 0) => {
+    return tokenAPI.get(`/api/unit/list/${id}`);
+  };
+
+  const getUnitView = (id = 0) => {
+    return tokenAPI.get(`/api/unit/read/${id}`);
+  };
+
+  const unitUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/unit/update/${id}`, body);
+  };
+
+  const unitDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/unit/remove/${id}`);
+  };
+
   /* ============== Gateway API ================ */
 
   const getGatewayData = () => {
@@ -112,9 +152,9 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/gateway/remove/${id}`);
   };
 
-   /* ============== Communication API ================ */
+  /* ============== Communication API ================ */
 
-   const getCommunicationData = () => {
+  const getCommunicationData = () => {
     return tokenAPI.get(`/api/communication/list`);
   };
 
@@ -129,8 +169,29 @@ const getAPI = () => {
   const communicationDelete = (id = 0) => {
     return tokenAPI.delete(`/api/communication/remove/${id}`);
   };
-  
-  
+
+  /* ============== Gateway API ================ */
+
+  const getDeviceData = (body) => {
+    return tokenAPI.post(`/api/device/list`, body);
+  };
+
+  const deviceRegister = (body) => {
+    return tokenAPI.post(`/api/device/add`, body);
+  };
+
+  const getDeviceView = (id = 0) => {
+    return tokenAPI.get(`/api/device/read/${id}`);
+  };
+
+  const deviceUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/device/update/${id}`, body);
+  };
+
+  const deviceDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/device/remove/${id}`);
+  };
+
   /* ============= Master Data ============== */
 
   /* ========================================= */
@@ -153,6 +214,17 @@ const getAPI = () => {
     buildingUpdate,
     buildingDelete,
 
+    FloorRegister,
+    getFloorList,
+    floorUpdate,
+    floorDelete,
+
+    UnitRegister,
+    getUnitList,
+    getUnitView,
+    unitUpdate,
+    unitDelete,
+
     getGatewayData,
     gatewayRegister,
     getGatewayView,
@@ -163,6 +235,12 @@ const getAPI = () => {
     communicationRegister,
     communicationUpdate,
     communicationDelete,
+
+    getDeviceData,
+    deviceRegister,
+    getDeviceView,
+    deviceUpdate,
+    deviceDelete,
   };
 };
 export default {

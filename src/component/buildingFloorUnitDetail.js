@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector, connect } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -34,6 +34,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -53,6 +54,21 @@ import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import _, { stubFalse } from "lodash";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import Validate from "./validate";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+} from "../js/actions";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -172,34 +188,6 @@ const useStyles = makeStyles((theme) => ({
     padding: 10,
   },
 }));
-
-function createData(name, calories, fat, carbs, power, protein, unit) {
-  return {
-    name,
-    calories,
-    fat,
-    carbs,
-    power,
-    protein,
-    unit,
-  };
-}
-
-const rows = [
-  createData(1, 10, "Building 1", "Building 1", "Building 1", 1120, 1120),
-  createData(2, 10, "Building 2", "Building 2", "Building 2", 1120, 1120),
-  createData(3, 10, "Building 3", "Building 3", "Building 3", 1120, 1120),
-  createData(4, 10, "Building 4", "Building 4", "Building 4", 1120, 1120),
-  createData(5, 10, "Building 5", "Building 5", "Building 5", 1120, 1120),
-  createData(6, 10, "Building 6", "Building 6", "Building 6", 1120, 1120),
-  createData(7, 10, "Building 7", "Building 7", "Building 7", 1120, 1120),
-  createData(8, 10, "Building 8", "Building 8", "Building 8", 1120, 1120),
-  createData(9, 10, "Building 9", "Building 9", "Building 9", 1120, 1120),
-  createData(10, 10, "Building 10", "Building 10", "Building 10", 1120, 1120),
-  createData(11, 10, "Building 11", "Building 11", "Building 11", 1120, 1120),
-  createData(12, 10, "Building 12", "Building 12", "Building 12", 1120, 1120),
-  createData(13, 10, "Building 13", "Building 13", "Building 13", 1120, 1120),
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -403,12 +391,13 @@ EnhancedTableUnitHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTableUnit({
+const UnitManagement = ({
   t,
   pageName,
   subPageName,
+  login,
   // zoneData,
-}) {
+}) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -434,16 +423,26 @@ export default function EnhancedTableUnit({
   const [building, setBuilding] = useState("");
   const [zone, setZone] = useState("");
 
+  const dispatch = useDispatch();
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
+  const token = useSelector((state) => state.token);
   const theme = useTheme();
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const { id } = state;
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const fullScreenEdit = useMediaQuery(theme.breakpoints.down("xl"));
   const [openAdd, setOpenAdd] = useState(false);
   const [file, setFile] = useState(null);
+  const [openView, setOpenView] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [isValidate, setIsValidate] = useState(true);
+  const [isIdEdit, setIsIdEdit] = useState("");
 
   const [rowsPointEdit, setRowsPointEdit] = useState([
     {
@@ -457,8 +456,184 @@ export default function EnhancedTableUnit({
     },
   ]);
 
-  const handleClickOpen = () => {
+  // console.log("ididid====", state, id);
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
+  };
+
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token) && id !== null) {
+      getUnitList(id);
+    }
+    console.log("token", token, login);
+  }, [token]);
+
+  const getUnitList = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getUnitList(id).then((response) => {
+        const dataPayload = response.data;
+        setRows(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const unitRegister = async () => {
+    setIsLoading(true);
+    try {
+      const body = {
+        unit: unitName,
+        floor_id: id,
+        description: description,
+        type_id: "",
+        file: "",
+      };
+      await API.connectTokenAPI(token);
+      await API.UnitRegister(body).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          getUnitList(id);
+          handleCloseAdd();
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleCloseAdd();
+      setIsLoading(false);
+    }
+  };
+
+  const unitUpdate = async (rowId) => {
+    setIsLoading(true);
+    try {
+      const body = {
+        name: floorName,
+      };
+      await API.connectTokenAPI(token);
+      await API.unitUpdate(rowId, body).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          getUnitList(id);
+          handleClose();
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleClose();
+      setIsLoading(false);
+    }
+  };
+
+  const getUnitView = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getUnitView(id).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 && dataPayload.map((item) => {});
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const unitDelete = async (rowId) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.unitDelete(rowId).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          getUnitList(id);
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // delete Data //
+  const handleClickDeleteData = (event, id) => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        unitDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  const handleClickOpen = (event, id) => {
     setOpen(true);
+    getUnitView(id);
+    setIsIdEdit(id);
   };
 
   const handleClose = () => {
@@ -521,7 +696,7 @@ export default function EnhancedTableUnit({
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
       ),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, rows]
   );
 
   const handleDeviceBrand = (event) => {
@@ -592,6 +767,11 @@ export default function EnhancedTableUnit({
     setOpenAdd(false);
   };
 
+  const handleOpenView = (event, id) => {
+    setOpenView(true);
+    getUnitView(id);
+  };
+
   const handleUploadFile = (e) => {
     // setFile(e.target.files[0]);
     if (e.target.files.length > 0) {
@@ -631,93 +811,111 @@ export default function EnhancedTableUnit({
     setGatewayMeter(event.target.value);
   };
 
-  const openPageFloorDetail = () => {
-    navigate("/buildingFloorDetail");
+  const openPageFloorDetail = (event, id) => {
+    // navigate("/buildingFloorDetail");
+    navigate("/buildingFloorDetail", { state: { id: id } });
   };
 
   return (
     <Container className={classes.marginRow}>
-      <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon
-          className={clsx(pageName ? classes.activeColor : classes.alignSelf)}
-        />
-        <Typography
-          variant="h6"
-          className={clsx(pageName ? classes.activeColor : "", classes.cursor)}
-          onClick={openPageFloorDetail}
-        >
-          {" "}
-          / {sideBar} / {pageName}
-        </Typography>
-        <Typography variant="h6">
-          {subPageName ? " / " + subPageName : ""}{" "}
-        </Typography>
-      </Grid>
-      <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
-        <Grid item md={5} className={classes.marginRow}>
-          <TextField
-            id="input-with-icon-textfield"
-            size="small"
-            placeholder={t("floor:searchUnit")}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-          />
-        </Grid>
-        <Grid item md={2} className={clsx(classes.marginRow)}>
-          <Button
-            onClick={handleClickOpenAdd}
-            autoFocus
-            // fullWidth
-            className={clsx(classes.backGroundConfrim, classes.width)}
-            variant="outlined"
-          >
-            {t("floor:btnAddUnit")}
-          </Button>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ width: "100%" }} className={classes.marginRow}>
-        <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableUnitToolbar numSelected={selected.length} /> */}
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <Grid item className={classes.flexRow}>
+            <HomeOutlinedIcon
+              className={clsx(
+                pageName ? classes.activeColor : classes.alignSelf
+              )}
+            />
+            <Typography
+              variant="h6"
+              className={clsx(
+                pageName ? classes.activeColor : "",
+                classes.cursor
+              )}
+              onClick={(event) => openPageFloorDetail(event, id)}
             >
-              <EnhancedTableUnitHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                //   onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-                classes={classes}
+              {" "}
+              / {sideBar} / {pageName}
+            </Typography>
+            <Typography variant="h6">
+              {subPageName ? " / " + subPageName : ""}{" "}
+            </Typography>
+          </Grid>
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRow, classes.justContent)}
+          >
+            <Grid item md={5} className={classes.marginRow}>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("floor:searchUnit")}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchOutlinedIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
               />
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+            </Grid>
+            <Grid item md={2} className={clsx(classes.marginRow)}>
+              <Button
+                onClick={handleClickOpenAdd}
+                autoFocus
+                // fullWidth
+                className={clsx(classes.backGroundConfrim, classes.width)}
+                variant="outlined"
+              >
+                {t("floor:btnAddUnit")}
+              </Button>
+            </Grid>
+          </Grid>
 
-                  return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleClick(event, row.name)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.name}
-                      selected={isItemSelected}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      {/* <TableCell padding="checkbox">
+          <Box sx={{ width: "100%" }} className={classes.marginRow}>
+            <Paper sx={{ width: "100%", mb: 2 }}>
+              {/* <EnhancedTableUnitToolbar numSelected={selected.length} /> */}
+              <TableContainer>
+                <Table
+                  sx={{ minWidth: 750 }}
+                  aria-labelledby="tableTitle"
+                  size={dense ? "small" : "medium"}
+                >
+                  <EnhancedTableUnitHead
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    //   onSelectAllClick={handleSelectAllClick}
+                    onRequestSort={handleRequestSort}
+                    rowCount={rows.length}
+                    classes={classes}
+                  />
+                  <TableBody>
+                    {visibleRows.map((row, index) => {
+                      const isItemSelected = isSelected(row.name);
+                      const labelId = `enhanced-table-checkbox-${index}`;
+
+                      console.log("========>>>>?", row);
+
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) => handleClick(event, row.name)}
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.name}
+                          selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          {/* <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
@@ -726,93 +924,104 @@ export default function EnhancedTableUnit({
                         }}
                       />
                     </TableCell> */}
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                        className={classes.fontSixeCell}
-                        align="center"
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            className={classes.fontSixeCell}
+                            align="center"
+                          >
+                            {row.name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.calories}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.fat}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.carbs}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.power}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.protein}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.unit}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            <FeedOutlinedIcon className={classes.marginIcon} />
+                            <VisibilityOutlinedIcon
+                              className={classes.marginIcon}
+                              onClick={(event) => handleOpenView(event, row.id)}
+                            />
+                            <SettingsOutlinedIcon
+                              onClick={(event) =>
+                                handleClickOpen(event, row.id)
+                              }
+                            />
+                            <DeleteOutlineOutlinedIcon
+                              onClick={(event) => {
+                                handleClickDeleteData(event, row.id);
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {emptyRows > 0 && (
+                      <TableRow
+                        style={{
+                          height: (dense ? 33 : 53) * emptyRows,
+                        }}
                       >
-                        {row.name}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.calories}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.fat}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.carbs}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.power}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.protein}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.unit}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        <FeedOutlinedIcon className={classes.marginIcon} />
-                        <VisibilityOutlinedIcon
-                          className={classes.marginIcon}
-                        />
-                        <SettingsOutlinedIcon onClick={handleClickOpen} />
-                        <DeleteOutlineOutlinedIcon />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: (dense ? 33 : 53) * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
-        {/* <FormControlLabel
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+            {/* <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
       /> */}
-      </Box>
+          </Box>
+        </>
+      )}
 
       {/* Modal Edit*/}
       <Dialog
@@ -1366,9 +1575,9 @@ export default function EnhancedTableUnit({
                 <MenuItem value="none">
                   {t("gateway:selectCommunication")}
                 </MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
+                <MenuItem value={10}>Ten</MenuItem>
+                <MenuItem value={20}>Twenty</MenuItem>
+                <MenuItem value={30}>Thirty</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -1391,10 +1600,6 @@ export default function EnhancedTableUnit({
               </Select>
             </FormControl>
           </Grid>
-          {/* <DialogContentText>
-            Let Google help apps determine location. This means sending
-            anonymous location data to Google, even when no apps are running.
-          </DialogContentText> */}
           <Grid
             item
             md={12}
@@ -1419,15 +1624,25 @@ export default function EnhancedTableUnit({
             </Grid>
           </Grid>
         </DialogContent>
-        {/* <DialogActions>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnCancel")}
-          </Button>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnAddModal")}
-          </Button>
-        </DialogActions> */}
       </Dialog>
     </Container>
   );
+};
+
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
 }
+
+export default connect(mapStateToProps, mapDispatchToProps)(UnitManagement);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector, connect } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -34,6 +34,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -55,6 +56,21 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import KeyOutlinedIcon from "@mui/icons-material/KeyOutlined";
 import { Topic } from "@mui/icons-material";
+import _, { stubFalse } from "lodash";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import Validate from "./validate";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+} from "../js/actions";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -202,152 +218,6 @@ const useStyles = makeStyles((theme) => ({
     paddingRight: 10,
   },
 }));
-
-function createData(name, calories, fat, device, carbs, power, protein, unit) {
-  return {
-    name,
-    calories,
-    fat,
-    device,
-    carbs,
-    power,
-    protein,
-    unit,
-  };
-}
-
-const rows = [
-  createData(
-    1,
-    "Gateway 1",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 1",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    2,
-    "Device 2",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 2",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    3,
-    "Device 3",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 3",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    4,
-    "Device 4",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 4",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    5,
-    "Device 5",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 5",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    6,
-    "Device 6",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 6",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    7,
-    "Device 7",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 7",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    8,
-    "Device 8",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 8",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    9,
-    "Device 9",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 9",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    10,
-    "Device 10",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 10",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    11,
-    "Device 11",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 11",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    12,
-    "Device 12",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 12",
-    20,
-    20,
-    "2022-01-01"
-  ),
-  createData(
-    13,
-    "Device 13",
-    "JCA Brand",
-    "JCA Model One",
-    "Gateway 13",
-    20,
-    20,
-    "2022-01-01"
-  ),
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -557,7 +427,7 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTable({ t, pageName }) {
+const GatewayDeviceManagement = ({ t, pageName }) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -571,10 +441,14 @@ export default function EnhancedTable({ t, pageName }) {
   const [serialNumber, setSerialNumber] = useState("");
   const [installation, setInstallation] = useState("");
 
+  const dispatch = useDispatch();
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
+  const token = useSelector((state) => state.token);
   const theme = useTheme();
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const { id } = state;
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -694,12 +568,224 @@ export default function EnhancedTable({ t, pageName }) {
     },
   ];
 
-  const handleClickOpen = () => {
-    setOpen(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [isValidate, setIsValidate] = useState(true);
+  const [isIdEdit, setIsIdEdit] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+
+  console.log("=======state", state, id);
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
   };
 
-  const handleClickOpenView = () => {
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token)) {
+      getDevice();
+    }
+  }, [token]);
+
+  const getDevice = async () => {
+    setIsLoading(true);
+    try {
+      const boby = {
+        listGatewayID: [id],
+      };
+      await API.connectTokenAPI(token);
+      await API.getDeviceData(boby).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", dataPayload);
+        setRows(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const deviceRegister = async () => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result; // Extract the base64 data
+        const body = {
+          deviceName: deviceName,
+          gatewayID: id,
+          deviceBand: deviceBrand,
+          model: model,
+          serialNumber: serialNumber,
+          installationDate: installation,
+          communicationType: communicationType,
+          description: "",
+          file: base64File, // Include the Base64 encoded file
+        };
+        await API.connectTokenAPI(token);
+        await API.deviceRegister(body).then((response) => {
+          const dataPayload = response.data;
+          console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getDevice();
+            handleCloseAdd();
+          }
+          setIsLoading(false);
+        });
+      };
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleCloseAdd();
+      setIsLoading(false);
+    }
+  };
+
+  const deviceUpdate = async (rowId) => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result; // Extract the base64 data
+        const body = {
+          deviceName: deviceName,
+          gatewayID: id,
+          deviceBand: deviceBrand,
+          model: model,
+          serialNumber: serialNumber,
+          installationDate: installation,
+          communicationType: communicationType,
+          description: "",
+          file: base64File, // Include the Base64 encoded file
+        };
+        await API.connectTokenAPI(token);
+        await API.deviceUpdate(rowId, body).then((response) => {
+          const dataPayload = response.data;
+          // console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getDevice();
+            handleClose();
+          }
+          setIsLoading(false);
+        });
+      };
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleClose();
+      setIsLoading(false);
+    }
+  };
+
+  const deviceView = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getDeviceView(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("9999=======item", item);
+            // setFile(item.file);
+            setImagePreviewUrl(item.file);
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const deviceDelete = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.deviceDelete(id).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          getDevice();
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // delete Data //
+  const handleClickDeleteData = (event, id) => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deviceDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  const handleClickOpen = (event, id) => {
+    setOpen(true);
+    setIsIdEdit(id);
+  };
+
+  const handleClickOpenView = (event, id) => {
     setOpenView(true);
+    deviceView(id);
   };
 
   const handleClose = () => {
@@ -775,7 +861,7 @@ export default function EnhancedTable({ t, pageName }) {
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
       ),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, rows]
   );
 
   const handleDeviceBrand = (event) => {
@@ -859,27 +945,27 @@ export default function EnhancedTable({ t, pageName }) {
     // setRowsPointEdit(updatedRows);
   };
 
-  const handleDeviceId  = (event) => {
+  const handleDeviceId = (event) => {
     setDeviceId(event.target.value);
   };
 
-  const handlePointName  = (event) => {
+  const handlePointName = (event) => {
     setPointName(event.target.value);
   };
 
-  const handleTopic  = (event) => {
+  const handleTopic = (event) => {
     setTopic(event.target.value);
   };
 
-  const handleData  = (event) => {
+  const handleData = (event) => {
     setData(event.target.value);
   };
 
-  const handleDataUnit  = (event) => {
+  const handleDataUnit = (event) => {
     setDataUnit(event.target.value);
   };
 
-  const handleUnitBinding  = (event) => {
+  const handleUnitBinding = (event) => {
     setUnitBinding(event.target.value);
   };
 
@@ -889,85 +975,100 @@ export default function EnhancedTable({ t, pageName }) {
 
   return (
     <Container className={classes.marginRow}>
-      <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon
-          className={clsx(pageName ? classes.activeColor : classes.alignSelf)}
-        />
-        <Typography
-          variant="h6"
-          className={clsx(pageName ? classes.activeColor : "", classes.cursor)}
-          onClick={openPageGateway}
-        >
-          {" "}
-          / {sideBar}{" "}
-        </Typography>
-        <Typography variant="h6"> / {pageName} </Typography>
-      </Grid>
-      <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
-        <Grid item md={5} className={classes.marginRow}>
-          <TextField
-            id="input-with-icon-textfield"
-            size="small"
-            placeholder={t("gateway:searchDevice")}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-          />
-        </Grid>
-        <Grid item md={2} className={clsx(classes.marginRow)}>
-          <Button
-            onClick={handleClickOpenAdd}
-            autoFocus
-            // fullWidth
-            className={clsx(classes.backGroundConfrim, classes.width)}
-            variant="outlined"
-          >
-            {t("gateway:btnAddDevice")}
-          </Button>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ width: "100%" }} className={classes.marginRow}>
-        <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <Grid item className={classes.flexRow}>
+            <HomeOutlinedIcon
+              className={clsx(
+                pageName ? classes.activeColor : classes.alignSelf
+              )}
+            />
+            <Typography
+              variant="h6"
+              className={clsx(
+                pageName ? classes.activeColor : "",
+                classes.cursor
+              )}
+              onClick={openPageGateway}
             >
-              <EnhancedTableHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                //   onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-                classes={classes}
+              {" "}
+              / {sideBar}{" "}
+            </Typography>
+            <Typography variant="h6"> / {pageName} </Typography>
+          </Grid>
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRow, classes.justContent)}
+          >
+            <Grid item md={5} className={classes.marginRow}>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("gateway:searchDevice")}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchOutlinedIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
               />
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+            </Grid>
+            <Grid item md={2} className={clsx(classes.marginRow)}>
+              <Button
+                onClick={handleClickOpenAdd}
+                autoFocus
+                // fullWidth
+                className={clsx(classes.backGroundConfrim, classes.width)}
+                variant="outlined"
+              >
+                {t("gateway:btnAddDevice")}
+              </Button>
+            </Grid>
+          </Grid>
 
-                  return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleClick(event, row.name)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.name}
-                      selected={isItemSelected}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      {/* <TableCell padding="checkbox">
+          <Box sx={{ width: "100%" }} className={classes.marginRow}>
+            <Paper sx={{ width: "100%", mb: 2 }}>
+              {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
+              <TableContainer>
+                <Table
+                  sx={{ minWidth: 750 }}
+                  aria-labelledby="tableTitle"
+                  size={dense ? "small" : "medium"}
+                >
+                  <EnhancedTableHead
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    //   onSelectAllClick={handleSelectAllClick}
+                    onRequestSort={handleRequestSort}
+                    rowCount={rows.length}
+                    classes={classes}
+                  />
+                  <TableBody>
+                    {visibleRows.map((row, index) => {
+                      const isItemSelected = isSelected(row.name);
+                      const labelId = `enhanced-table-checkbox-${index}`;
+
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) => handleClick(event, row.name)}
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.name}
+                          selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          {/* <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
@@ -976,100 +1077,106 @@ export default function EnhancedTable({ t, pageName }) {
                         }}
                       />
                     </TableCell> */}
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                        className={classes.fontSixeCell}
-                        align="center"
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            className={classes.fontSixeCell}
+                            align="center"
+                          >
+                            {row.name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.calories}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.fat}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.device}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.carbs}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.power}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.protein}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.unit}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            <FeedOutlinedIcon className={classes.marginIcon} />
+                            <VisibilityOutlinedIcon
+                              className={classes.marginIcon}
+                              onClick={(event) => handleClickOpenView(event, row.id)}
+                            />
+                            <SettingsOutlinedIcon onClick={(event) => handleClickOpen(event, row.id)} />
+                            <DeleteOutlineOutlinedIcon
+                              onClick={(event) => {
+                                handleClickDeleteData(event, row.id);
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {emptyRows > 0 && (
+                      <TableRow
+                        style={{
+                          height: (dense ? 33 : 53) * emptyRows,
+                        }}
                       >
-                        {row.name}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.calories}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.fat}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.device}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.carbs}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.power}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.protein}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.unit}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        <FeedOutlinedIcon className={classes.marginIcon} />
-                        <VisibilityOutlinedIcon
-                          className={classes.marginIcon}
-                          onClick={handleClickOpenView}
-                        />
-                        <SettingsOutlinedIcon onClick={handleClickOpen} />
-                        <DeleteOutlineOutlinedIcon />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: (dense ? 33 : 53) * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
-        {/* <FormControlLabel
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+            {/* <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
       /> */}
-      </Box>
+          </Box>
+        </>
+      )}
 
       {/* Modal Edit*/}
       <Dialog
@@ -1888,4 +1995,25 @@ export default function EnhancedTable({ t, pageName }) {
       </Dialog>
     </Container>
   );
+};
+
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
 }
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(GatewayDeviceManagement);

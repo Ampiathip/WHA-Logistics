@@ -797,8 +797,9 @@ const BuildingManagement = ({ t, login }) => {
     }
   };
 
-  const openPageFlooreDetail = () => {
-    navigate("/buildingFloorDetail");
+  const openPageFlooreDetail = (event, id) => {
+    // navigate("/buildingFloorDetail");
+    navigate('/buildingFloorDetail', { state: { id: id } });
   };
 
   return (
@@ -942,7 +943,7 @@ const BuildingManagement = ({ t, login }) => {
                           >
                             <FeedOutlinedIcon
                               className={classes.marginIcon}
-                              onClick={openPageFlooreDetail}
+                              onClick={(event) => openPageFlooreDetail(event, row.id)}
                             />
                             <VisibilityOutlinedIcon
                               className={classes.marginIcon}
@@ -1324,7 +1325,7 @@ const BuildingManagement = ({ t, login }) => {
                 </label>
               </Grid>
 
-              {!isValidate && _.isNull(file) ? (
+              {!isValidate && _.isNull(imagePreviewUrl) ? (
                 <Validate errorText={"กรุณาระบุข้อมูล"} />
               ) : null}
             </Grid>
