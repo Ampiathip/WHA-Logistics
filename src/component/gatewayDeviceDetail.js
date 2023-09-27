@@ -454,7 +454,12 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [openAdd, setOpenAdd] = useState(false);
   const [file, setFile] = useState(null);
-  const [communicationType, setCommunicationType] = useState("none");
+  const [communicationType, setCommunicationType] = useState([]);
+  const [communicationTypeSelect, setCommunicationTypeSelect] =
+    useState("none");
+  const [billingType, setBillingType] = useState([]);
+  const [billingTypeSelect, setBillingTypeSelect] = useState("none");
+
   const [openView, setOpenView] = useState(false);
   const fullScreenView = useMediaQuery(theme.breakpoints.down("xl"));
   // view //
@@ -511,6 +516,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   ];
   // edit //
   const [deviceId, setDeviceId] = useState("");
+  const [deviceIdPoint, setDeviceIdPoint] = useState("");
   const [pointName, setPointName] = useState("");
   const [topic, setTopic] = useState("");
   const [data, setData] = useState("");
@@ -519,15 +525,15 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const [rowsPerPageEdit, setRowsPerPageEdit] = useState(5);
   const [pageEdit, setPageEdit] = useState(0);
   const [rowsPointEdit, setRowsPointEdit] = useState([
-    {
-      name: 1,
-      code: "",
-      population: "",
-      size: "",
-      density: "",
-      unit: "",
-      action: "",
-    },
+    // {
+    //   name: 1,
+    //   code: "",
+    //   population: "",
+    //   size: "",
+    //   density: "",
+    //   unit: "",
+    //   action: "",
+    // },
   ]);
 
   const columnsPointEdit = [
@@ -574,7 +580,6 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
-  console.log("=======state", state, id);
   const swalFire = (msg) => {
     MySwal.fire({
       icon: "error",
@@ -585,19 +590,18 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
 
   useEffect(() => {
     dispatch(checkToken());
-    if (!_.isEmpty(token)) {
-      getDevice();
+    if (!_.isEmpty(token) && id !== null) {
+      getDevice(id);
+      getCommunicationData();
+      getBillingTypeData();
     }
   }, [token]);
 
-  const getDevice = async () => {
+  const getDevice = async (id) => {
     setIsLoading(true);
     try {
-      const boby = {
-        listGatewayID: [id],
-      };
       await API.connectTokenAPI(token);
-      await API.getDeviceData(boby).then((response) => {
+      await API.getDeviceData(id).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayload", dataPayload);
         setRows(dataPayload);
@@ -627,6 +631,69 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     }
   };
 
+  // get getCommunicationData //
+  const getCommunicationData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getCommunicationData().then((response) => {
+        const dataPayload = response.data;
+        setCommunicationType(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // get getBillingTypeData //
+  const getBillingTypeData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getBillingTypeData().then((response) => {
+        const dataPayload = response.data;
+        setBillingType(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleValidate = (type) => {
+    let isValidate = true;
+    if (
+      _.isEmpty(deviceName) ||
+      _.isEmpty(gatewayName) ||
+      _.isEmpty(deviceBrand) ||
+      !communicationTypeSelect ||
+      !billingTypeSelect ||
+      _.isEmpty(model) ||
+      _.isEmpty(serialNumber) ||
+      _.isEmpty(installation) ||
+      _.isEmpty(imagePreviewUrl)
+    ) {
+      isValidate = false;
+    }
+    console.log("isValidate", isValidate);
+    setIsValidate(isValidate);
+
+    if (isValidate) {
+      if (type === "edit") {
+        deviceUpdate(isIdEdit);
+      } else {
+        deviceRegister();
+      }
+    }
+  };
+
   const deviceRegister = async () => {
     setIsLoading(true);
     let reader = new window.FileReader();
@@ -641,7 +708,8 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           model: model,
           serialNumber: serialNumber,
           installationDate: installation,
-          communicationType: communicationType,
+          communicationType: communicationTypeSelect,
+          billingType_id: billingTypeSelect,
           description: "",
           file: base64File, // Include the Base64 encoded file
         };
@@ -655,7 +723,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
               confirmButtonText: "ตกลง",
               text: dataPayload,
             });
-            getDevice();
+            getDevice(id);
             handleCloseAdd();
           }
           setIsLoading(false);
@@ -684,7 +752,8 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           model: model,
           serialNumber: serialNumber,
           installationDate: installation,
-          communicationType: communicationType,
+          communicationType: communicationTypeSelect,
+          billingType_id: billingTypeSelect,
           description: "",
           file: base64File, // Include the Base64 encoded file
         };
@@ -698,7 +767,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
               confirmButtonText: "ตกลง",
               text: dataPayload,
             });
-            getDevice();
+            getDevice(id);
             handleClose();
           }
           setIsLoading(false);
@@ -723,8 +792,25 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
         dataPayload.length > 0 &&
           dataPayload.map((item) => {
             console.log("9999=======item", item);
+            setDeviceId(item.id);
+            setInstallation(item.installation_date);
+            setModel(item.model);
+            setDeviceName(item.name);
+            setDeviceBrand(item.band);
+            setSerialNumber(item.serial_number);
+            // setBillingTypeSelect(
+            //   item.billing_type &&
+            //     billingType.find((f) => f.name === item.billing_type).id
+            // );
+            setCommunicationTypeSelect(
+              item.communication &&
+                communicationType.find(
+                  (f) => f.communication === item.communication
+                ).id
+            );
             // setFile(item.file);
             setImagePreviewUrl(item.file);
+            getPointData(item.id);
           });
         setIsLoading(false);
       });
@@ -736,14 +822,14 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     }
   };
 
-  const deviceDelete = async (id) => {
+  const deviceDelete = async (rowId) => {
     setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.deviceDelete(id).then((response) => {
+      await API.deviceDelete(rowId).then((response) => {
         const dataPayload = response.data;
         if (response.status === 200) {
-          getDevice();
+          getDevice(id);
           MySwal.fire({
             icon: "success",
             confirmButtonText: "ตกลง",
@@ -778,9 +864,45 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     });
   };
 
+  // get Points //
+  const getPointData = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getPointData(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload====Point", dataPayload);
+        setRowsPointEdit(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
   const handleClickOpen = (event, id) => {
     setOpen(true);
     setIsIdEdit(id);
+    deviceView(id);
   };
 
   const handleClickOpenView = (event, id) => {
@@ -874,6 +996,16 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
 
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
+    setIsValidate(true);
+    setBillingTypeSelect("none");
+    setCommunicationTypeSelect("none");
+    setDeviceBrand("");
+    setDeviceName("");
+    setGatewayName("");
+    setModel("");
+    setSerialNumber("");
+    setInstallation("");
+    setImagePreviewUrl("");
   };
 
   const handleCloseAdd = () => {
@@ -886,13 +1018,26 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
 
   const handleUploadFile = (e) => {
     // setFile(e.target.files[0]);
-    if (e.target.files.length > 0) {
-      setFile(URL.createObjectURL(e.target.files[0]));
+    e.preventDefault();
+    const fileTypeArray = ["image/png", "image/jpg", "image/jpeg"];
+    let reader = new window.FileReader();
+    let file = e.target.files[0];
+
+    if (fileTypeArray.includes(file.type)) {
+      reader.onloadend = () => {
+        setFile(file);
+        setImagePreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleCommunicationType = (event) => {
-    setCommunicationType(event.target.value);
+    setCommunicationTypeSelect(event.target.value);
+  };
+
+  const handleBillingType = (event) => {
+    setBillingTypeSelect(event.target.value);
   };
 
   const handleDeviceName = (event) => {
@@ -913,22 +1058,23 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
 
   // add row Edit //
   const addNewRow = () => {
-    let newRow;
-    rowsPointEdit.forEach((item) => {
-      newRow = {
-        // Construct the new row object here
-        // For example: id: someValue, name: someValue, ...
-        name: item.name + 1,
-        code: "",
-        population: "",
-        size: "",
-        density: "",
-        unit: "",
-        action: "",
-      };
-    });
-    // Add the new row to the existing rowsPoint array
-    setRowsPointEdit([...rowsPointEdit, newRow]);
+    const newRowTemplate = {
+      name: 1,
+      point_name: pointName,
+      topic: topic,
+      data_unit: dataUnit,
+      unit_binding: unitBinding,
+      device_id: deviceIdPoint,
+      action: "",
+    };
+    // Create a copy of the existing rowsPointEdit array
+    const updatedRows = [...rowsPointEdit];
+
+    // Add a new row by pushing a copy of the newRowTemplate into the array
+    updatedRows.push({ ...newRowTemplate });
+
+    // Update the state with the new array
+    setRowsPointEdit(updatedRows);
   };
 
   const handleChangePageEdit = (event, newPage) => {
@@ -946,7 +1092,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   };
 
   const handleDeviceId = (event) => {
-    setDeviceId(event.target.value);
+    setDeviceIdPoint(event.target.value);
   };
 
   const handlePointName = (event) => {
@@ -973,6 +1119,43 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     navigate("/gateway");
   };
 
+  // save Point //
+  const handleAddPoint = async () => {
+    // setIsLoading(true);
+    console.log('------>>>>', rowsPointEdit);
+    try {
+      
+      // await API.connectTokenAPI(token);
+      // await API.pointRegister().then((response) => {
+      //   const dataPayload = response.data;
+      //   console.log("dataPayload====Point", dataPayload);
+      //   setRowsPointEdit(dataPayload);
+      //   setIsLoading(false);
+      // });
+    } catch (error) {
+    //   console.log(error);
+    //   const response = error.response;
+    //   if (response.status >= 500) {
+    //     swalFire(response.data);
+    //   } else {
+    //     MySwal.fire({
+    //       icon: "error",
+    //       confirmButtonText: "ตกลง",
+    //       cancelButtonText: "ยกเลิก",
+    //       showCancelButton: true,
+    //       text: response.data,
+    //     }).then((result) => {
+    //       if (result.isConfirmed) {
+    //         dispatch(logout(false));
+    //       } else if (result.isDismissed) {
+    //         setIsLoading(false);
+    //       }
+    //     });
+    //   }
+    //   setIsLoading(false);
+    }
+  };
+ 
   return (
     <Container className={classes.marginRow}>
       {isLoading ? (
@@ -1062,10 +1245,10 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           hover
                           onClick={(event) => handleClick(event, row.name)}
                           role="checkbox"
-                          aria-checked={isItemSelected}
+                          // aria-checked={isItemSelected}
                           tabIndex={-1}
                           key={row.name}
-                          selected={isItemSelected}
+                          // selected={isItemSelected}
                           sx={{ cursor: "pointer" }}
                         >
                           {/* <TableCell padding="checkbox">
@@ -1085,49 +1268,49 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             className={classes.fontSixeCell}
                             align="center"
                           >
+                            {row.id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.devicename}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.band}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.model}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
                             {row.name}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.calories}
+                            {row.communication_type}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.fat}
+                            {row.no_of_device}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.device}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.carbs}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.power}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.protein}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.unit}
+                            {row.installation_date}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1136,9 +1319,15 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             <FeedOutlinedIcon className={classes.marginIcon} />
                             <VisibilityOutlinedIcon
                               className={classes.marginIcon}
-                              onClick={(event) => handleClickOpenView(event, row.id)}
+                              onClick={(event) =>
+                                handleClickOpenView(event, row.id)
+                              }
                             />
-                            <SettingsOutlinedIcon onClick={(event) => handleClickOpen(event, row.id)} />
+                            <SettingsOutlinedIcon
+                              onClick={(event) =>
+                                handleClickOpen(event, row.id)
+                              }
+                            />
                             <DeleteOutlineOutlinedIcon
                               onClick={(event) => {
                                 handleClickDeleteData(event, row.id);
@@ -1203,385 +1392,444 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           </Grid>
         </DialogTitle>
         <DialogContent className={clsx(classes.flexRow, classes.modalContent)}>
-          <Box className={classes.borderBox}>
-            <Card className={clsx(classes.cardBoxGeteway)}>
-              <CardContent>
-                <Typography variant="h5">{t("gateway:gatewayInfo")}</Typography>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Box className={classes.borderBox}>
+                <Card className={clsx(classes.cardBoxGeteway)}>
+                  <CardContent>
+                    <Typography variant="h5">
+                      {t("gateway:gatewayInfo")}
+                    </Typography>
+                    <Grid
+                      item
+                      md={12}
+                      className={clsx(classes.flexRow, classes.alignItem)}
+                    >
+                      <Grid item md={6} className={classes.marginIcon}>
+                        {file ? (
+                          <img
+                            src={file}
+                            alt="img-upload"
+                            // className={classes.imgWidth}
+                            width={150}
+                          />
+                        ) : (
+                          <img
+                            src={process.env.PUBLIC_URL + "/img/Group.png"}
+                            alt="img-upload"
+                            // className={classes.imgWidth}
+                            width={150}
+                          />
+                        )}
+                      </Grid>
+                      <Grid item md={6} className={classes.textAlignEnd}>
+                        <Typography variant="h6">Gateway1</Typography>
+                        <Typography variant="body1">JCA GATEWAY</Typography>
+                        <Typography variant="subtitle2">Building 1</Typography>
+                        <Button
+                          variant="outlined"
+                          className={classes.btnSecret}
+                        >
+                          <KeyOutlinedIcon />
+                          <Typography variant="body1">View Secret</Typography>
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+                <Card className={clsx("mt-3", classes.cardBox)}>
+                  <CardContent>
+                    <Typography variant="h5">
+                      {t("gateway:DeviceInfo")}
+                    </Typography>
+                    <Grid item md={12} className={clsx(classes.flexRow)}>
+                      <Grid item md={6} className={classes.marginIcon}>
+                        {imagePreviewUrl ? (
+                          <img
+                            src={imagePreviewUrl}
+                            alt="img-upload"
+                            width={150}
+                            // className={classes.imgWidth}
+                          />
+                        ) : (
+                          <img
+                            src={process.env.PUBLIC_URL + "/img/Group.png"}
+                            alt="img-upload"
+                            width={150}
+                            // className={classes.imgWidth}
+                          />
+                        )}
+                      </Grid>
+                      <Grid item md={6}>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Device ID</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {deviceId ? deviceId : "-"}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Device name</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {deviceName ? deviceName : "-"}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Brand</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {deviceBrand ? deviceBrand : "-"}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Model</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {model ? model : "-"}e
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Type</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {communicationTypeSelect
+                              ? communicationTypeSelect
+                              : "-"}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6">
+                            {" "}
+                            Installation Date
+                          </Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {installation ? installation : "-"}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
                 <Grid
                   item
                   md={12}
-                  className={clsx(classes.flexRow, classes.alignItem)}
+                  className={clsx(classes.flexRowBtnModal, classes.marginRow)}
                 >
-                  <Grid item md={6} className={classes.marginIcon}>
-                    {file ? (
-                      <img
-                        src={file}
-                        alt="img-upload"
-                        // className={classes.imgWidth}
-                        width={150}
-                      />
-                    ) : (
-                      <img
-                        src={process.env.PUBLIC_URL + "/img/Group.png"}
-                        alt="img-upload"
-                        // className={classes.imgWidth}
-                        width={150}
-                      />
-                    )}
+                  <Grid item md={3}>
+                    <Button
+                      // onClick={handleCloseAdd}
+                      className={clsx(classes.backGroundCancel)}
+                      variant="outlined"
+                    >
+                      {t("gateway:btnRefresh")}
+                    </Button>
                   </Grid>
-                  <Grid item md={6} className={classes.textAlignEnd}>
-                    <Typography variant="h6">Gateway1</Typography>
-                    <Typography variant="body1">JCA GATEWAY</Typography>
-                    <Typography variant="subtitle2">Building 1</Typography>
-                    <Button variant="outlined" className={classes.btnSecret}>
-                      <KeyOutlinedIcon />
-                      <Typography variant="body1">View Secret</Typography>
+                  <Grid item md={3} className={classes.boxMargin}>
+                    <Button
+                      className={clsx(classes.backGroundConfrim)}
+                      variant="outlined"
+                    >
+                      {t("gateway:btnSave")}
                     </Button>
                   </Grid>
                 </Grid>
-              </CardContent>
-            </Card>
-            <Card className={clsx("mt-3", classes.cardBox)}>
-              <CardContent>
-                <Typography variant="h5">{t("gateway:DeviceInfo")}</Typography>
-                <Grid item md={12} className={clsx(classes.flexRow)}>
-                  <Grid item md={6} className={classes.marginIcon}>
-                    {file ? (
-                      <img
-                        src={file}
-                        alt="img-upload"
-                        width={150}
-                        // className={classes.imgWidth}
-                      />
-                    ) : (
-                      <img
-                        src={process.env.PUBLIC_URL + "/img/Group.png"}
-                        alt="img-upload"
-                        width={150}
-                        // className={classes.imgWidth}
-                      />
+              </Box>
+              <Box className={classes.boxMargin}>
+                <Grid item md={12} className={classes.flexRowBtnModal}>
+                  <Grid
+                    item
+                    className={clsx(
+                      classes.flexRow,
+                      classes.alignItem,
+                      classes.justContentCenter
                     )}
-                  </Grid>
-                  <Grid item md={6}>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Device ID</Typography>
-                      <Typography variant="h6"> 1</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Device name</Typography>
-                      <Typography variant="h6"> Device 1</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Brand</Typography>
-                      <Typography variant="h6"> JCA Brand</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Model</Typography>
-                      <Typography variant="h6"> JCA Model One</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Type</Typography>
-                      <Typography variant="h6"> Modebus RTU</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Installation Date</Typography>
-                      <Typography variant="h6"> 2022-01-01</Typography>
+                  >
+                    <Typography variant="h5">Point</Typography>
+                    <Grid item className={classes.borderPoint}>
+                      <Typography variant="body2">20/100</Typography>
                     </Grid>
                   </Grid>
+
+                  <Grid item md={3} className={classes.boxMargin}>
+                    <Button
+                      variant="outlined"
+                      onClick={addNewRow}
+                      className={clsx(classes.backGroundConfrim)}
+                    >
+                      {t("gateway:btnAddPoint")}
+                    </Button>
+                  </Grid>
                 </Grid>
-              </CardContent>
-            </Card>
-            <Grid
-              item
-              md={12}
-              className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-            >
-              <Grid item md={3}>
-                <Button
-                  // onClick={handleCloseAdd}
-                  className={clsx(classes.backGroundCancel)}
-                  variant="outlined"
+
+                <Paper sx={{ width: "100%", overflow: "hidden" }}>
+                  <TableContainer sx={{ maxHeight: 640 }}>
+                    <Table stickyHeader aria-label="sticky table">
+                      <TableHead>
+                        <TableRow>
+                          {columnsPointEdit.map((column) => (
+                            <TableCell
+                              key={column.id}
+                              align={column.align}
+                              style={{
+                                minWidth: column.minWidth,
+                                fontSize: 16,
+                              }}
+                            >
+                              {column.label}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {rowsPointEdit
+                          .slice(
+                            pageEdit * rowsPerPageEdit,
+                            pageEdit * rowsPerPageEdit + rowsPerPageEdit
+                          )
+                          .map((row) => {
+                            return (
+                              <TableRow
+                                hover
+                                role="checkbox"
+                                tabIndex={-1}
+                                key={row.code}
+                              >
+                                <TableCell
+                                  component="th"
+                                  id={row.name}
+                                  scope="row"
+                                  padding="none"
+                                  style={{ fontSize: 16 }}
+                                  align="center"
+                                >
+                                  {row.name ? (
+                                    row.name
+                                  ) : (
+                                    <Grid
+                                      item
+                                      className={classes.marginDataTable}
+                                    >
+                                      <TextField
+                                        value={deviceIdPoint}
+                                        variant="outlined"
+                                        size="small"
+                                        fullWidth
+                                        onChange={handleDeviceId}
+                                      />
+                                    </Grid>
+                                  )}
+                                </TableCell>
+                                <TableCell
+                                  component="th"
+                                  id={row.name}
+                                  scope="row"
+                                  padding="none"
+                                  style={{ fontSize: 16 }}
+                                  align="center"
+                                >
+                                  {row.code ? (
+                                    row.code
+                                  ) : (
+                                    <Grid
+                                      item
+                                      className={classes.marginDataTable}
+                                    >
+                                      <TextField
+                                        value={pointName}
+                                        variant="outlined"
+                                        size="small"
+                                        fullWidth
+                                        onChange={handlePointName}
+                                      />
+                                    </Grid>
+                                  )}
+                                </TableCell>
+                                <TableCell
+                                  component="th"
+                                  id={row.name}
+                                  scope="row"
+                                  padding="none"
+                                  style={{ fontSize: 16 }}
+                                  align="center"
+                                >
+                                  {row.population ? (
+                                    row.population
+                                  ) : (
+                                    <Grid
+                                      item
+                                      className={classes.marginDataTable}
+                                    >
+                                      <TextField
+                                        value={topic}
+                                        variant="outlined"
+                                        size="small"
+                                        fullWidth
+                                        onChange={handleTopic}
+                                      />
+                                    </Grid>
+                                  )}
+                                </TableCell>
+                                <TableCell
+                                  component="th"
+                                  id={row.name}
+                                  scope="row"
+                                  padding="none"
+                                  style={{ fontSize: 16 }}
+                                  align="center"
+                                >
+                                  {row.size ? (
+                                    row.size
+                                  ) : (
+                                    <Grid
+                                      item
+                                      className={classes.marginDataTable}
+                                    >
+                                      <TextField
+                                        value={data}
+                                        variant="outlined"
+                                        size="small"
+                                        fullWidth
+                                        onChange={handleData}
+                                      />
+                                    </Grid>
+                                  )}
+                                </TableCell>
+                                <TableCell
+                                  component="th"
+                                  id={row.name}
+                                  scope="row"
+                                  padding="none"
+                                  style={{ fontSize: 16 }}
+                                  align="center"
+                                >
+                                  {row.density ? (
+                                    row.density
+                                  ) : (
+                                    <Grid
+                                      item
+                                      className={classes.marginDataTable}
+                                    >
+                                      <TextField
+                                        value={dataUnit}
+                                        variant="outlined"
+                                        size="small"
+                                        fullWidth
+                                        onChange={handleDataUnit}
+                                      />
+                                    </Grid>
+                                  )}
+                                </TableCell>
+                                <TableCell
+                                  component="th"
+                                  id={row.name}
+                                  scope="row"
+                                  padding="none"
+                                  style={{ fontSize: 16 }}
+                                  align="center"
+                                >
+                                  {row.unit ? (
+                                    row.unit
+                                  ) : (
+                                    <Grid
+                                      item
+                                      className={classes.marginDataTable}
+                                    >
+                                      <TextField
+                                        value={unitBinding}
+                                        variant="outlined"
+                                        size="small"
+                                        fullWidth
+                                        onChange={handleUnitBinding}
+                                      />
+                                    </Grid>
+                                  )}
+                                </TableCell>
+                                <TableCell
+                                  component="th"
+                                  id={row.name}
+                                  scope="row"
+                                  padding="none"
+                                  align="center"
+                                >
+                                  {row.action ? (
+                                    <>
+                                      {/* <BorderColorOutlinedIcon /> */}
+                                      <DeleteOutlineOutlinedIcon
+                                        onClick={deleteRow(row.name)}
+                                      />
+                                    </>
+                                  ) : (
+                                    <DeleteOutlineOutlinedIcon />
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={rowsPointEdit.length}
+                    rowsPerPage={rowsPerPageEdit}
+                    page={pageEdit}
+                    onPageChange={handleChangePageEdit}
+                    onRowsPerPageChange={handleChangeRowsPerPageEdit}
+                  />
+                </Paper>
+
+                <Grid
+                  item
+                  md={12}
+                  className={clsx(classes.flexRowBtnModal, classes.marginRow)}
                 >
-                  {t("gateway:btnRefresh")}
-                </Button>
-              </Grid>
-              <Grid item md={3} className={classes.boxMargin}>
-                <Button
-                  className={clsx(classes.backGroundConfrim)}
-                  variant="outlined"
-                >
-                  {t("gateway:btnSave")}
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
-          <Box className={classes.boxMargin}>
-            <Grid item md={12} className={classes.flexRowBtnModal}>
-              <Grid
-                item
-                className={clsx(
-                  classes.flexRow,
-                  classes.alignItem,
-                  classes.justContentCenter
-                )}
-              >
-                <Typography variant="h5">Point</Typography>
-                <Grid item className={classes.borderPoint}>
-                  <Typography variant="body2">20/100</Typography>
+                  <Grid item md={3}>
+                    <Button
+                      // onClick={handleCloseAdd}
+                      className={clsx(classes.backGroundCancel)}
+                      variant="outlined"
+                    >
+                      {t("gateway:btnRefresh")}
+                    </Button>
+                  </Grid>
+                  <Grid item md={3} className={classes.boxMargin}>
+                    <Button
+                      onClick={handleAddPoint}
+                      className={clsx(classes.backGroundConfrim)}
+                      variant="outlined"
+                    >
+                      {t("gateway:btnSave")}
+                    </Button>
+                  </Grid>
                 </Grid>
-              </Grid>
-
-              <Grid item md={3} className={classes.boxMargin}>
-                <Button
-                  variant="outlined"
-                  onClick={addNewRow}
-                  className={clsx(classes.backGroundConfrim)}
-                >
-                  {t("gateway:btnAddPoint")}
-                </Button>
-              </Grid>
-            </Grid>
-
-            <Paper sx={{ width: "100%", overflow: "hidden" }}>
-              <TableContainer sx={{ maxHeight: 640 }}>
-                <Table stickyHeader aria-label="sticky table">
-                  <TableHead>
-                    <TableRow>
-                      {columnsPointEdit.map((column) => (
-                        <TableCell
-                          key={column.id}
-                          align={column.align}
-                          style={{ minWidth: column.minWidth, fontSize: 16 }}
-                        >
-                          {column.label}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rowsPointEdit
-                      .slice(
-                        pageEdit * rowsPerPageEdit,
-                        pageEdit * rowsPerPageEdit + rowsPerPageEdit
-                      )
-                      .map((row) => {
-                        return (
-                          <TableRow
-                            hover
-                            role="checkbox"
-                            tabIndex={-1}
-                            key={row.code}
-                          >
-                            <TableCell
-                              component="th"
-                              id={row.name}
-                              scope="row"
-                              padding="none"
-                              style={{ fontSize: 16 }}
-                              align="center"
-                            >
-                              {row.name ? (
-                                row.name
-                              ) : (
-                                <Grid item className={classes.marginDataTable}>
-                                  <TextField
-                                    value={deviceId}
-                                    variant="outlined"
-                                    size="small"
-                                    fullWidth
-                                    onChange={handleDeviceId}
-                                  />
-                                </Grid>
-                              )}
-                            </TableCell>
-                            <TableCell
-                              component="th"
-                              id={row.name}
-                              scope="row"
-                              padding="none"
-                              style={{ fontSize: 16 }}
-                              align="center"
-                            >
-                              {row.code ? (
-                                row.code
-                              ) : (
-                                <Grid item className={classes.marginDataTable}>
-                                  <TextField
-                                    value={pointName}
-                                    variant="outlined"
-                                    size="small"
-                                    fullWidth
-                                    onChange={handlePointName}
-                                  />
-                                </Grid>
-                              )}
-                            </TableCell>
-                            <TableCell
-                              component="th"
-                              id={row.name}
-                              scope="row"
-                              padding="none"
-                              style={{ fontSize: 16 }}
-                              align="center"
-                            >
-                              {row.population ? (
-                                row.population
-                              ) : (
-                                <Grid item className={classes.marginDataTable}>
-                                  <TextField
-                                    value={topic}
-                                    variant="outlined"
-                                    size="small"
-                                    fullWidth
-                                    onChange={handleTopic}
-                                  />
-                                </Grid>
-                              )}
-                            </TableCell>
-                            <TableCell
-                              component="th"
-                              id={row.name}
-                              scope="row"
-                              padding="none"
-                              style={{ fontSize: 16 }}
-                              align="center"
-                            >
-                              {row.size ? (
-                                row.size
-                              ) : (
-                                <Grid item className={classes.marginDataTable}>
-                                  <TextField
-                                    value={data}
-                                    variant="outlined"
-                                    size="small"
-                                    fullWidth
-                                    onChange={handleData}
-                                  />
-                                </Grid>
-                              )}
-                            </TableCell>
-                            <TableCell
-                              component="th"
-                              id={row.name}
-                              scope="row"
-                              padding="none"
-                              style={{ fontSize: 16 }}
-                              align="center"
-                            >
-                              {row.density ? (
-                                row.density
-                              ) : (
-                                <Grid item className={classes.marginDataTable}>
-                                  <TextField
-                                    value={dataUnit}
-                                    variant="outlined"
-                                    size="small"
-                                    fullWidth
-                                    onChange={handleDataUnit}
-                                  />
-                                </Grid>
-                              )}
-                            </TableCell>
-                            <TableCell
-                              component="th"
-                              id={row.name}
-                              scope="row"
-                              padding="none"
-                              style={{ fontSize: 16 }}
-                              align="center"
-                            >
-                              {row.unit ? (
-                                row.unit
-                              ) : (
-                                <Grid item className={classes.marginDataTable}>
-                                  <TextField
-                                    value={unitBinding}
-                                    variant="outlined"
-                                    size="small"
-                                    fullWidth
-                                    onChange={handleUnitBinding}
-                                  />
-                                </Grid>
-                              )}
-                            </TableCell>
-                            <TableCell
-                              component="th"
-                              id={row.name}
-                              scope="row"
-                              padding="none"
-                              align="center"
-                            >
-                              {row.action ? (
-                                <>
-                                  {/* <BorderColorOutlinedIcon /> */}
-                                  <DeleteOutlineOutlinedIcon
-                                    onClick={deleteRow(row.name)}
-                                  />
-                                </>
-                              ) : (
-                                <DeleteOutlineOutlinedIcon />
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={rowsPointEdit.length}
-                rowsPerPage={rowsPerPageEdit}
-                page={pageEdit}
-                onPageChange={handleChangePageEdit}
-                onRowsPerPageChange={handleChangeRowsPerPageEdit}
-              />
-            </Paper>
-
-            <Grid
-              item
-              md={12}
-              className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-            >
-              <Grid item md={3}>
-                <Button
-                  // onClick={handleCloseAdd}
-                  className={clsx(classes.backGroundCancel)}
-                  variant="outlined"
-                >
-                  {t("gateway:btnRefresh")}
-                </Button>
-              </Grid>
-              <Grid item md={3} className={classes.boxMargin}>
-                <Button
-                  onClick={handleClose}
-                  className={clsx(classes.backGroundConfrim)}
-                  variant="outlined"
-                >
-                  {t("gateway:btnSave")}
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
+              </Box>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -1605,84 +1853,108 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
               {t("gateway:deviceName")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("gateway:deviceName")}
               fullWidth
               variant="outlined"
               value={deviceName}
               onChange={handleDeviceName}
+              error={_.isEmpty(deviceName) && !isValidate}
             />
+            {_.isEmpty(deviceName) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:gatewayName")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("gateway:gatewayName")}
               fullWidth
               variant="outlined"
               value={gatewayName}
               onChange={handleGatewayName}
+              error={_.isEmpty(gatewayName) && !isValidate}
             />
+            {_.isEmpty(gatewayName) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:deviceBrand")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("gateway:deviceBrand")}
               fullWidth
               variant="outlined"
               value={deviceBrand}
               onChange={handleDeviceBrand}
+              error={_.isEmpty(model) && !isValidate}
             />
+            {_.isEmpty(deviceBrand) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:model")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("gateway:model")}
               fullWidth
               variant="outlined"
               value={model}
               onChange={handleModel}
+              error={_.isEmpty(model) && !isValidate}
             />
+            {_.isEmpty(model) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:serialNumber")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("gateway:serialNumber")}
               fullWidth
               variant="outlined"
               value={serialNumber}
               onChange={handleSerialNumber}
+              error={_.isEmpty(serialNumber) && !isValidate}
             />
+            {_.isEmpty(serialNumber) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:Installation")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("gateway:Installation")}
               fullWidth
               variant="outlined"
               value={installation}
               onChange={handleInstallation}
+              error={_.isEmpty(installation) && !isValidate}
             />
+            {_.isEmpty(installation) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1691,19 +1963,70 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             <FormControl variant="outlined" size="small" fullWidth>
               <Select
                 labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={communicationType}
+                // id="demo-select-small"
+                value={
+                  communicationType.length > 0
+                    ? communicationTypeSelect
+                    : "none"
+                }
                 placeholder={t("gateway:selectCommunication")}
                 onChange={handleCommunicationType}
+                error={communicationTypeSelect === "none" && !isValidate}
               >
                 <MenuItem value="none">
                   {t("gateway:selectCommunication")}
                 </MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
+                {communicationType.length > 0 &&
+                  communicationType.map((item) => {
+                    return (
+                      <MenuItem
+                        id={"selectCommunication-" + item.id}
+                        key={item.id}
+                        value={item.id}
+                      >
+                        {item.communication}
+                      </MenuItem>
+                    );
+                  })}
               </Select>
             </FormControl>
+            {communicationTypeSelect === "none" && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
+          </Grid>
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("gateway:billingType")}
+            </Typography>
+            <FormControl variant="outlined" size="small" fullWidth>
+              <Select
+                labelId="demo-select-small-label"
+                // id="demo-select-small"
+                value={billingType.length > 0 ? billingTypeSelect : "none"}
+                placeholder={t("gateway:billingType")}
+                onChange={handleBillingType}
+                error={billingTypeSelect === "none" && !isValidate}
+              >
+                <MenuItem value="none">
+                  {t("gateway:selectBillingType")}
+                </MenuItem>
+                {billingType.length > 0 &&
+                  billingType.map((item) => {
+                    return (
+                      <MenuItem
+                        id={"selectbillingType-" + item.id}
+                        key={item.id}
+                        value={item.id}
+                      >
+                        {item.type}
+                      </MenuItem>
+                    );
+                  })}
+              </Select>
+            </FormControl>
+            {billingTypeSelect === "none" && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -1738,9 +2061,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                   style={{ width: 200, height: 200 }}
                   className={clsx(classes.boxUpload)}
                 >
-                  {file ? (
+                  {imagePreviewUrl ? (
                     <img
-                      src={file}
+                      src={imagePreviewUrl}
                       alt="img-upload"
                       className={classes.imgWidth}
                     />
@@ -1755,11 +2078,10 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                 </Card>
               </label>
             </Grid>
+            {_.isEmpty(imagePreviewUrl) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
-          {/* <DialogContentText>
-            Let Google help apps determine location. This means sending
-            anonymous location data to Google, even when no apps are running.
-          </DialogContentText> */}
           <Grid
             item
             md={12}
@@ -1778,20 +2100,13 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
               <Button
                 className={clsx(classes.backGroundConfrim)}
                 variant="outlined"
+                onClick={handleValidate}
               >
                 {t("building:btnAddModal")}
               </Button>
             </Grid>
           </Grid>
         </DialogContent>
-        {/* <DialogActions>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnCancel")}
-          </Button>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnAddModal")}
-          </Button>
-        </DialogActions> */}
       </Dialog>
 
       {/* Modal ViewData */}
@@ -1822,175 +2137,217 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           </Grid>
         </DialogTitle>
         <DialogContent className={clsx(classes.flexRow, classes.modalContent)}>
-          <Box>
-            <Card className={clsx(classes.cardBoxGeteway)}>
-              <CardContent>
-                <Typography variant="h5">{t("gateway:gatewayInfo")}</Typography>
-                <Grid
-                  item
-                  md={12}
-                  className={clsx(classes.flexRow, classes.alignItem)}
-                >
-                  <Grid item md={6} className={classes.marginIcon}>
-                    {file ? (
-                      <img
-                        src={file}
-                        alt="img-upload"
-                        // className={classes.imgWidth}
-                        width={150}
-                      />
-                    ) : (
-                      <img
-                        src={process.env.PUBLIC_URL + "/img/Group.png"}
-                        alt="img-upload"
-                        // className={classes.imgWidth}
-                        width={150}
-                      />
-                    )}
-                  </Grid>
-                  <Grid item md={6} className={classes.textAlignEnd}>
-                    <Typography variant="h6">Gateway1</Typography>
-                    <Typography variant="body1">JCA GATEWAY</Typography>
-                    <Typography variant="subtitle2">Building 1</Typography>
-                    <Button variant="outlined" className={classes.btnSecret}>
-                      <KeyOutlinedIcon />
-                      <Typography variant="body1">View Secret</Typography>
-                    </Button>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-            <Card className={clsx("mt-3", classes.cardBox)}>
-              <CardContent>
-                <Typography variant="h5">{t("gateway:DeviceInfo")}</Typography>
-                <Grid item md={12} className={clsx(classes.flexRow)}>
-                  <Grid item md={6} className={classes.marginIcon}>
-                    {file ? (
-                      <img
-                        src={file}
-                        alt="img-upload"
-                        width={150}
-                        // className={classes.imgWidth}
-                      />
-                    ) : (
-                      <img
-                        src={process.env.PUBLIC_URL + "/img/Group.png"}
-                        alt="img-upload"
-                        width={150}
-                        // className={classes.imgWidth}
-                      />
-                    )}
-                  </Grid>
-                  <Grid item md={6}>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Box>
+                <Card className={clsx(classes.cardBoxGeteway)}>
+                  <CardContent>
+                    <Typography variant="h5">
+                      {t("gateway:gatewayInfo")}
+                    </Typography>
                     <Grid
                       item
-                      className={clsx(classes.flexRow, classes.justContent)}
+                      md={12}
+                      className={clsx(classes.flexRow, classes.alignItem)}
                     >
-                      <Typography variant="h6"> Device ID</Typography>
-                      <Typography variant="h6"> 1</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Device name</Typography>
-                      <Typography variant="h6"> Device 1</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Brand</Typography>
-                      <Typography variant="h6"> JCA Brand</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Model</Typography>
-                      <Typography variant="h6"> JCA Model One</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Type</Typography>
-                      <Typography variant="h6"> Modebus RTU</Typography>
-                    </Grid>
-                    <Grid
-                      item
-                      className={clsx(classes.flexRow, classes.justContent)}
-                    >
-                      <Typography variant="h6"> Installation Date</Typography>
-                      <Typography variant="h6"> 2022-01-01</Typography>
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Box>
-          <Box>
-            <Paper sx={{ width: "100%", overflow: "hidden" }}>
-              <TableContainer sx={{ maxHeight: 640 }}>
-                <Table stickyHeader aria-label="sticky table">
-                  <TableHead>
-                    <TableRow>
-                      {columnsPoint.map((column) => (
-                        <TableCell
-                          key={column.id}
-                          align={column.align}
-                          style={{ minWidth: column.minWidth, fontSize: 18 }}
+                      <Grid item md={6} className={classes.marginIcon}>
+                        {file ? (
+                          <img
+                            src={file}
+                            alt="img-upload"
+                            // className={classes.imgWidth}
+                            width={150}
+                          />
+                        ) : (
+                          <img
+                            src={process.env.PUBLIC_URL + "/img/Group.png"}
+                            alt="img-upload"
+                            // className={classes.imgWidth}
+                            width={150}
+                          />
+                        )}
+                      </Grid>
+                      <Grid item md={6} className={classes.textAlignEnd}>
+                        <Typography variant="h6">Gateway1</Typography>
+                        <Typography variant="body1">JCA GATEWAY</Typography>
+                        <Typography variant="subtitle2">Building 1</Typography>
+                        <Button
+                          variant="outlined"
+                          className={classes.btnSecret}
                         >
-                          {column.label}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rowsPoint
-                      .slice(
-                        pageView * rowsPerPageView,
-                        pageView * rowsPerPageView + rowsPerPageView
-                      )
-                      .map((row) => {
-                        return (
-                          <TableRow
-                            hover
-                            role="checkbox"
-                            tabIndex={-1}
-                            key={row.code}
-                          >
-                            {columnsPoint.map((column) => {
-                              const value = row[column.id];
-                              return (
-                                <TableCell
-                                  key={column.id}
-                                  align={column.align}
-                                  style={{ fontSize: 15 }}
-                                >
-                                  {column.format && typeof value === "number"
-                                    ? column.format(value)
-                                    : value}
-                                </TableCell>
-                              );
-                            })}
-                          </TableRow>
-                        );
-                      })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <TablePagination
-                rowsPerPageOptions={[5, 8, 10]}
-                component="div"
-                count={rowsPoint.length}
-                rowsPerPage={rowsPerPageView}
-                page={pageView}
-                onPageChange={handleChangePageView}
-                onRowsPerPageChange={handleChangeRowsPerPageView}
-              />
-            </Paper>
-          </Box>
+                          <KeyOutlinedIcon />
+                          <Typography variant="body1">View Secret</Typography>
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+                <Card className={clsx("mt-3", classes.cardBox)}>
+                  <CardContent>
+                    <Typography variant="h5">
+                      {t("gateway:DeviceInfo")}
+                    </Typography>
+                    <Grid item md={12} className={clsx(classes.flexRow)}>
+                      <Grid item md={6} className={classes.marginIcon}>
+                        {imagePreviewUrl ? (
+                          <img
+                            src={imagePreviewUrl}
+                            alt="img-upload"
+                            width={150}
+                            // className={classes.imgWidth}
+                          />
+                        ) : (
+                          <img
+                            src={process.env.PUBLIC_URL + "/img/Group.png"}
+                            alt="img-upload"
+                            width={150}
+                            // className={classes.imgWidth}
+                          />
+                        )}
+                      </Grid>
+                      <Grid item md={6}>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Device ID</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {deviceId ? deviceId : "-"}{" "}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Device name</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {deviceName ? deviceName : "-"}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Brand</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {deviceBrand ? deviceBrand : "-"}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Model</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {model ? model : "-"}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6"> Type</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {communicationTypeSelect
+                              ? communicationTypeSelect
+                              : "-"}
+                          </Typography>
+                        </Grid>
+                        <Grid
+                          item
+                          className={clsx(classes.flexRow, classes.justContent)}
+                        >
+                          <Typography variant="h6">
+                            {" "}
+                            Installation Date
+                          </Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {installation ? installation : "-"}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Box>
+              <Box>
+                <Paper sx={{ width: "100%", overflow: "hidden" }}>
+                  <TableContainer sx={{ maxHeight: 640 }}>
+                    <Table stickyHeader aria-label="sticky table">
+                      <TableHead>
+                        <TableRow>
+                          {columnsPoint.map((column) => (
+                            <TableCell
+                              key={column.id}
+                              align={column.align}
+                              style={{
+                                minWidth: column.minWidth,
+                                fontSize: 18,
+                              }}
+                            >
+                              {column.label}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {rowsPoint
+                          .slice(
+                            pageView * rowsPerPageView,
+                            pageView * rowsPerPageView + rowsPerPageView
+                          )
+                          .map((row) => {
+                            return (
+                              <TableRow
+                                hover
+                                role="checkbox"
+                                tabIndex={-1}
+                                key={row.code}
+                              >
+                                {columnsPoint.map((column) => {
+                                  const value = row[column.id];
+                                  return (
+                                    <TableCell
+                                      key={column.id}
+                                      align={column.align}
+                                      style={{ fontSize: 15 }}
+                                    >
+                                      {column.format &&
+                                      typeof value === "number"
+                                        ? column.format(value)
+                                        : value}
+                                    </TableCell>
+                                  );
+                                })}
+                              </TableRow>
+                            );
+                          })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  <TablePagination
+                    rowsPerPageOptions={[5, 8, 10]}
+                    component="div"
+                    count={rowsPoint.length}
+                    rowsPerPage={rowsPerPageView}
+                    page={pageView}
+                    onPageChange={handleChangePageView}
+                    onRowsPerPageChange={handleChangeRowsPerPageView}
+                  />
+                </Paper>
+              </Box>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </Container>

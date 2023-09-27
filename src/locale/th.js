@@ -149,6 +149,7 @@ let th = {
       "delete": "Delete",
       "addMeasurement": "+ Add Measurement",
       "action": "Action",
+      "unitLogo": "Unit Logo",
     },
     gateway: {
       "search": "Search by Gateway name",
@@ -178,6 +179,7 @@ let th = {
       "DeviceInfo": "Device Info",
       "btnRefresh": "Refresh",
       "btnAddPoint": "Add Point",
+      "selectBillingType": "Choose Billing Type",
     },
     zone: {
       "search": "Search by Zone name",

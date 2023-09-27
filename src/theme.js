@@ -10,7 +10,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Nunito, sans-serif !important",
+    fontFamily: "Poppins, sans-serif !important",
     h1: {
       fontSize: 26,
       fontWeight: 'bold',
@@ -29,7 +29,7 @@ const theme = createTheme({
       fontSize: 18,
     },
     h6: {
-      fontSize: 17,
+      fontSize: 15,
     },
     overline: {
       fontSize: 15,

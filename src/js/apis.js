@@ -130,6 +130,28 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/unit/remove/${id}`);
   };
 
+  /* ============== UnitType API ================ */
+
+  const UnitTypeRegister = (body) => {
+    return tokenAPI.post(`/api/unit-type/add`, body);
+  };
+
+  const getUnitTypeList = () => {
+    return tokenAPI.get(`/api/unit-type/list`);
+  };
+
+  const getUnitTypeView = (id = 0) => {
+    return tokenAPI.get(`/api/unit-type/read/${id}`);
+  };
+
+  const unitTypeUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/unit-type/update/${id}`, body);
+  };
+
+  const unitTypeDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/unit-type/remove/${id}`);
+  };
+
   /* ============== Gateway API ================ */
 
   const getGatewayData = () => {
@@ -170,10 +192,10 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/communication/remove/${id}`);
   };
 
-  /* ============== Gateway API ================ */
+  /* ============== Device API ================ */
 
-  const getDeviceData = (body) => {
-    return tokenAPI.post(`/api/device/list`, body);
+  const getDeviceData = (id = 0) => {
+    return tokenAPI.get(`/api/device/list/${id}`);
   };
 
   const deviceRegister = (body) => {
@@ -192,9 +214,115 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/device/remove/${id}`);
   };
 
-  /* ============= Master Data ============== */
+  /* ============== Billing-type API ================ */
 
-  /* ========================================= */
+  const getBillingTypeData = () => {
+    return tokenAPI.get(`/api/billing-type/list`);
+  };
+
+  const billingTypeRegister = (body) => {
+    return tokenAPI.post(`/api/billing-type/add`, body);
+  };
+
+  const getBillingTypeView = (id = 0) => {
+    return tokenAPI.get(`/api/billing-type/read/${id}`);
+  };
+
+  const billingTypeUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/billing-type/update/${id}`, body);
+  };
+
+  const billingTypeDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/billing-type/remove/${id}`);
+  };
+
+  /* ============== Points API ================ */
+
+  const getPointData = (id = 0) => {
+    return tokenAPI.get(`/api/point/list/${id}`);
+  };
+
+  const pointRegister = (body) => {
+    return tokenAPI.post(`/api/point/add`, body);
+  };
+
+  // const getPointView = (id = 0) => {
+  //   return tokenAPI.get(`/api/point/read/${id}`);
+  // };
+
+  const pointUpdate = (body) => {
+    return tokenAPI.put(`/api/point/update`, body);
+  };
+
+  const pointDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/point/remove/${id}`);
+  };
+
+  /* ============== Zone API ================ */
+
+  const getZoneData = () => {
+    return tokenAPI.get(`/api/zone/list`);
+  };
+
+  const zoneRegister = (body) => {
+    return tokenAPI.post(`/api/zone/add`, body);
+  };
+
+  const getZoneView = (id = 0) => {
+    return tokenAPI.get(`/api/zone/read/${id}`);
+  };
+
+  const zoneUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/zone/update/${id}`, body);
+  };
+
+  const zoneDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/zone/remove/${id}`);
+  };
+
+  /* ============== Zone Type API ================ */
+
+  const getZoneTypeData = () => {
+    return tokenAPI.get(`/api/zone-type/list`);
+  };
+
+  const zoneTypeRegister = (body) => {
+    return tokenAPI.post(`/api/zone-type/add`, body);
+  };
+
+  const getZoneTypeView = (id = 0) => {
+    return tokenAPI.get(`/api/zone-type/read/${id}`);
+  };
+
+  const zoneTypeUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/zone-type/update/${id}`, body);
+  };
+
+  const zoneTypeDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/zone-type/remove/${id}`);
+  };
+
+  /* ============== Zone Unit API ================ */
+
+  const getZoneUnitData = (id = 0) => {
+    return tokenAPI.get(`/api/zone-unit/list/${id}`);
+  };
+
+  const zoneUnitRegister = (body) => {
+    return tokenAPI.post(`/api/zone-unit/add`, body);
+  };
+
+  // const getZoneUnitView = (id = 0) => {
+  //   return tokenAPI.get(`/api/zone-unit/read/${id}`);
+  // };
+
+  const zoneUnitUpdate = (body) => {
+    return tokenAPI.put(`/api/zone-unit/update`, body);
+  };
+
+  const zoneUnitDelete = () => {
+    return tokenAPI.delete(`/api/zone-unit/remove`);
+  };
 
   return {
     connectTokenAPI,
@@ -225,6 +353,12 @@ const getAPI = () => {
     unitUpdate,
     unitDelete,
 
+    UnitTypeRegister,
+    getUnitTypeList,
+    getUnitTypeView,
+    unitTypeUpdate,
+    unitTypeDelete,
+
     getGatewayData,
     gatewayRegister,
     getGatewayView,
@@ -241,6 +375,35 @@ const getAPI = () => {
     getDeviceView,
     deviceUpdate,
     deviceDelete,
+
+    getBillingTypeData,
+    billingTypeRegister,
+    getBillingTypeView,
+    billingTypeUpdate,
+    billingTypeDelete,
+
+    getPointData,
+    pointRegister,
+    pointUpdate,
+    pointDelete,
+
+    getZoneData,
+    zoneRegister,
+    getZoneView,
+    zoneUpdate,
+    zoneDelete,
+
+    getZoneTypeData,
+    zoneTypeRegister,
+    getZoneTypeView,
+    zoneTypeUpdate,
+    zoneTypeDelete,
+
+    getZoneUnitData,
+    zoneUnitRegister,
+    zoneUnitUpdate,
+    zoneUnitDelete,
+    
   };
 };
 export default {

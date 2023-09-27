@@ -12,7 +12,7 @@ const ZoneDetail = () => {
       <Layout type={"Zone"}>
         <TableZoneDetail
           t={t}
-          pageName={zone?.calories}
+          pageName={zone?.zone}
           subPageName={""}
           zoneData={zone}
         />

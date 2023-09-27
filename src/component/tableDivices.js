@@ -403,12 +403,12 @@ const DeviceManagement = ({ t, login }) => {
     });
   };
 
-  useEffect(() => {
-    dispatch(checkToken());
-    if (!_.isEmpty(token)) {
-      getDevice();
-    }
-  }, [token]);
+  // useEffect(() => {
+  //   dispatch(checkToken());
+  //   if (!_.isEmpty(token)) {
+  //     getDevice();
+  //   }
+  // }, [token]);
 
   const getDevice = async () => {
     setIsLoading(true);

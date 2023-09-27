@@ -1400,7 +1400,7 @@ const BuildingManagement = ({ t, login }) => {
                 )}
               >
                 <Grid item md={3} className={classes.borderImg}>
-                  <img src={file} alt="img-test" className={classes.imgWidth} />
+                  <img src={imagePreviewUrl} alt="img-test" className={classes.imgWidth} />
                 </Grid>
                 <Grid item md={9}>
                   <Grid

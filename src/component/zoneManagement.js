@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, connect } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
@@ -34,6 +34,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -53,7 +54,22 @@ import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import { addZone } from "../js/actions";
+import _, { set, stubFalse } from "lodash";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import Validate from "./validate";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+  addZone,
+} from "../js/actions";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -163,34 +179,6 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "flex-end",
   },
 }));
-
-function createData(name, calories, fat, carbs, unit) {
-  return {
-    name,
-    calories,
-    fat,
-    carbs,
-    // power,
-    // protein,
-    unit,
-  };
-}
-
-const rows = [
-  createData(1, "Zone 1", "Public Zone", "Building 1", 1120),
-  createData(2, "Zone 2", "Public Zone", "Building 1", 1120),
-  createData(3, "Zone 3", "Public Zone", "Building 1", 1120),
-  createData(4, "Zone 4", "Public Zone", "Building 1", 1120),
-  createData(5, "Zone 5", "Public Zone", "Building 1", 1120),
-  createData(6, "Zone 6", "Public Zone", "Building 1", 1120),
-  createData(7, "Zone 7", "Public Zone", "Building 1", 1120),
-  createData(8, "Zone 8", "Public Zone", "Building 1", 1120),
-  createData(9, "Zone 9", "Public Zone", "Building 1", 1120),
-  createData(10, "Zone 10", "Public Zone", "Building 1", 1120),
-  createData(11, "Zone 11", "Public Zone", "Building 1", 1120),
-  createData(12, "Zone 12", "Public Zone", "Building 1", 1120),
-  createData(13, "Zone 13", "Public Zone", "Building 1", 1120),
-];
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -394,7 +382,7 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTable({ t }) {
+const ZoneManagement = ({ t }) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -403,10 +391,13 @@ export default function EnhancedTable({ t }) {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [buildingName, setBuildingName] = useState("none");
   const [zoneName, setZoneName] = useState("");
-  const [zoneType, setZoneType] = useState("none");
+  const [zoneTypeSelect, setZoneTypeSelect] = useState("none");
+  const [building, setBuilding] = useState([]);
 
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
+  const token = useSelector((state) => state.token);
+  const user = useSelector((state) => state.user);
   const theme = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -414,9 +405,256 @@ export default function EnhancedTable({ t }) {
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [openAdd, setOpenAdd] = useState(false);
+  const [zoneType, setZoneType] = useState([]);
 
-  const handleClickOpen = () => {
+  const [openView, setOpenView] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [isValidate, setIsValidate] = useState(true);
+  const [isIdEdit, setIsIdEdit] = useState("");
+
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
+  };
+
+  useEffect(() => {
+    if (user && user?.building) {
+      setBuilding(user?.building);
+    }
+  }, [user, building]);
+
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token)) {
+      getZoneData();
+      getZoneTypeData();
+    }
+  }, [token]);
+
+  const getZoneData = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getZoneData(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", dataPayload);
+        setRows(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  // get getZoneTypeData //
+  const getZoneTypeData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getZoneTypeData().then((response) => {
+        const dataPayload = response.data;
+        setZoneType(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleValidate = (type) => {
+    let isValidate = true;
+    if (type === "edit") {
+      if (_.isEmpty(zoneName) || !zoneTypeSelect || !buildingName) {
+        isValidate = false;
+      }
+      console.log("isValidateEdit", isValidate);
+      setIsValidate(isValidate);
+    } else {
+      if (_.isEmpty(zoneName) || !zoneTypeSelect || !buildingName) {
+        isValidate = false;
+      }
+      console.log("isValidate", isValidate);
+      setIsValidate(isValidate);
+    }
+    if (isValidate) {
+      if (type === "edit") {
+        zoneUpdate(isIdEdit);
+      } else {
+        zoneRegister();
+      }
+    }
+  };
+
+  const zoneRegister = async () => {
+    setIsLoading(true);
+    try {
+      const body = {
+        zone: zoneName,
+        type_id: zoneTypeSelect,
+        building_id: buildingName,
+      };
+      await API.connectTokenAPI(token);
+      await API.zoneRegister(body).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          getZoneData();
+          handleCloseAdd();
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleCloseAdd();
+      setIsLoading(false);
+    }
+  };
+
+  const zoneUpdate = async (rowId) => {
+    setIsLoading(true);
+    try {
+      const body = {
+        zone: zoneName,
+        type_id: zoneTypeSelect,
+        building_id: buildingName,
+      };
+      await API.connectTokenAPI(token);
+      await API.zoneUpdate(rowId, body).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          getZoneData();
+          handleClose();
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleClose();
+      setIsLoading(false);
+    }
+  };
+
+  const zoneView = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getZoneView(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            setZoneName(item.zone);
+            setBuildingName(
+              item.building_name
+                ? building.find((f) => f.name === item.building_name).id
+                : "none"
+            );
+            setZoneTypeSelect(
+              item.type ? zoneType.find((f) => f.type === item.type).id : "none"
+            );
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const zoneDelete = async (rowId) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.zoneDelete(rowId).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          getZoneData();
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // delete Data //
+  const handleClickDeleteData = (event, id) => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        zoneDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  const handleClickOpen = (event, id) => {
     setOpen(true);
+    setIsIdEdit(id);
+    zoneView(id);
+    setIsValidate(true);
+  };
+
+  const handleClickOpenView = (event, id) => {
+    setOpenView(true);
+    zoneView(id);
   };
 
   const handleClose = () => {
@@ -483,11 +721,11 @@ export default function EnhancedTable({ t }) {
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
       ),
-    [order, orderBy, page, rowsPerPage]
+    [order, orderBy, page, rowsPerPage, rows]
   );
 
   const handleZoneType = (event) => {
-    setZoneType(event.target.value);
+    setZoneTypeSelect(event.target.value);
   };
 
   const handleBuildingName = (event) => {
@@ -500,91 +738,110 @@ export default function EnhancedTable({ t }) {
 
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
+    setIsValidate(true);
+    setZoneName("");
+    setZoneTypeSelect("none");
+    setBuildingName("none");
   };
 
   const handleCloseAdd = () => {
     setOpenAdd(false);
   };
 
-  const openPageZoneDetail = () => {
-    navigate(`/zoneDetail`);
+  const openPageZoneDetail = (event, id) => {
+    // navigate(`/zoneDetail`);
+    navigate("/zoneDetail", { state: { id: id } });
   };
 
   const handleDetailZone = (event, row) => {
     dispatch(addZone(row));
   };
 
+  const handleCloseView = () => {
+    setOpenView(false);
+  };
+
   return (
     <Container className={classes.marginRow}>
-      <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon className={classes.alignSelf} />
-        <Typography variant="h6"> / {sideBar}</Typography>
-      </Grid>
-      <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
-        <Grid item md={5} className={classes.marginRow}>
-          <TextField
-            id="input-with-icon-textfield"
-            size="small"
-            placeholder={t("zone:search")}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-          />
-        </Grid>
-        <Grid item md={2} className={clsx(classes.marginRow)}>
-          <Button
-            onClick={handleClickOpenAdd}
-            autoFocus
-            // fullWidth
-            className={clsx(classes.backGroundConfrim, classes.width)}
-            variant="outlined"
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <Grid item className={classes.flexRow}>
+            <HomeOutlinedIcon className={classes.alignSelf} />
+            <Typography variant="h6"> / {sideBar}</Typography>
+          </Grid>
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRow, classes.justContent)}
           >
-            {t("zone:btnAdd")}
-          </Button>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ width: "100%" }} className={classes.marginRow}>
-        <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
-            >
-              <EnhancedTableHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                //   onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-                classes={classes}
+            <Grid item md={5} className={classes.marginRow}>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("zone:search")}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchOutlinedIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
               />
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+            </Grid>
+            <Grid item md={2} className={clsx(classes.marginRow)}>
+              <Button
+                onClick={handleClickOpenAdd}
+                autoFocus
+                // fullWidth
+                className={clsx(classes.backGroundConfrim, classes.width)}
+                variant="outlined"
+              >
+                {t("zone:btnAdd")}
+              </Button>
+            </Grid>
+          </Grid>
 
-                  return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleClick(event, row.name)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.name}
-                      selected={isItemSelected}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      {/* <TableCell padding="checkbox">
+          <Box sx={{ width: "100%" }} className={classes.marginRow}>
+            <Paper sx={{ width: "100%", mb: 2 }}>
+              {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
+              <TableContainer>
+                <Table
+                  sx={{ minWidth: 750 }}
+                  aria-labelledby="tableTitle"
+                  size={dense ? "small" : "medium"}
+                >
+                  <EnhancedTableHead
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    //   onSelectAllClick={handleSelectAllClick}
+                    onRequestSort={handleRequestSort}
+                    rowCount={rows.length}
+                    classes={classes}
+                  />
+                  <TableBody>
+                    {visibleRows.map((row, index) => {
+                      const isItemSelected = isSelected(row.name);
+                      const labelId = `enhanced-table-checkbox-${index}`;
+
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) => handleClick(event, row.name)}
+                          role="checkbox"
+                          // aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.name}
+                          // selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          {/* <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
@@ -593,100 +850,101 @@ export default function EnhancedTable({ t }) {
                         }}
                       />
                     </TableCell> */}
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                        className={classes.fontSixeCell}
-                        align="center"
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            className={classes.fontSixeCell}
+                            align="center"
+                          >
+                            {row.id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.zone}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.type}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.building_name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.no_of_unit}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            <FeedOutlinedIcon
+                              className={classes.marginIcon}
+                              // onClick={{openPageZoneDetail, handleDetailZone(row)}}
+                              onClick={(event) => {
+                                openPageZoneDetail(event, row.id);
+                                handleDetailZone(event, row);
+                              }}
+                            />
+                            <VisibilityOutlinedIcon
+                              className={classes.marginIcon}
+                              onClick={(event) =>
+                                handleClickOpenView(event, row.id)
+                              }
+                            />
+                            <SettingsOutlinedIcon
+                              onClick={(event) =>
+                                handleClickOpen(event, row.id)
+                              }
+                            />
+                            <DeleteOutlineOutlinedIcon
+                              onClick={(event) => {
+                                handleClickDeleteData(event, row.id);
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {emptyRows > 0 && (
+                      <TableRow
+                        style={{
+                          height: (dense ? 33 : 53) * emptyRows,
+                        }}
                       >
-                        {row.name}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.calories}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.fat}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.carbs}
-                      </TableCell>
-                      {/* <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.power}
-                      </TableCell> */}
-                      {/* <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.protein}
-                      </TableCell> */}
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.unit}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        <FeedOutlinedIcon
-                          className={classes.marginIcon}
-                          // onClick={{openPageZoneDetail, handleDetailZone(row)}}
-                          onClick={(event) => {
-                            openPageZoneDetail();
-                            handleDetailZone(event, row);
-                          }}
-                        />
-                        <VisibilityOutlinedIcon
-                          className={classes.marginIcon}
-                        />
-                        <SettingsOutlinedIcon onClick={handleClickOpen} />
-                        <DeleteOutlineOutlinedIcon />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: (dense ? 33 : 53) * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
-        {/* <FormControlLabel
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+            {/* <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
       /> */}
-      </Box>
+          </Box>
+        </>
+      )}
 
       {/* Modal Edit*/}
       <Dialog
@@ -703,81 +961,122 @@ export default function EnhancedTable({ t }) {
           <Typography variant="h3">{t("zone:editZone")}</Typography>
         </DialogTitle>
         <DialogContent>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="pb-3">
-              {t("zone:zoneName")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:buildingName")}
-              fullWidth
-              variant="outlined"
-              value={zoneName}
-              onChange={handleZoneName}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("zone:zoneType")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={zoneType}
-                placeholder={t("gateway:selectCommunication")}
-                onChange={handleZoneType}
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="pb-3">
+                  {t("zone:zoneName")}
+                </Typography>
+                <TextField
+                  id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("building:buildingName")}
+                  fullWidth
+                  variant="outlined"
+                  value={zoneName}
+                  onChange={handleZoneName}
+                  error={_.isEmpty(zoneName) && !isValidate}
+                />
+                {_.isEmpty(zoneName) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("zone:zoneType")}
+                </Typography>
+                <FormControl variant="outlined" size="small" fullWidth>
+                  <Select
+                    labelId="demo-select-small-label"
+                    id="demo-select-small"
+                    value={zoneType.length > 0 ? zoneTypeSelect : "none"}
+                    placeholder={t("gateway:selectCommunication")}
+                    onChange={handleZoneType}
+                    error={zoneTypeSelect === "none" && !isValidate}
+                  >
+                    <MenuItem value="none">{t("zone:selectZoneType")}</MenuItem>
+                    {zoneType.length > 0 &&
+                      zoneType.map((item) => {
+                        return (
+                          <MenuItem
+                            id={"selectZoneType-" + item.id}
+                            key={item.id}
+                            value={item.id}
+                          >
+                            {item.type}
+                          </MenuItem>
+                        );
+                      })}
+                  </Select>
+                </FormControl>
+                {zoneTypeSelect === "none" && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("building:buildingName")}
+                </Typography>
+                <FormControl variant="outlined" size="small" fullWidth>
+                  <Select
+                    labelId="demo-select-small-label"
+                    id="demo-select-small"
+                    value={building.length > 0 ? buildingName : "none"}
+                    placeholder={t("gateway:selectCommunication")}
+                    onChange={handleBuildingName}
+                    error={buildingName === "none" && !isValidate}
+                  >
+                    <MenuItem value="none">
+                      {t("building:buildingName")}
+                    </MenuItem>
+                    {building.length > 0 &&
+                      building.map((item) => {
+                        return (
+                          <MenuItem
+                            id={"buildingNameSelect-" + item.id}
+                            key={item.id}
+                            value={item.id}
+                          >
+                            {item.name}
+                          </MenuItem>
+                        );
+                      })}
+                  </Select>
+                </FormControl>
+                {buildingName === "none" && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
+              </Grid>
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
               >
-                <MenuItem value="none">{t("zone:selectZoneType")}</MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:buildingName")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={buildingName}
-                placeholder={t("gateway:selectCommunication")}
-                onChange={handleBuildingName}
-              >
-                <MenuItem value="none">{t("building:buildingName")}</MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-          >
-            <Grid item md={3}>
-              <Button
-                onClick={handleClose}
-                className={clsx(classes.backGroundCancel)}
-                variant="outlined"
-              >
-                {t("building:btnCancel")}
-              </Button>
-            </Grid>
-            <Grid item md={3} className={classes.boxMargin}>
-              <Button
-                className={clsx(classes.backGroundConfrim)}
-                variant="outlined"
-              >
-                {t("building:btnSave")}
-              </Button>
-            </Grid>
-          </Grid>
+                <Grid item md={3}>
+                  <Button
+                    onClick={handleClose}
+                    className={clsx(classes.backGroundCancel)}
+                    variant="outlined"
+                  >
+                    {t("building:btnCancel")}
+                  </Button>
+                </Grid>
+                <Grid item md={3} className={classes.boxMargin}>
+                  <Button
+                    className={clsx(classes.backGroundConfrim)}
+                    variant="outlined"
+                    onClick={() => handleValidate("edit")}
+                  >
+                    {t("building:btnSave")}
+                  </Button>
+                </Grid>
+              </Grid>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -802,14 +1101,18 @@ export default function EnhancedTable({ t }) {
               {t("zone:zoneName")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("building:buildingName")}
               fullWidth
               variant="outlined"
               value={zoneName}
               onChange={handleZoneName}
+              error={_.isEmpty(zoneName) && !isValidate}
             />
+            {_.isEmpty(zoneName) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -819,16 +1122,29 @@ export default function EnhancedTable({ t }) {
               <Select
                 labelId="demo-select-small-label"
                 id="demo-select-small"
-                value={zoneType}
+                value={zoneType.length > 0 ? zoneTypeSelect : "none"}
                 placeholder={t("gateway:selectCommunication")}
                 onChange={handleZoneType}
+                error={zoneTypeSelect === "none" && !isValidate}
               >
                 <MenuItem value="none">{t("zone:selectZoneType")}</MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
+                {zoneType.length > 0 &&
+                  zoneType.map((item) => {
+                    return (
+                      <MenuItem
+                        id={"selectZoneType-" + item.id}
+                        key={item.id}
+                        value={item.id}
+                      >
+                        {item.type}
+                      </MenuItem>
+                    );
+                  })}
               </Select>
             </FormControl>
+            {zoneTypeSelect === "none" && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -838,16 +1154,29 @@ export default function EnhancedTable({ t }) {
               <Select
                 labelId="demo-select-small-label"
                 id="demo-select-small"
-                value={buildingName}
+                value={building.length > 0 ? buildingName : "none"}
                 placeholder={t("gateway:selectCommunication")}
                 onChange={handleBuildingName}
+                error={buildingName === "none" && !isValidate}
               >
                 <MenuItem value="none">{t("building:buildingName")}</MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
+                {building.length > 0 &&
+                  building.map((item) => {
+                    return (
+                      <MenuItem
+                        id={"buildingNameSelect-" + item.id}
+                        key={item.id}
+                        value={item.id}
+                      >
+                        {item.name}
+                      </MenuItem>
+                    );
+                  })}
               </Select>
             </FormControl>
+            {buildingName === "none" && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid
             item
@@ -867,21 +1196,92 @@ export default function EnhancedTable({ t }) {
               <Button
                 className={clsx(classes.backGroundConfrim)}
                 variant="outlined"
+                onClick={handleValidate}
               >
                 {t("building:btnAddModal")}
               </Button>
             </Grid>
           </Grid>
         </DialogContent>
-        {/* <DialogActions>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnCancel")}
-          </Button>
-          <Button variant="outlined" onClick={handleClose}>
-            {t("building:btnAddModal")}
-          </Button>
-        </DialogActions> */}
+      </Dialog>
+
+      {/* Modal View */}
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openView}
+        onClose={handleCloseView}
+        aria-labelledby="responsive-dialog-title-view"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle
+          id="responsive-dialog-title-view"
+          className={clsx(
+            classes.flexRow,
+            classes.justContent,
+            classes.borderBottom
+          )}
+        >
+          <Typography variant="h3">{zoneName}</Typography>
+          <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
+        </DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+               <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("zone:zoneName")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {zoneName ? zoneName : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("zone:zoneType")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {zoneTypeSelect ? zoneTypeSelect : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("building:buildingName")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {buildingName ? buildingName : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </>
+          )}
+        </DialogContent>
       </Dialog>
     </Container>
   );
+};
+
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
 }
+
+export default connect(mapStateToProps, mapDispatchToProps)(ZoneManagement);

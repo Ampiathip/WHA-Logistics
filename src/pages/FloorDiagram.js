@@ -91,12 +91,12 @@ const useStyles = makeStyles((theme) => ({
   fontSizeHead: {
     fontSize: 14,
     fontWeight: "bold",
-    fontFamily: "Nunito, sans-serif !important",
+    fontFamily: "Poppins, sans-serif !important",
   },
   fontSizeSub: {
     fontSize: 12,
     fontWeight: "normal",
-    fontFamily: "Nunito, sans-serif !important",
+    fontFamily: "Poppins, sans-serif !important",
   },
   displayFlex: {
     display: "flex",

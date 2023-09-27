@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector, connect } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -34,6 +34,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -53,6 +54,21 @@ import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import _, { stubFalse } from "lodash";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import Validate from "./validate";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+} from "../js/actions";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   flexRow: {
@@ -378,12 +394,12 @@ EnhancedTableUnitHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-export default function EnhancedTableUnit({
+const ZoneDetailManagement = ({
   t,
   pageName,
   subPageName,
   zoneData,
-}) {
+}) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -409,16 +425,28 @@ export default function EnhancedTableUnit({
   const [building, setBuilding] = useState("");
   const [zone, setZone] = useState("");
 
+  const dispatch = useDispatch();
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
+  const token = useSelector((state) => state.token);
   const theme = useTheme();
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const { id } = state;
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const fullScreenEdit = useMediaQuery(theme.breakpoints.down("xl"));
   const [openAdd, setOpenAdd] = useState(false);
   const [file, setFile] = useState(null);
+  const [openView, setOpenView] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [isValidate, setIsValidate] = useState(true);
+  const [isIdEdit, setIsIdEdit] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+
 
   const [rowsPointEdit, setRowsPointEdit] = useState([
     {
@@ -432,18 +460,56 @@ export default function EnhancedTableUnit({
     },
   ]);
 
-  const [rows, setRow] = useState([
-    {
-      name: 1,
-      calories: 10,
-      fat: "Building",
-      carbs: "Building",
-      power: "Building",
-      protein: 1120,
-      unit: 1120,
-      action: "",
-    },
-  ]);
+    // console.log("ididid====", state, id);
+    const swalFire = (msg) => {
+      MySwal.fire({
+        icon: "error",
+        confirmButtonText: "ตกลง",
+        text: msg,
+      });
+    };
+  
+    useEffect(() => {
+      dispatch(checkToken());
+      if (!_.isEmpty(token) && id !== null) {
+        getZoneUnit(id);
+      }
+    }, [token]);
+
+    const getZoneUnit = async (id) => {
+      setIsLoading(true);
+      try {
+        await API.connectTokenAPI(token);
+        await API.getUnitList(id).then((response) => {
+          const dataPayload = response.data;
+          console.log('dataPayload', dataPayload);
+          setRows(dataPayload);
+          setIsLoading(false);
+        });
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        if (response.status >= 500) {
+          swalFire(response.data);
+        } else {
+          MySwal.fire({
+            icon: "error",
+            confirmButtonText: "ตกลง",
+            cancelButtonText: "ยกเลิก",
+            showCancelButton: true,
+            text: response.data,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              dispatch(logout(false));
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      }
+    };
+  
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -573,23 +639,23 @@ export default function EnhancedTableUnit({
   };
 
   const handleClickOpenAdd = () => {
-    let newRow;
-    rows.forEach((item) => {
-      newRow = {
-        // Construct the new row object here
-        // For example: id: someValue, name: someValue, ...
-        name: item.name + 1,
-        calories: "",
-        fat: "",
-        carbs: "",
-        power: "",
-        protein: "",
-        unit: "",
-        action: "",
-      };
-    });
-    // Add the new row to the existing rowsPoint array
-    setRow([...rows, newRow]);
+    const newRowTemplate = {
+      name: 1,
+      point_name: '',
+      topic: '',
+      data_unit: '',
+      unit_binding: '',
+      device_id: '',
+      action: "",
+    };
+    // Create a copy of the existing rowsPointEdit array
+    const updatedRows = [...rowsPointEdit];
+
+    // Add a new row by pushing a copy of the newRowTemplate into the array
+    updatedRows.push({ ...newRowTemplate });
+
+    // Update the state with the new array
+    setRows(updatedRows);
   };
 
   const handleCloseAdd = () => {
@@ -661,9 +727,9 @@ export default function EnhancedTableUnit({
         <Grid item md={12} className={classes.marginRow}>
           <Card>
             <CardContent>
-              <Typography variant="h4">E10023</Typography>
+              <Typography variant="h4">{zoneData?.zone}</Typography>
               <Typography variant="h5" className="pt-3">
-                {zoneData?.calories}
+                {zoneData?.zone}
               </Typography>
               <Grid
                 item
@@ -679,13 +745,13 @@ export default function EnhancedTableUnit({
                     {t("gateway:building")}
                   </Typography>
                   <Typography variant="subtitle2" className="pt-1">
-                    {zoneData?.carbs}
+                    {zoneData?.building_name}
                   </Typography>
                 </Grid>
                 <Grid item md={6}>
                   <Typography variant="body2">{t("zone:type")}</Typography>
                   <Typography variant="subtitle2" className="pt-1">
-                    {zoneData?.fat}
+                    {zoneData?.type}
                   </Typography>
                 </Grid>
               </Grid>
@@ -1365,3 +1431,21 @@ export default function EnhancedTableUnit({
     </Container>
   );
 }
+
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ZoneDetailManagement);

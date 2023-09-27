@@ -411,17 +411,17 @@ const UnitManagement = ({
   const [model, setModel] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const [installation, setInstallation] = useState("");
-  const [communicationType, setCommunicationType] = useState("none");
   const [gatewayMeter, setGatewayMeter] = useState("none");
   const [gatewayMeterTwo, setGatewayMeterTwo] = useState("none");
   const [gatewayMeterThree, setGatewayMeterThree] = useState("none");
   const [billingType, setBillingType] = useState("none");
   const [unitNumber, setUnitNumber] = useState("");
   const [unitName, setUnitName] = useState("");
-  const [unitType, setUnitType] = useState("");
+  const [unitTypeSelect, setUnitTypeSelect] = useState("none");
   const [description, setDescription] = useState("");
   const [building, setBuilding] = useState("");
   const [zone, setZone] = useState("");
+  const [unitType, setUnitType] = useState([]);
 
   const dispatch = useDispatch();
   const classes = useStyles();
@@ -443,6 +443,7 @@ const UnitManagement = ({
   const [rows, setRows] = useState([]);
   const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
   const [rowsPointEdit, setRowsPointEdit] = useState([
     {
@@ -469,6 +470,7 @@ const UnitManagement = ({
     dispatch(checkToken());
     if (!_.isEmpty(token) && id !== null) {
       getUnitList(id);
+      getUnitTypeList();
     }
     console.log("token", token, login);
   }, [token]);
@@ -506,31 +508,90 @@ const UnitManagement = ({
     }
   };
 
-  const unitRegister = async () => {
+  // get Unit Type //
+  const getUnitTypeList = async () => {
     setIsLoading(true);
     try {
-      const body = {
-        unit: unitName,
-        floor_id: id,
-        description: description,
-        type_id: "",
-        file: "",
-      };
       await API.connectTokenAPI(token);
-      await API.UnitRegister(body).then((response) => {
+      await API.getUnitTypeList().then((response) => {
         const dataPayload = response.data;
-        console.log("dataPayload", dataPayload, response);
-        if (response.status === 200) {
-          MySwal.fire({
-            icon: "success",
-            confirmButtonText: "ตกลง",
-            text: dataPayload,
-          });
-          getUnitList(id);
-          handleCloseAdd();
-        }
+        setUnitType(dataPayload);
         setIsLoading(false);
       });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleValidate = (type) => {
+    let isValidate = true;
+    if (type === "edit") {
+      if (
+        _.isEmpty(unitNumber) ||
+        _.isEmpty(unitName) ||
+        _.isEmpty(description) ||
+        !unitTypeSelect ||
+        _.isEmpty(imagePreviewUrl)
+      ) {
+        isValidate = false;
+      }
+      setIsValidate(isValidate);
+    } else {
+      if (
+        _.isEmpty(unitNumber) ||
+        _.isEmpty(unitName) ||
+        _.isEmpty(description) ||
+        !unitTypeSelect ||
+        _.isEmpty(imagePreviewUrl)
+      ) {
+        isValidate = false;
+      }
+      console.log("isValidate", isValidate);
+      setIsValidate(isValidate);
+    }
+
+    if (isValidate) {
+      if (type === "edit") {
+        unitUpdate(isIdEdit);
+      } else {
+        unitRegister();
+      }
+    }
+  };
+
+  const unitRegister = async () => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result;
+        const body = {
+          unit: unitName,
+          floor_id: id,
+          description: description,
+          type_id: unitTypeSelect,
+          file: base64File,
+        };
+        await API.connectTokenAPI(token);
+        await API.UnitRegister(body).then((response) => {
+          const dataPayload = response.data;
+          console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getUnitList(id);
+            handleCloseAdd();
+          }
+          setIsLoading(false);
+        });
+      };
     } catch (error) {
       console.log(error);
       const response = error.response;
@@ -542,25 +603,34 @@ const UnitManagement = ({
 
   const unitUpdate = async (rowId) => {
     setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
     try {
-      const body = {
-        name: floorName,
+      reader.onload = async () => {
+        const base64File = reader.result;
+        const body = {
+          unit: unitName,
+          description: description,
+          type_id: unitTypeSelect,
+          file: base64File,
+          fileOld: "",
+        };
+        await API.connectTokenAPI(token);
+        await API.unitUpdate(rowId, body).then((response) => {
+          const dataPayload = response.data;
+          console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getUnitList(id);
+            handleClose();
+          }
+          setIsLoading(false);
+        });
       };
-      await API.connectTokenAPI(token);
-      await API.unitUpdate(rowId, body).then((response) => {
-        const dataPayload = response.data;
-        console.log("dataPayload", dataPayload, response);
-        if (response.status === 200) {
-          MySwal.fire({
-            icon: "success",
-            confirmButtonText: "ตกลง",
-            text: dataPayload,
-          });
-          getUnitList(id);
-          handleClose();
-        }
-        setIsLoading(false);
-      });
     } catch (error) {
       console.log(error);
       const response = error.response;
@@ -577,7 +647,17 @@ const UnitManagement = ({
       await API.getUnitView(id).then((response) => {
         const dataPayload = response.data;
         // console.log("dataPayload", response, dataPayload);
-        dataPayload.length > 0 && dataPayload.map((item) => {});
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("==========View", item);
+            setUnitName(item.unit);
+            // setUnitNumber(item.unit);
+            setDescription(item.description);
+            setUnitTypeSelect(
+              item.type_id ? unitType.find((f) => f.id === item.type_id).id : ""
+            );
+            setImagePreviewUrl(item.file);
+          });
         setIsLoading(false);
       });
     } catch (error) {
@@ -634,6 +714,7 @@ const UnitManagement = ({
     setOpen(true);
     getUnitView(id);
     setIsIdEdit(id);
+    setIsValidate(true);
   };
 
   const handleClose = () => {
@@ -699,38 +780,6 @@ const UnitManagement = ({
     [order, orderBy, page, rowsPerPage, rows]
   );
 
-  const handleDeviceBrand = (event) => {
-    setDeviceBrand(event.target.value);
-  };
-
-  const handleGatewayName = (event) => {
-    setGatewayName(event.target.value);
-  };
-
-  const handleCommunicationType = (event) => {
-    setCommunicationType(event.target.value);
-  };
-
-  const handleBillingType = (event) => {
-    setBillingType(event.target.value);
-  };
-
-  const handleDeviceName = (event) => {
-    setDeviceName(event.target.value);
-  };
-
-  const handleModel = (event) => {
-    setModel(event.target.value);
-  };
-
-  const handleSerialNumber = (event) => {
-    setSerialNumber(event.target.value);
-  };
-
-  const handleInstallation = (event) => {
-    setInstallation(event.target.value);
-  };
-
   const handleFloorName = (event) => {
     setFloorName(event.target.value);
   };
@@ -748,7 +797,7 @@ const UnitManagement = ({
   };
 
   const handleUnitType = (event) => {
-    setUnitType(event.target.value);
+    setUnitTypeSelect(event.target.value);
   };
 
   const handleZone = (event) => {
@@ -761,6 +810,12 @@ const UnitManagement = ({
 
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
+    setIsValidate(true);
+    setUnitName("");
+    setUnitNumber("");
+    setDescription("");
+    setUnitTypeSelect("none");
+    setImagePreviewUrl("");
   };
 
   const handleCloseAdd = () => {
@@ -774,8 +829,17 @@ const UnitManagement = ({
 
   const handleUploadFile = (e) => {
     // setFile(e.target.files[0]);
-    if (e.target.files.length > 0) {
-      setFile(URL.createObjectURL(e.target.files[0]));
+    e.preventDefault();
+    const fileTypeArray = ["image/png", "image/jpg", "image/jpeg"];
+    let reader = new window.FileReader();
+    let file = e.target.files[0];
+
+    if (fileTypeArray.includes(file.type)) {
+      reader.onloadend = () => {
+        setFile(file);
+        setImagePreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -814,6 +878,10 @@ const UnitManagement = ({
   const openPageFloorDetail = (event, id) => {
     // navigate("/buildingFloorDetail");
     navigate("/buildingFloorDetail", { state: { id: id } });
+  };
+
+  const handleCloseView = () => {
+    setOpenView(false);
   };
 
   return (
@@ -909,10 +977,10 @@ const UnitManagement = ({
                           hover
                           onClick={(event) => handleClick(event, row.name)}
                           role="checkbox"
-                          aria-checked={isItemSelected}
+                          // aria-checked={isItemSelected}
                           tabIndex={-1}
                           key={row.name}
-                          selected={isItemSelected}
+                          // selected={isItemSelected}
                           sx={{ cursor: "pointer" }}
                         >
                           {/* <TableCell padding="checkbox">
@@ -932,43 +1000,46 @@ const UnitManagement = ({
                             className={classes.fontSixeCell}
                             align="center"
                           >
-                            {row.name}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.calories}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.fat}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.carbs}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.power}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.protein}
+                            {row.id}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
                             {row.unit}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.description}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {/* {row.type_id
+                              ? unitType.find((f) => f.id === row.type_id).type
+                              : ""} */}
+                            {row.type_id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.building_name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.no_of_point}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.no_of_point}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1045,418 +1116,468 @@ const UnitManagement = ({
           </Grid>
         </DialogTitle>
         <DialogContent>
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRow, classes.modalContent)}
-          >
-            <Grid item md={5}>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
               <Grid
                 item
                 md={12}
-                className={clsx(classes.flexRow, classes.alignItem)}
+                className={clsx(classes.flexRow, classes.modalContent)}
               >
-                <Grid item md={6}>
-                  <Typography variant="body2">{t("floor:shopLogo")}</Typography>
-                </Grid>
-                <Grid item md={6}>
-                  <input
-                    className={classes.input}
-                    id={"contained-button-file"}
-                    type="file"
-                    accept="image/jpeg,image/png,application/pdf,image/tiff"
-                    // multiple={isMultiple}
-                    onChange={handleUploadFile}
-                    onClick={(e) => {
-                      console.log("aaaaa");
-                    }}
-                  />
-                  <label
-                    htmlFor={"contained-button-file"}
-                    className={clsx(
-                      classes.flexRow,
-                      classes.justContentCenter,
-                      classes.width
-                    )}
+                <Grid item md={5}>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(classes.flexRow, classes.alignItem)}
                   >
-                    <Card
-                      variant="outlined"
-                      style={{ width: 200, height: 200 }}
-                      className={clsx(classes.boxUpload)}
-                    >
-                      {file ? (
-                        <img
-                          src={file}
-                          alt="img-upload"
-                          className={classes.imgWidth}
-                        />
-                      ) : (
-                        <CardContent
-                          className={clsx(
-                            classes.textCenter,
-                            classes.marginTopBox
-                          )}
-                        >
-                          <Typography> +</Typography>
-                          <Typography> upload</Typography>
-                        </CardContent>
-                      )}
-                    </Card>
-                  </label>
-                </Grid>
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="pb-3">
-                  {t("floor:unitNumber")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:unitNumber")}
-                  fullWidth
-                  variant="outlined"
-                  value={unitNumber}
-                  onChange={handleUnitNumber}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:unitName")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:unitName")}
-                  fullWidth
-                  variant="outlined"
-                  value={unitName}
-                  onChange={handleUnitName}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:description")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:description")}
-                  fullWidth
-                  variant="outlined"
-                  value={description}
-                  onChange={handleDescription}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:unitType")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:unitType")}
-                  fullWidth
-                  variant="outlined"
-                  value={unitType}
-                  onChange={handleUnitType}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="h3" className="mt-3 pb-3">
-                  {t("floor:building")}
-                </Typography>
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:building")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:building")}
-                  fullWidth
-                  variant="outlined"
-                  value={building}
-                  onChange={handleBuilding}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:floor")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:floor")}
-                  fullWidth
-                  variant="outlined"
-                  value={floorName}
-                  onChange={handleFloorName}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:zone")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:zone")}
-                  fullWidth
-                  variant="outlined"
-                  value={zone}
-                  onChange={handleZone}
-                />
-              </Grid>
-              <Grid
-                item
-                md={12}
-                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-              >
-                <Grid item md={3}>
-                  <Button
-                    // onClick={handleCloseAdd}
-                    className={clsx(classes.backGroundCancel)}
-                    variant="outlined"
-                  >
-                    {t("gateway:btnRefresh")}
-                  </Button>
-                </Grid>
-                <Grid item md={3} className={classes.boxMargin}>
-                  <Button
-                    className={clsx(classes.backGroundConfrim)}
-                    variant="outlined"
-                  >
-                    {t("gateway:btnSave")}
-                  </Button>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item className={classes.borderBox}></Grid>
-            <Grid item md={6} className={classes.boxMargin}>
-              <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeHead}
-                      >
-                        #
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={clsx(
-                          classes.colorText,
-                          classes.fontSixeHead
-                        )}
-                      >
-                        {t("floor:gateway")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={clsx(
-                          classes.colorText,
-                          classes.fontSixeHead
-                        )}
-                      >
-                        {t("floor:gateway")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={clsx(
-                          classes.colorText,
-                          classes.fontSixeHead
-                        )}
-                      >
-                        {t("floor:gateway")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeHead}
-                      >
-                        {t("floor:action")}
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rowsPointEdit.map((row) => (
-                      <TableRow
-                        key={row.name}
-                        sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
+                    <Grid item md={6}>
+                      <Typography variant="body2">
+                        {t("floor:shopLogo")}
+                      </Typography>
+                    </Grid>
+                    <Grid item md={6}>
+                      <input
+                        className={classes.input}
+                        id={"contained-button-file"}
+                        type="file"
+                        accept="image/jpeg,image/png,application/pdf,image/tiff"
+                        // multiple={isMultiple}
+                        onChange={handleUploadFile}
+                        onClick={(e) => {
+                          console.log("aaaaa");
                         }}
+                      />
+                      <label
+                        htmlFor={"contained-button-file"}
+                        className={clsx(
+                          classes.flexRow,
+                          classes.justContentCenter,
+                          classes.width
+                        )}
                       >
-                        <TableCell
-                          component="th"
-                          scope="row"
-                          className={classes.fontSixeCell}
+                        <Card
+                          variant="outlined"
+                          style={{ width: 200, height: 200 }}
+                          className={clsx(classes.boxUpload)}
                         >
-                          {row.name}
-                        </TableCell>
-                        <TableCell
-                          align="center"
-                          className={classes.fontSixeCell}
-                        >
-                          {row.code ? (
-                            row.code
+                          {imagePreviewUrl ? (
+                            <img
+                              src={imagePreviewUrl}
+                              alt="img-upload"
+                              className={classes.imgWidth}
+                            />
                           ) : (
-                            <Grid item className={classes.marginDataTable}>
-                              <FormControl
-                                variant="outlined"
-                                size="small"
-                                fullWidth
-                              >
-                                <Select
-                                  labelId="demo-select-small-label"
-                                  id="demo-select-small"
-                                  value={gatewayMeter}
-                                  placeholder={"Energy Meter"}
-                                  onChange={handleGatewayMeter}
-                                >
-                                  <MenuItem value="none">Energy Meter</MenuItem>
-                                  {/* <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem> */}
-                                </Select>
-                              </FormControl>
-                            </Grid>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          className={classes.fontSixeCell}
-                        >
-                          {row.population ? (
-                            row.population
-                          ) : (
-                            <Grid item className={classes.marginDataTable}>
-                              <FormControl
-                                variant="outlined"
-                                size="small"
-                                fullWidth
-                              >
-                                <Select
-                                  labelId="demo-select-small-label"
-                                  id="demo-select-small"
-                                  value={gatewayMeterTwo}
-                                  placeholder={"Energy Meter"}
-                                  onChange={handleGatewayMeterTwo}
-                                >
-                                  <MenuItem value="none">Energy Meter</MenuItem>
-                                  {/* <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem> */}
-                                </Select>
-                              </FormControl>
-                            </Grid>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          className={classes.fontSixeCell}
-                        >
-                          {row.size ? (
-                            row.size
-                          ) : (
-                            <Grid item className={classes.marginDataTable}>
-                              <FormControl
-                                variant="outlined"
-                                size="small"
-                                fullWidth
-                              >
-                                <Select
-                                  labelId="demo-select-small-label"
-                                  id="demo-select-small"
-                                  value={gatewayMeterThree}
-                                  placeholder={"Energy Meter"}
-                                  onChange={handleGatewayMeterThree}
-                                >
-                                  <MenuItem value="none">Energy Meter</MenuItem>
-                                  {/* <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem> */}
-                                </Select>
-                              </FormControl>
-                            </Grid>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          className={classes.fontSixeCell}
-                        >
-                          {row.action ? (
-                            <>
-                              <Typography
-                                className={clsx(
-                                  classes.fontSixeCell,
-                                  classes.activeColor
-                                )}
-                              >
-                                {t("floor:delete")}
-                              </Typography>
-                            </>
-                          ) : (
-                            <Typography
+                            <CardContent
                               className={clsx(
-                                classes.fontSixeCell,
-                                classes.activeColor
+                                classes.textCenter,
+                                classes.marginTopBox
                               )}
                             >
-                              {t("floor:delete")}
-                            </Typography>
+                              <Typography> +</Typography>
+                              <Typography> upload</Typography>
+                            </CardContent>
                           )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <Grid
-                item
-                md={12}
-                className={clsx(
-                  classes.marginRow,
-                  classes.flexRow,
-                  classes.justContentCenter
-                )}
-              >
-                <Grid item md={6}>
-                  <Button
-                    variant="outlined"
-                    onClick={addNewRow}
-                    className={clsx(classes.backGroundCancel)}
+                        </Card>
+                      </label>
+                    </Grid>
+                    {_.isEmpty(imagePreviewUrl) && !isValidate && (
+                      <Validate errorText={"กรุณาระบุข้อมูล"} />
+                    )}
+                  </Grid>
+                  <Grid item md={12}>
+                    <Typography variant="subtitle2" className="pb-3">
+                      {t("floor:unitNumber")}
+                    </Typography>
+                    <TextField
+                      // id="input-with-icon-textfield"
+                      size="small"
+                      placeholder={t("floor:unitNumber")}
+                      fullWidth
+                      variant="outlined"
+                      value={unitNumber}
+                      onChange={handleUnitNumber}
+                      error={_.isEmpty(unitNumber) && !isValidate}
+                    />
+                    {_.isEmpty(unitNumber) && !isValidate && (
+                      <Validate errorText={"กรุณาระบุข้อมูล"} />
+                    )}
+                  </Grid>
+                  <Grid item md={12}>
+                    <Typography variant="subtitle2" className="mt-3 pb-3">
+                      {t("floor:unitName")}
+                    </Typography>
+                    <TextField
+                      // id="input-with-icon-textfield"
+                      size="small"
+                      placeholder={t("floor:unitName")}
+                      fullWidth
+                      variant="outlined"
+                      value={unitName}
+                      onChange={handleUnitName}
+                      error={_.isEmpty(unitName) && !isValidate}
+                    />
+                    {_.isEmpty(unitName) && !isValidate && (
+                      <Validate errorText={"กรุณาระบุข้อมูล"} />
+                    )}
+                  </Grid>
+                  <Grid item md={12}>
+                    <Typography variant="subtitle2" className="mt-3 pb-3">
+                      {t("floor:description")}
+                    </Typography>
+                    <TextField
+                      // id="input-with-icon-textfield"
+                      size="small"
+                      placeholder={t("floor:description")}
+                      fullWidth
+                      variant="outlined"
+                      value={description}
+                      onChange={handleDescription}
+                      error={_.isEmpty(unitName) && !isValidate}
+                    />
+                    {_.isEmpty(unitName) && !isValidate && (
+                      <Validate errorText={"กรุณาระบุข้อมูล"} />
+                    )}
+                  </Grid>
+                  <Grid item md={12}>
+                    <Typography variant="subtitle2" className="mt-3 pb-3">
+                      {t("floor:unitType")}
+                    </Typography>
+                    <FormControl variant="outlined" size="small" fullWidth>
+                      <Select
+                        labelId="demo-select-small-label"
+                        // id="demo-select-small"
+                        value={unitType.length > 0 ? unitTypeSelect : "none"}
+                        placeholder={t("floor:unitType")}
+                        onChange={handleUnitType}
+                        error={unitTypeSelect === "none" && !isValidate}
+                      >
+                        <MenuItem value="none">{t("floor:unitType")}</MenuItem>
+                        {unitType.length > 0 &&
+                          unitType.map((item) => {
+                            return (
+                              <MenuItem
+                                id={"selectCommunication-" + item.id}
+                                key={item.id}
+                                value={item.id}
+                              >
+                                {item.type}
+                              </MenuItem>
+                            );
+                          })}
+                      </Select>
+                    </FormControl>
+                    {unitTypeSelect === "none" && !isValidate && (
+                      <Validate errorText={"กรุณาระบุข้อมูล"} />
+                    )}
+                  </Grid>
+                  <Grid item md={12}>
+                    <Typography variant="h3" className="mt-3 pb-3">
+                      {t("floor:building")}
+                    </Typography>
+                  </Grid>
+                  <Grid item md={12}>
+                    <Typography variant="subtitle2" className="mt-3 pb-3">
+                      {t("floor:building")}
+                    </Typography>
+                    <TextField
+                      // id="input-with-icon-textfield"
+                      size="small"
+                      placeholder={t("floor:building")}
+                      fullWidth
+                      variant="outlined"
+                      value={building}
+                      onChange={handleBuilding}
+                    />
+                  </Grid>
+                  <Grid item md={12}>
+                    <Typography variant="subtitle2" className="mt-3 pb-3">
+                      {t("floor:floor")}
+                    </Typography>
+                    <TextField
+                      // id="input-with-icon-textfield"
+                      size="small"
+                      placeholder={t("floor:floor")}
+                      fullWidth
+                      variant="outlined"
+                      value={floorName}
+                      onChange={handleFloorName}
+                    />
+                  </Grid>
+                  <Grid item md={12}>
+                    <Typography variant="subtitle2" className="mt-3 pb-3">
+                      {t("floor:zone")}
+                    </Typography>
+                    <TextField
+                      // id="input-with-icon-textfield"
+                      size="small"
+                      placeholder={t("floor:zone")}
+                      fullWidth
+                      variant="outlined"
+                      value={zone}
+                      onChange={handleZone}
+                    />
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(classes.flexRowBtnModal, classes.marginRow)}
                   >
-                    {t("floor:addMeasurement")}
-                  </Button>
+                    <Grid item md={3}>
+                      <Button
+                        // onClick={handleCloseAdd}
+                        className={clsx(classes.backGroundCancel)}
+                        variant="outlined"
+                      >
+                        {t("gateway:btnRefresh")}
+                      </Button>
+                    </Grid>
+                    <Grid item md={3} className={classes.boxMargin}>
+                      <Button
+                        className={clsx(classes.backGroundConfrim)}
+                        variant="outlined"
+                        onClick={() => handleValidate("edit")}
+                      >
+                        {t("gateway:btnSave")}
+                      </Button>
+                    </Grid>
+                  </Grid>
                 </Grid>
-              </Grid>
+                <Grid item className={classes.borderBox}></Grid>
+                <Grid item md={6} className={classes.boxMargin}>
+                  <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeHead}
+                          >
+                            #
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={clsx(
+                              classes.colorText,
+                              classes.fontSixeHead
+                            )}
+                          >
+                            {t("floor:gateway")}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={clsx(
+                              classes.colorText,
+                              classes.fontSixeHead
+                            )}
+                          >
+                            {t("floor:gateway")}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={clsx(
+                              classes.colorText,
+                              classes.fontSixeHead
+                            )}
+                          >
+                            {t("floor:gateway")}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeHead}
+                          >
+                            {t("floor:action")}
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {rowsPointEdit.map((row) => (
+                          <TableRow
+                            key={row.name}
+                            sx={{
+                              "&:last-child td, &:last-child th": { border: 0 },
+                            }}
+                          >
+                            <TableCell
+                              component="th"
+                              scope="row"
+                              className={classes.fontSixeCell}
+                            >
+                              {row.name}
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              className={classes.fontSixeCell}
+                            >
+                              {row.code ? (
+                                row.code
+                              ) : (
+                                <Grid item className={classes.marginDataTable}>
+                                  <FormControl
+                                    variant="outlined"
+                                    size="small"
+                                    fullWidth
+                                  >
+                                    <Select
+                                      labelId="demo-select-small-label"
+                                      id="demo-select-small"
+                                      value={gatewayMeter}
+                                      placeholder={"Energy Meter"}
+                                      onChange={handleGatewayMeter}
+                                    >
+                                      <MenuItem value="none">
+                                        Energy Meter
+                                      </MenuItem>
+                                      {/* <MenuItem value={10}>Ten</MenuItem>
+                                <MenuItem value={20}>Twenty</MenuItem>
+                                <MenuItem value={30}>Thirty</MenuItem> */}
+                                    </Select>
+                                  </FormControl>
+                                </Grid>
+                              )}
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              className={classes.fontSixeCell}
+                            >
+                              {row.population ? (
+                                row.population
+                              ) : (
+                                <Grid item className={classes.marginDataTable}>
+                                  <FormControl
+                                    variant="outlined"
+                                    size="small"
+                                    fullWidth
+                                  >
+                                    <Select
+                                      labelId="demo-select-small-label"
+                                      id="demo-select-small"
+                                      value={gatewayMeterTwo}
+                                      placeholder={"Energy Meter"}
+                                      onChange={handleGatewayMeterTwo}
+                                    >
+                                      <MenuItem value="none">
+                                        Energy Meter
+                                      </MenuItem>
+                                      {/* <MenuItem value={10}>Ten</MenuItem>
+                                <MenuItem value={20}>Twenty</MenuItem>
+                                <MenuItem value={30}>Thirty</MenuItem> */}
+                                    </Select>
+                                  </FormControl>
+                                </Grid>
+                              )}
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              className={classes.fontSixeCell}
+                            >
+                              {row.size ? (
+                                row.size
+                              ) : (
+                                <Grid item className={classes.marginDataTable}>
+                                  <FormControl
+                                    variant="outlined"
+                                    size="small"
+                                    fullWidth
+                                  >
+                                    <Select
+                                      labelId="demo-select-small-label"
+                                      id="demo-select-small"
+                                      value={gatewayMeterThree}
+                                      placeholder={"Energy Meter"}
+                                      onChange={handleGatewayMeterThree}
+                                    >
+                                      <MenuItem value="none">
+                                        Energy Meter
+                                      </MenuItem>
+                                      {/* <MenuItem value={10}>Ten</MenuItem>
+                                <MenuItem value={20}>Twenty</MenuItem>
+                                <MenuItem value={30}>Thirty</MenuItem> */}
+                                    </Select>
+                                  </FormControl>
+                                </Grid>
+                              )}
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              className={classes.fontSixeCell}
+                            >
+                              {row.action ? (
+                                <>
+                                  <Typography
+                                    className={clsx(
+                                      classes.fontSixeCell,
+                                      classes.activeColor
+                                    )}
+                                  >
+                                    {t("floor:delete")}
+                                  </Typography>
+                                </>
+                              ) : (
+                                <Typography
+                                  className={clsx(
+                                    classes.fontSixeCell,
+                                    classes.activeColor
+                                  )}
+                                >
+                                  {t("floor:delete")}
+                                </Typography>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.marginRow,
+                      classes.flexRow,
+                      classes.justContentCenter
+                    )}
+                  >
+                    <Grid item md={6}>
+                      <Button
+                        variant="outlined"
+                        onClick={addNewRow}
+                        className={clsx(classes.backGroundCancel)}
+                      >
+                        {t("floor:addMeasurement")}
+                      </Button>
+                    </Grid>
+                  </Grid>
 
-              <Grid
-                item
-                md={12}
-                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-              >
-                <Grid item md={3}>
-                  <Button
-                    // onClick={handleCloseAdd}
-                    className={clsx(classes.backGroundCancel)}
-                    variant="outlined"
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(classes.flexRowBtnModal, classes.marginRow)}
                   >
-                    {t("gateway:btnRefresh")}
-                  </Button>
-                </Grid>
-                <Grid item md={3} className={classes.boxMargin}>
-                  <Button
-                    className={clsx(classes.backGroundConfrim)}
-                    variant="outlined"
-                  >
-                    {t("gateway:btnSave")}
-                  </Button>
+                    <Grid item md={3}>
+                      <Button
+                        // onClick={handleCloseAdd}
+                        className={clsx(classes.backGroundCancel)}
+                        variant="outlined"
+                      >
+                        {t("gateway:btnRefresh")}
+                      </Button>
+                    </Grid>
+                    <Grid item md={3} className={classes.boxMargin}>
+                      <Button
+                        className={clsx(classes.backGroundConfrim)}
+                        variant="outlined"
+                      >
+                        {t("gateway:btnSave")}
+                      </Button>
+                    </Grid>
+                  </Grid>
                 </Grid>
               </Grid>
-            </Grid>
-          </Grid>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -1477,128 +1598,144 @@ const UnitManagement = ({
         </DialogTitle>
         <DialogContent>
           <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("floor:unitLogo")}
+            </Typography>
+            <Grid
+              item
+              md={12}
+              //   className={clsx(classes.flexRow, classes.justContentCenter)}
+            >
+              <input
+                className={classes.input}
+                id={"contained-button-file"}
+                type="file"
+                accept="image/jpeg,image/png,application/pdf,image/tiff"
+                // multiple={isMultiple}
+                onChange={handleUploadFile}
+                onClick={(e) => {
+                  console.log("aaaaa");
+                }}
+              />
+              <label
+                htmlFor={"contained-button-file"}
+                className={clsx(
+                  classes.flexRow,
+                  classes.justContentCenter,
+                  classes.width
+                )}
+              >
+                <Card
+                  variant="outlined"
+                  style={{ width: 200, height: 200 }}
+                  className={clsx(classes.boxUpload)}
+                >
+                  {imagePreviewUrl ? (
+                    <img
+                      src={imagePreviewUrl}
+                      alt="img-upload"
+                      className={classes.imgWidth}
+                    />
+                  ) : (
+                    <CardContent
+                      className={clsx(classes.textCenter, classes.marginTopBox)}
+                    >
+                      <Typography> +</Typography>
+                      <Typography> upload</Typography>
+                    </CardContent>
+                  )}
+                </Card>
+              </label>
+            </Grid>
+            {_.isEmpty(imagePreviewUrl) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
+          </Grid>
+          <Grid item md={12}>
             <Typography variant="subtitle2" className="pb-3">
-              {t("gateway:deviceName")}
+              {t("floor:unitNumber")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
-              placeholder={t("gateway:deviceName")}
+              placeholder={t("floor:unitNumber")}
               fullWidth
               variant="outlined"
-              value={deviceName}
-              onChange={handleDeviceName}
+              value={unitNumber}
+              onChange={handleUnitNumber}
+              error={_.isEmpty(unitNumber) && !isValidate}
             />
+            {_.isEmpty(unitNumber) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:gatewayName")}
+              {t("floor:unitName")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
-              placeholder={t("gateway:gatewayName")}
+              placeholder={t("floor:unitName")}
               fullWidth
               variant="outlined"
-              value={gatewayName}
-              onChange={handleGatewayName}
+              value={unitName}
+              onChange={handleUnitName}
+              error={_.isEmpty(unitName) && !isValidate}
             />
+            {_.isEmpty(unitName) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:deviceBrand")}
+              {t("floor:description")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
-              placeholder={t("gateway:deviceBrand")}
+              placeholder={t("floor:description")}
               fullWidth
               variant="outlined"
-              value={deviceBrand}
-              onChange={handleDeviceBrand}
+              value={description}
+              onChange={handleDescription}
+              error={_.isEmpty(unitName) && !isValidate}
             />
+            {_.isEmpty(unitName) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:model")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:model")}
-              fullWidth
-              variant="outlined"
-              value={model}
-              onChange={handleModel}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:serialNumber")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:serialNumber")}
-              fullWidth
-              variant="outlined"
-              value={serialNumber}
-              onChange={handleSerialNumber}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:Installation")}
-            </Typography>
-            <TextField
-              id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("gateway:Installation")}
-              fullWidth
-              variant="outlined"
-              value={installation}
-              onChange={handleInstallation}
-            />
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:communicationType")}
+              {t("floor:unitType")}
             </Typography>
             <FormControl variant="outlined" size="small" fullWidth>
               <Select
                 labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={communicationType}
-                placeholder={t("gateway:selectCommunication")}
-                onChange={handleCommunicationType}
+                // id="demo-select-small"
+                value={unitType.length > 0 ? unitTypeSelect : "none"}
+                placeholder={t("floor:unitType")}
+                onChange={handleUnitType}
+                error={unitTypeSelect === "none" && !isValidate}
               >
-                <MenuItem value="none">
-                  {t("gateway:selectCommunication")}
-                </MenuItem>
-                <MenuItem value={10}>Ten</MenuItem>
-                <MenuItem value={20}>Twenty</MenuItem>
-                <MenuItem value={30}>Thirty</MenuItem>
+                <MenuItem value="none">{t("floor:unitType")}</MenuItem>
+                {unitType.length > 0 &&
+                  unitType.map((item) => {
+                    return (
+                      <MenuItem
+                        id={"selectCommunication-" + item.id}
+                        key={item.id}
+                        value={item.id}
+                      >
+                        {item.type}
+                      </MenuItem>
+                    );
+                  })}
               </Select>
             </FormControl>
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("gateway:billingType")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={billingType}
-                placeholder={t("gateway:billingType")}
-                onChange={handleBillingType}
-              >
-                <MenuItem value="none">{t("gateway:billingType")}</MenuItem>
-                {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
-              </Select>
-            </FormControl>
+            {unitTypeSelect === "none" && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
           </Grid>
           <Grid
             item
@@ -1618,11 +1755,100 @@ const UnitManagement = ({
               <Button
                 className={clsx(classes.backGroundConfrim)}
                 variant="outlined"
+                onClick={handleValidate}
               >
                 {t("building:btnAddModal")}
               </Button>
             </Grid>
           </Grid>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal View */}
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openView}
+        onClose={handleCloseView}
+        aria-labelledby="responsive-dialog-title-view"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle
+          id="responsive-dialog-title-view"
+          className={clsx(
+            classes.flexRow,
+            classes.justContent,
+            classes.borderBottom
+          )}
+        >
+          <Typography variant="h3">{unitName}</Typography>
+          <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
+        </DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(
+                  classes.alignItem,
+                  classes.marginRow,
+                  classes.flexRow
+                )}
+              >
+                <Grid item md={3} className={classes.borderImg}>
+                  <img
+                    src={imagePreviewUrl}
+                    alt="img-test"
+                    className={classes.imgWidth}
+                  />
+                </Grid>
+                <Grid item md={9}>
+                  <Grid
+                    item
+                    className={clsx(classes.boxMargin, classes.marginRow)}
+                  >
+                    <Typography variant="h5">
+                      {unitName ? unitName : "-"}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:unitNumber")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {unitNumber ? unitNumber : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:description")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {description ? description : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:unitType")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {unitTypeSelect ? unitTypeSelect : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </Container>
