@@ -150,6 +150,8 @@ let en = {
       "addMeasurement": "+ Add Measurement",
       "action": "Action",
       "unitLogo": "Unit Logo",
+      "device": "*Device",
+      "point": "*Point",
     },
     gateway: {
       "search": "Search by Gateway name",

@@ -152,6 +152,24 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/unit-type/remove/${id}`);
   };
 
+    /* ============== Unit Points API ================ */
+
+    const getUnitPointData = (id = 0) => {
+      return tokenAPI.get(`/api/unit-point/list/${id}`);
+    };
+  
+    const unitPointRegister = (body) => {
+      return tokenAPI.post(`/api/unit-point/add`, body);
+    };
+  
+    const unitPointUpdate = (id) => {
+      return tokenAPI.put(`/api/unit-point/update/${id}`);
+    };
+  
+    const unitPointDelete = (id = 0) => {
+      return tokenAPI.delete(`/api/unitpoints/${id}`);
+    };
+
   /* ============== Gateway API ================ */
 
   const getGatewayData = () => {
@@ -358,6 +376,11 @@ const getAPI = () => {
     getUnitTypeView,
     unitTypeUpdate,
     unitTypeDelete,
+
+    getUnitPointData,
+    unitPointRegister,
+    unitPointUpdate,
+    unitPointDelete,
 
     getGatewayData,
     gatewayRegister,

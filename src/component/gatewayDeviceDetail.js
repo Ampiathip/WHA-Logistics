@@ -524,17 +524,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const [unitBinding, setUnitBinding] = useState("");
   const [rowsPerPageEdit, setRowsPerPageEdit] = useState(5);
   const [pageEdit, setPageEdit] = useState(0);
-  const [rowsPointEdit, setRowsPointEdit] = useState([
-    // {
-    //   name: 1,
-    //   code: "",
-    //   population: "",
-    //   size: "",
-    //   density: "",
-    //   unit: "",
-    //   action: "",
-    // },
-  ]);
+  const [rowsPointEdit, setRowsPointEdit] = useState([]);
 
   const columnsPointEdit = [
     { id: "name", label: "Device ID", minWidth: 120 },
@@ -1058,24 +1048,28 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
 
   // add row Edit //
   const addNewRow = () => {
-    const newRowTemplate = {
-      name: 1,
-      point_name: pointName,
-      topic: topic,
-      data_unit: dataUnit,
-      unit_binding: unitBinding,
-      device_id: deviceIdPoint,
+    const newRow = {
+      id: rowsPointEdit.length + 1,
+      // name: "New Name",
+      point_name: "",
+      topic: "",
+      data: "",
+      data_unit: "",
+      unit_binding: "",
+      device_id: "",
       action: "",
     };
     // Create a copy of the existing rowsPointEdit array
     const updatedRows = [...rowsPointEdit];
 
-    // Add a new row by pushing a copy of the newRowTemplate into the array
-    updatedRows.push({ ...newRowTemplate });
+    // Add the new row to the array
+    updatedRows.push(newRow);
 
     // Update the state with the new array
     setRowsPointEdit(updatedRows);
   };
+
+  console.log("rowsPointEdit", rowsPointEdit);
 
   const handleChangePageEdit = (event, newPage) => {
     setPageEdit(newPage);
@@ -1091,28 +1085,55 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     // setRowsPointEdit(updatedRows);
   };
 
-  const handleDeviceId = (event) => {
-    setDeviceIdPoint(event.target.value);
+  const handleDeviceId = (e, row, index) => {
+    const newValue = e.target.value;
+    // Create a copy of the existing rowsPointEdit array
+    const updatedRows = [...rowsPointEdit];
+    // Update the device_id of the specific row at the given index
+    updatedRows[index].device_id = newValue;
+    // Update the state with the new array
+    setRowsPointEdit(updatedRows);
+    // setDeviceIdPoint(newValue);
   };
 
-  const handlePointName = (event) => {
-    setPointName(event.target.value);
+  const handlePointName = (e, row, index) => {
+    const newValue = e.target.value;
+    const updatedRows = [...rowsPointEdit];
+    updatedRows[index].point_name = newValue;
+    setRowsPointEdit(updatedRows);
+    // setPointName(newValue);
   };
 
-  const handleTopic = (event) => {
-    setTopic(event.target.value);
+  const handleTopic = (e, row, index) => {
+    const newValue = e.target.value;
+    const updatedRows = [...rowsPointEdit];
+    updatedRows[index].topic = newValue;
+    setRowsPointEdit(updatedRows);
+    // setTopic(newValue);
   };
 
-  const handleData = (event) => {
-    setData(event.target.value);
+  const handleData = (e, row, index) => {
+    const newValue = e.target.value;
+    const updatedRows = [...rowsPointEdit];
+    updatedRows[index].data = newValue;
+    setRowsPointEdit(updatedRows);
+    // setData(newValue);
   };
 
-  const handleDataUnit = (event) => {
-    setDataUnit(event.target.value);
+  const handleDataUnit = (e, row, index) => {
+    const newValue = e.target.value;
+    const updatedRows = [...rowsPointEdit];
+    updatedRows[index].data_unit = newValue;
+    setRowsPointEdit(updatedRows);
+    // setDataUnit(newValue);
   };
 
-  const handleUnitBinding = (event) => {
-    setUnitBinding(event.target.value);
+  const handleUnitBinding = (e, row, index) => {
+    const newValue = e.target.value;
+    const updatedRows = [...rowsPointEdit];
+    updatedRows[index].unit_binding = newValue;
+    setRowsPointEdit(updatedRows);
+    // setUnitBinding(newValue);
   };
 
   const openPageGateway = () => {
@@ -1122,40 +1143,60 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   // save Point //
   const handleAddPoint = async () => {
     // setIsLoading(true);
-    console.log('------>>>>', rowsPointEdit);
+    console.log("------>>>>", rowsPointEdit);
     try {
-      
-      // await API.connectTokenAPI(token);
-      // await API.pointRegister().then((response) => {
-      //   const dataPayload = response.data;
-      //   console.log("dataPayload====Point", dataPayload);
-      //   setRowsPointEdit(dataPayload);
-      //   setIsLoading(false);
-      // });
+      let body = [];
+      rowsPointEdit.length > 0 &&
+        rowsPointEdit.map((row) => {
+          const data = {
+            point_name: row.point_name,
+            topic: row.topic,
+            data_unit: row.data_unit,
+            unit_binding: row.unit_binding,
+            device_id: row.device_id,
+          };
+          body.push(data);
+        });
+      console.log("body", body);
+      await API.connectTokenAPI(token);
+      await API.pointRegister(body).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload====Point", dataPayload);
+        console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getPointData(deviceId);
+          }
+        setIsLoading(false);
+      });
     } catch (error) {
-    //   console.log(error);
-    //   const response = error.response;
-    //   if (response.status >= 500) {
-    //     swalFire(response.data);
-    //   } else {
-    //     MySwal.fire({
-    //       icon: "error",
-    //       confirmButtonText: "ตกลง",
-    //       cancelButtonText: "ยกเลิก",
-    //       showCancelButton: true,
-    //       text: response.data,
-    //     }).then((result) => {
-    //       if (result.isConfirmed) {
-    //         dispatch(logout(false));
-    //       } else if (result.isDismissed) {
-    //         setIsLoading(false);
-    //       }
-    //     });
-    //   }
-    //   setIsLoading(false);
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
     }
   };
- 
+
   return (
     <Container className={classes.marginRow}>
       {isLoading ? (
@@ -1610,13 +1651,14 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             pageEdit * rowsPerPageEdit,
                             pageEdit * rowsPerPageEdit + rowsPerPageEdit
                           )
-                          .map((row) => {
+                          .map((row, index) => {
+                            console.log("row=======", row, index);
                             return (
                               <TableRow
                                 hover
                                 role="checkbox"
                                 tabIndex={-1}
-                                key={row.code}
+                                key={row.id}
                               >
                                 <TableCell
                                   component="th"
@@ -1626,22 +1668,24 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                   style={{ fontSize: 16 }}
                                   align="center"
                                 >
-                                  {row.name ? (
-                                    row.name
-                                  ) : (
-                                    <Grid
-                                      item
-                                      className={classes.marginDataTable}
-                                    >
-                                      <TextField
-                                        value={deviceIdPoint}
-                                        variant="outlined"
-                                        size="small"
-                                        fullWidth
-                                        onChange={handleDeviceId}
-                                      />
-                                    </Grid>
-                                  )}
+                                  <Grid
+                                    item
+                                    className={classes.marginDataTable}
+                                  >
+                                    <TextField
+                                      value={
+                                        row.device_id
+                                          ? row.device_id
+                                          : deviceIdPoint
+                                      }
+                                      variant="outlined"
+                                      size="small"
+                                      fullWidth
+                                      onChange={(e) =>
+                                        handleDeviceId(e, row, index)
+                                      }
+                                    />
+                                  </Grid>
                                 </TableCell>
                                 <TableCell
                                   component="th"
@@ -1651,22 +1695,24 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                   style={{ fontSize: 16 }}
                                   align="center"
                                 >
-                                  {row.code ? (
-                                    row.code
-                                  ) : (
-                                    <Grid
-                                      item
-                                      className={classes.marginDataTable}
-                                    >
-                                      <TextField
-                                        value={pointName}
-                                        variant="outlined"
-                                        size="small"
-                                        fullWidth
-                                        onChange={handlePointName}
-                                      />
-                                    </Grid>
-                                  )}
+                                  <Grid
+                                    item
+                                    className={classes.marginDataTable}
+                                  >
+                                    <TextField
+                                      value={
+                                        row.point_name
+                                          ? row.point_name
+                                          : pointName
+                                      }
+                                      variant="outlined"
+                                      size="small"
+                                      fullWidth
+                                      onChange={(e) =>
+                                        handlePointName(e, row, index)
+                                      }
+                                    />
+                                  </Grid>
                                 </TableCell>
                                 <TableCell
                                   component="th"
@@ -1676,22 +1722,20 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                   style={{ fontSize: 16 }}
                                   align="center"
                                 >
-                                  {row.population ? (
-                                    row.population
-                                  ) : (
-                                    <Grid
-                                      item
-                                      className={classes.marginDataTable}
-                                    >
-                                      <TextField
-                                        value={topic}
-                                        variant="outlined"
-                                        size="small"
-                                        fullWidth
-                                        onChange={handleTopic}
-                                      />
-                                    </Grid>
-                                  )}
+                                  <Grid
+                                    item
+                                    className={classes.marginDataTable}
+                                  >
+                                    <TextField
+                                      value={row.topic ? row.topic : topic}
+                                      variant="outlined"
+                                      size="small"
+                                      fullWidth
+                                      onChange={(e) =>
+                                        handleTopic(e, row, index)
+                                      }
+                                    />
+                                  </Grid>
                                 </TableCell>
                                 <TableCell
                                   component="th"
@@ -1701,22 +1745,20 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                   style={{ fontSize: 16 }}
                                   align="center"
                                 >
-                                  {row.size ? (
-                                    row.size
-                                  ) : (
-                                    <Grid
-                                      item
-                                      className={classes.marginDataTable}
-                                    >
-                                      <TextField
-                                        value={data}
-                                        variant="outlined"
-                                        size="small"
-                                        fullWidth
-                                        onChange={handleData}
-                                      />
-                                    </Grid>
-                                  )}
+                                  <Grid
+                                    item
+                                    className={classes.marginDataTable}
+                                  >
+                                    <TextField
+                                      value={row.data ? row.data : data}
+                                      variant="outlined"
+                                      size="small"
+                                      fullWidth
+                                      onChange={(e) =>
+                                        handleData(e, row, index)
+                                      }
+                                    />
+                                  </Grid>
                                 </TableCell>
                                 <TableCell
                                   component="th"
@@ -1726,22 +1768,22 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                   style={{ fontSize: 16 }}
                                   align="center"
                                 >
-                                  {row.density ? (
-                                    row.density
-                                  ) : (
-                                    <Grid
-                                      item
-                                      className={classes.marginDataTable}
-                                    >
-                                      <TextField
-                                        value={dataUnit}
-                                        variant="outlined"
-                                        size="small"
-                                        fullWidth
-                                        onChange={handleDataUnit}
-                                      />
-                                    </Grid>
-                                  )}
+                                  <Grid
+                                    item
+                                    className={classes.marginDataTable}
+                                  >
+                                    <TextField
+                                      value={
+                                        row.data_unit ? row.data_unit : dataUnit
+                                      }
+                                      variant="outlined"
+                                      size="small"
+                                      fullWidth
+                                      onChange={(e) =>
+                                        handleDataUnit(e, row, index)
+                                      }
+                                    />
+                                  </Grid>
                                 </TableCell>
                                 <TableCell
                                   component="th"
@@ -1751,22 +1793,24 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                   style={{ fontSize: 16 }}
                                   align="center"
                                 >
-                                  {row.unit ? (
-                                    row.unit
-                                  ) : (
-                                    <Grid
-                                      item
-                                      className={classes.marginDataTable}
-                                    >
-                                      <TextField
-                                        value={unitBinding}
-                                        variant="outlined"
-                                        size="small"
-                                        fullWidth
-                                        onChange={handleUnitBinding}
-                                      />
-                                    </Grid>
-                                  )}
+                                  <Grid
+                                    item
+                                    className={classes.marginDataTable}
+                                  >
+                                    <TextField
+                                      value={
+                                        row.unit_binding
+                                          ? row.unit_binding
+                                          : unitBinding
+                                      }
+                                      variant="outlined"
+                                      size="small"
+                                      fullWidth
+                                      onChange={(e) =>
+                                        handleUnitBinding(e, row, index)
+                                      }
+                                    />
+                                  </Grid>
                                 </TableCell>
                                 <TableCell
                                   component="th"
@@ -1777,7 +1821,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                 >
                                   {row.action ? (
                                     <>
-                                      {/* <BorderColorOutlinedIcon /> */}
+                                      <BorderColorOutlinedIcon />
                                       <DeleteOutlineOutlinedIcon
                                         onClick={deleteRow(row.name)}
                                       />
@@ -2110,9 +2154,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
       </Dialog>
 
       {/* Modal ViewData */}
-      <Dialog
+      {/* <Dialog
         fullScreen={fullScreenView}
-        // className={classes.modalWidth}
+        className={classes.modalWidth}
         open={openView}
         onClose={handleCloseView}
         aria-labelledby="responsive-dialog-title"
@@ -2349,7 +2393,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             </>
           )}
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </Container>
   );
 };

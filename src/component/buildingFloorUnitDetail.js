@@ -445,17 +445,10 @@ const UnitManagement = ({
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
-  const [rowsPointEdit, setRowsPointEdit] = useState([
-    {
-      name: 1,
-      code: "",
-      population: "",
-      size: "",
-      density: "",
-      unit: "",
-      action: "",
-    },
-  ]);
+  const [rowsPointEdit, setRowsPointEdit] = useState([]);
+  const [gatewayData, setGatewayData] = useState([]);
+  const [deviceData, setDeviceData] = useState([]);
+  const [pointData, setPointData] = useState([]);
 
   // console.log("ididid====", state, id);
   const swalFire = (msg) => {
@@ -474,6 +467,46 @@ const UnitManagement = ({
     }
     console.log("token", token, login);
   }, [token]);
+
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token)) {
+      getGateway();
+    }
+  }, [token]);
+
+  const getGateway = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getGatewayData().then((response) => {
+        const dataPayload = response.data;
+        setGatewayData(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
 
   const getUnitList = async (id) => {
     setIsLoading(true);
@@ -710,11 +743,33 @@ const UnitManagement = ({
     });
   };
 
+  const getUnitPointData = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getUnitPointData(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("==========UnitPoint", item);
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  }
+
   const handleClickOpen = (event, id) => {
     setOpen(true);
     getUnitView(id);
     setIsIdEdit(id);
     setIsValidate(true);
+    getUnitPointData(id);
   };
 
   const handleClose = () => {
@@ -845,35 +900,178 @@ const UnitManagement = ({
 
   // add row Edit //
   const addNewRow = () => {
-    let newRow;
-    rowsPointEdit.forEach((item) => {
-      newRow = {
-        // Construct the new row object here
-        // For example: id: someValue, name: someValue, ...
-        name: item.name + 1,
-        code: "",
-        population: "",
-        size: "",
-        density: "",
-        unit: "",
-        action: "",
-      };
-    });
-    // Add the new row to the existing rowsPoint array
-    setRowsPointEdit([...rowsPointEdit, newRow]);
+    const newRow = {
+      id: rowsPointEdit.length + 1,
+      unit_id: "",
+      gateway_id: "",
+      device_id: "",
+      point_id: "",
+    };
+    // Create a copy of the existing rowsPointEdit array
+    const updatedRows = [...rowsPointEdit];
+
+    // Add the new row to the array
+    updatedRows.push(newRow);
+
+    // Update the state with the new array
+    setRowsPointEdit(updatedRows);
   };
 
-  const handleGatewayMeterThree = (event) => {
-    setGatewayMeterThree(event.target.value);
+  const handleGatewayMeterThree = (e, row, index) => {
+    const newValue = e.target.value;
+    const updatedRows = [...rowsPointEdit];
+    updatedRows[index].point_id = newValue;
+    // Update the state with the new array
+    setRowsPointEdit(updatedRows);
+    setGatewayMeterThree(newValue);
   };
 
-  const handleGatewayMeterTwo = (event) => {
-    setGatewayMeterTwo(event.target.value);
+  const handleGatewayMeterTwo = (e, row, index) => {
+    const newValue = e.target.value;
+    // Create a copy of the existing rowsPointEdit array
+    const updatedRows = [...rowsPointEdit];
+    // Update the device_id of the specific row at the given index
+    updatedRows[index].device_id = newValue;
+    // Update the state with the new array
+    setRowsPointEdit(updatedRows);
+    getPointData(newValue);
+    // setGatewayMeterTwo(newValue);
   };
 
-  const handleGatewayMeter = (event) => {
-    setGatewayMeter(event.target.value);
+  const handleGatewayMeter = (e, row, index) => {
+    const newValue = e.target.value;
+    // Create a copy of the existing rowsPointEdit array
+    const updatedRows = [...rowsPointEdit];
+    // Update the device_id of the specific row at the given index
+    updatedRows[index].gateway_id = newValue;
+    // Update the state with the new array
+    setRowsPointEdit(updatedRows);
+    getDevice(newValue);
+    // setGatewayMeter(newValue);
   };
+
+  const getDevice = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getDeviceData(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", dataPayload);
+        setDeviceData(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  // get Points //
+  const getPointData = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getPointData(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload====Point", dataPayload);
+        setPointData(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  // add unit point //
+  const addUnitPoint = async () => {
+    setIsLoading(true);
+    try {
+      let body = [];
+      rowsPointEdit.length > 0 &&
+        rowsPointEdit.map((row) => {
+          const data = {
+            unit_id: isIdEdit,
+            gateway_id: row.gateway_id,
+            device_id: row.device_id,
+            point_id: row.point_id ? row.point_id : 0,
+          };
+          body.push(data);
+        });
+      console.log("body====", body);
+      await API.connectTokenAPI(token);
+      await API.unitPointRegister().then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload====Point", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getUnitPointData(isIdEdit);
+          }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  }
 
   const openPageFloorDetail = (event, id) => {
     // navigate("/buildingFloorDetail");
@@ -1373,7 +1571,7 @@ const UnitManagement = ({
                               classes.fontSixeHead
                             )}
                           >
-                            {t("floor:gateway")}
+                            {t("floor:device")}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1382,7 +1580,7 @@ const UnitManagement = ({
                               classes.fontSixeHead
                             )}
                           >
-                            {t("floor:gateway")}
+                            {t("floor:point")}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1393,112 +1591,137 @@ const UnitManagement = ({
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {rowsPointEdit.map((row) => (
+                        {rowsPointEdit.map((row, index) => (
                           <TableRow
                             key={row.name}
                             sx={{
                               "&:last-child td, &:last-child th": { border: 0 },
                             }}
                           >
+                            {console.log("row=======", row, index)}
                             <TableCell
                               component="th"
                               scope="row"
                               className={classes.fontSixeCell}
                             >
-                              {row.name}
+                              {row.id}
                             </TableCell>
                             <TableCell
                               align="center"
                               className={classes.fontSixeCell}
                             >
-                              {row.code ? (
-                                row.code
-                              ) : (
-                                <Grid item className={classes.marginDataTable}>
-                                  <FormControl
-                                    variant="outlined"
-                                    size="small"
-                                    fullWidth
+                              <Grid item className={classes.marginDataTable}>
+                                <FormControl
+                                  variant="outlined"
+                                  size="small"
+                                  fullWidth
+                                >
+                                  <Select
+                                    labelId="demo-select-small-label"
+                                    id="demo-select-small"
+                                    value={
+                                      row.gateway_id
+                                        ? row.gateway_id
+                                        : gatewayMeter
+                                    }
+                                    placeholder={"Energy Meter"}
+                                    onChange={(e) =>
+                                      handleGatewayMeter(e, row, index)
+                                    }
                                   >
-                                    <Select
-                                      labelId="demo-select-small-label"
-                                      id="demo-select-small"
-                                      value={gatewayMeter}
-                                      placeholder={"Energy Meter"}
-                                      onChange={handleGatewayMeter}
-                                    >
-                                      <MenuItem value="none">
-                                        Energy Meter
-                                      </MenuItem>
-                                      {/* <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem> */}
-                                    </Select>
-                                  </FormControl>
-                                </Grid>
-                              )}
+                                    <MenuItem value="none">Gateway</MenuItem>
+                                    {gatewayData.length > 0 &&
+                                      gatewayData.map((item) => {
+                                        return (
+                                          <MenuItem
+                                            key={item.id}
+                                            value={item.id}
+                                          >
+                                            {item.name}
+                                          </MenuItem>
+                                        );
+                                      })}
+                                  </Select>
+                                </FormControl>
+                              </Grid>
                             </TableCell>
                             <TableCell
                               align="right"
                               className={classes.fontSixeCell}
                             >
-                              {row.population ? (
-                                row.population
-                              ) : (
-                                <Grid item className={classes.marginDataTable}>
-                                  <FormControl
-                                    variant="outlined"
-                                    size="small"
-                                    fullWidth
+                              <Grid item className={classes.marginDataTable}>
+                                <FormControl
+                                  variant="outlined"
+                                  size="small"
+                                  fullWidth
+                                >
+                                  <Select
+                                    labelId="demo-select-small-label"
+                                    id="demo-select-small"
+                                    value={
+                                      row.device_id
+                                        ? row.device_id
+                                        : gatewayMeterTwo
+                                    }
+                                    placeholder={"Energy Meter"}
+                                    onChange={(e) =>
+                                      handleGatewayMeterTwo(e, row, index)
+                                    }
                                   >
-                                    <Select
-                                      labelId="demo-select-small-label"
-                                      id="demo-select-small"
-                                      value={gatewayMeterTwo}
-                                      placeholder={"Energy Meter"}
-                                      onChange={handleGatewayMeterTwo}
-                                    >
-                                      <MenuItem value="none">
-                                        Energy Meter
-                                      </MenuItem>
-                                      {/* <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem> */}
-                                    </Select>
-                                  </FormControl>
-                                </Grid>
-                              )}
+                                    <MenuItem value="none">Device</MenuItem>
+                                    {deviceData.length > 0 &&
+                                      deviceData.map((item) => {
+                                        return (
+                                          <MenuItem
+                                            key={item.id}
+                                            value={item.id}
+                                          >
+                                            {item.devicename}
+                                          </MenuItem>
+                                        );
+                                      })}
+                                  </Select>
+                                </FormControl>
+                              </Grid>
                             </TableCell>
                             <TableCell
                               align="right"
                               className={classes.fontSixeCell}
                             >
-                              {row.size ? (
-                                row.size
-                              ) : (
-                                <Grid item className={classes.marginDataTable}>
-                                  <FormControl
-                                    variant="outlined"
-                                    size="small"
-                                    fullWidth
+                              <Grid item className={classes.marginDataTable}>
+                                <FormControl
+                                  variant="outlined"
+                                  size="small"
+                                  fullWidth
+                                >
+                                  <Select
+                                    labelId="demo-select-small-label"
+                                    id="demo-select-small"
+                                    value={
+                                      row.point_id
+                                        ? row.point_id
+                                        : gatewayMeterThree
+                                    }
+                                    placeholder={"Energy Meter"}
+                                    onChange={(e) =>
+                                      handleGatewayMeterThree(e, row, index)
+                                    }
                                   >
-                                    <Select
-                                      labelId="demo-select-small-label"
-                                      id="demo-select-small"
-                                      value={gatewayMeterThree}
-                                      placeholder={"Energy Meter"}
-                                      onChange={handleGatewayMeterThree}
-                                    >
-                                      <MenuItem value="none">
-                                        Energy Meter
-                                      </MenuItem>
-                                      {/* <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem> */}
-                                    </Select>
-                                  </FormControl>
-                                </Grid>
-                              )}
+                                    <MenuItem value="none">Point</MenuItem>
+                                    {pointData.length > 0 &&
+                                      pointData.map((item) => {
+                                        return (
+                                          <MenuItem
+                                            key={item.id}
+                                            value={item.id}
+                                          >
+                                            {item.name}
+                                          </MenuItem>
+                                        );
+                                      })}
+                                  </Select>
+                                </FormControl>
+                              </Grid>
                             </TableCell>
                             <TableCell
                               align="right"
@@ -1569,6 +1792,7 @@ const UnitManagement = ({
                       <Button
                         className={clsx(classes.backGroundConfrim)}
                         variant="outlined"
+                        onClick={addUnitPoint}
                       >
                         {t("gateway:btnSave")}
                       </Button>
