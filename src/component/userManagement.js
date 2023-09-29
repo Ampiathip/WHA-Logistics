@@ -67,6 +67,9 @@ import {
   checkToken,
   logout,
 } from "../js/actions";
+import IconDelete from "../images/icon/Delete.svg";
+import IconEdit from "../images/icon/Edit.svg";
+import IconShow from "../images/icon/Show.svg";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -85,10 +88,10 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
   },
   fontSixeHead: {
-    fontSize: "16px !important",
+    fontSize: "14px !important",
   },
   fontSixeCell: {
-    fontSize: "14px !important",
+    fontSize: "12px !important",
   },
   marginIcon: {
     marginRight: 5,
@@ -448,6 +451,10 @@ const UserManagement = ({ t, login }) => {
   const [isValidateForget, setIsValidateForget] = useState(false);
   const [messageForget, setMessageForget] = useState("");
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortedRows, setSortedRows] = useState(rows);
+
+
   // user view //
   // const [userView, setUserView] = useState([]);
 
@@ -743,10 +750,10 @@ const UserManagement = ({ t, login }) => {
   const handleClickOpenAddUser = () => {
     setOpenAddUser(true);
     setIsValidate(true);
-    setMessage('');
-    setMessagePassRe('');
-    setMessagePhone('');
-    setMessageEmail('');
+    setMessage("");
+    setMessagePassRe("");
+    setMessagePhone("");
+    setMessageEmail("");
     setEmailUser("");
     setFristName("");
     setLastName("");
@@ -884,7 +891,7 @@ const UserManagement = ({ t, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const visibleRows = React.useMemo(
+  const visibleRows = useMemo(
     () =>
       stableSort(rows, getComparator(order, orderBy)).slice(
         page * rowsPerPage,
@@ -980,6 +987,29 @@ const UserManagement = ({ t, login }) => {
   };
   // close modal reset //
 
+  // Update visibleRows based on the searchQuery
+  const updateVisibleRows = (query) => {
+    if (query) {
+      const filteredRows = rows.filter((row) =>
+        Object.values(row).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+      console.log("filteredRows", filteredRows);
+      setRows(filteredRows);
+    } else {
+      getUser();
+    }
+  };
+
+  const handleSearchChange = (event) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+    updateVisibleRows(query);
+  };
+
   return (
     <Container className={classes.marginRow}>
       {isLoading ? (
@@ -999,7 +1029,7 @@ const UserManagement = ({ t, login }) => {
           >
             <Grid item md={5} className={classes.marginRow}>
               <TextField
-                id="input-with-icon-textfield"
+                // id="input-with-icon-textfield"
                 size="small"
                 placeholder={t("user:search")}
                 fullWidth
@@ -1011,6 +1041,8 @@ const UserManagement = ({ t, login }) => {
                   ),
                 }}
                 variant="outlined"
+                value={searchQuery}
+                onChange={handleSearchChange}
               />
             </Grid>
             <Grid item md={3} className={classes.marginRow}>
@@ -1090,8 +1122,8 @@ const UserManagement = ({ t, login }) => {
                           <TableCell
                             component="th"
                             id={labelId}
-                            scope="row"
-                            padding="none"
+                            // scope="row"
+                            // padding="none"
                             className={clsx(
                               classes.fontSixeCell
                               //   classes.paddingHead
@@ -1168,18 +1200,24 @@ const UserManagement = ({ t, login }) => {
                               classes.paddingIcon
                             )}
                           >
-                            <BorderColorOutlinedIcon
-                              className={classes.marginIcon}
+                            <img
+                              src={IconEdit}
+                              alt="IconEdit"
                               onClick={(event) => {
                                 handleClickOpenEditUser(event, row.id);
                               }}
                             />
-                            <Visibility
+
+                            <img
+                              src={IconShow}
+                              alt="IconShow"
                               onClick={(event) => {
                                 handleClickOpenView(event, row.id);
                               }}
                             />
-                            <DeleteOutlineOutlinedIcon
+                            <img
+                              src={IconDelete}
+                              alt="IconDelete"
                               onClick={(event) => {
                                 handleClickDeleteData(event, row.id);
                               }}
@@ -1412,7 +1450,7 @@ const UserManagement = ({ t, login }) => {
               />
               {!isValidate && _.isEmpty(password) ? (
                 <Validate errorText={message} />
-              ) : null }
+              ) : null}
               {/* (password.length < 6 && <Validate errorText={messagePass} /> ) */}
             </Grid>
             <Grid item md={6} className={classes.boxMargin}>

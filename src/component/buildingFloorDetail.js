@@ -48,9 +48,6 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
 import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
-import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import _, { stubFalse } from "lodash";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -63,6 +60,10 @@ import {
   checkToken,
   logout,
 } from "../js/actions";
+import IconDelete from "../images/icon/Delete.svg";
+import IconDocument from "../images/icon/Document.svg";
+import IconShow from "../images/icon/Show.svg";
+import IconSetting from "../images/icon/Setting.svg";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -78,10 +79,10 @@ const useStyles = makeStyles((theme) => ({
     alignSelf: "center",
   },
   fontSixeHead: {
-    fontSize: "18px !important",
+    fontSize: "14px !important",
   },
   fontSixeCell: {
-    fontSize: "16px !important",
+    fontSize: "12px !important",
   },
   marginIcon: {
     marginRight: 5,
@@ -409,6 +410,9 @@ const FloorManagement = ({ t, pageName, login }) => {
   const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortedRows, setSortedRows] = useState(rows);
+
   const swalFire = (msg) => {
     MySwal.fire({
       icon: "error",
@@ -646,7 +650,7 @@ const FloorManagement = ({ t, pageName, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const visibleRows = React.useMemo(
+  const visibleRows = useMemo(
     () =>
       stableSort(rows, getComparator(order, orderBy)).slice(
         page * rowsPerPage,
@@ -676,6 +680,29 @@ const FloorManagement = ({ t, pageName, login }) => {
 
   const openPageFloor = () => {
     navigate("/building");
+  };
+
+  // Update visibleRows based on the searchQuery
+  const updateVisibleRows = (query) => {
+    if (query) {
+      const filteredRows = rows.filter((row) =>
+        Object.values(row).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+      console.log("filteredRows", filteredRows);
+      setRows(filteredRows);
+    } else {
+      getFloorList(id);
+    }
+  };
+
+  const handleSearchChange = (event) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+    updateVisibleRows(query);
   };
 
   return (
@@ -712,7 +739,7 @@ const FloorManagement = ({ t, pageName, login }) => {
           >
             <Grid item md={5} className={classes.marginRow}>
               <TextField
-                id="input-with-icon-textfield"
+                // id="input-with-icon-textfield"
                 size="small"
                 placeholder={t("floor:search")}
                 fullWidth
@@ -724,6 +751,8 @@ const FloorManagement = ({ t, pageName, login }) => {
                   ),
                 }}
                 variant="outlined"
+                value={searchQuery}
+                onChange={handleSearchChange}
               />
             </Grid>
             <Grid item md={2} className={clsx(classes.marginRow)}>
@@ -832,21 +861,32 @@ const FloorManagement = ({ t, pageName, login }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            <FeedOutlinedIcon
-                              className={classes.marginIcon}
-                              onClick={(event) =>
-                                openPageFlooreUnitDetail(event, row.id)
-                              }
+                            <img
+                              src={IconDocument}
+                              alt="IconDocument"
+                              onClick={(event) => {
+                                openPageFlooreUnitDetail(event, row.id);
+                              }}
                             />
-                            <VisibilityOutlinedIcon
-                              className={classes.marginIcon}
+
+                            <img
+                              src={IconShow}
+                              alt="IconShow"
+                              // onClick={(event) => {
+                              //   handleOpenView(event, row.id);
+                              // }}
                             />
-                            <SettingsOutlinedIcon
-                              onClick={(event) =>
-                                handleClickOpen(event, row.id)
-                              }
+
+                            <img
+                              src={IconSetting}
+                              alt="IconSetting"
+                              onClick={(event) => {
+                                handleClickOpen(event, row.id);
+                              }}
                             />
-                            <DeleteOutlineOutlinedIcon
+                            <img
+                              src={IconDelete}
+                              alt="IconDelete"
                               onClick={(event) => {
                                 handleClickDeleteData(event, row.id);
                               }}

@@ -50,10 +50,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
-import WestOutlinedIcon from "@mui/icons-material/WestOutlined";
-import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import _, { stubFalse } from "lodash";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -66,6 +62,10 @@ import {
   checkToken,
   logout,
 } from "../js/actions";
+import IconDelete from "../images/icon/Delete.svg";
+import IconDocument from "../images/icon/Document.svg";
+import IconShow from "../images/icon/Show.svg";
+import IconSetting from "../images/icon/Setting.svg";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -81,10 +81,10 @@ const useStyles = makeStyles((theme) => ({
     alignSelf: "center",
   },
   fontSixeHead: {
-    fontSize: "18px !important",
+    fontSize: "14px !important",
   },
   fontSixeCell: {
-    fontSize: "16px !important",
+    fontSize: "12px !important",
   },
   marginIcon: {
     marginRight: 5,
@@ -450,6 +450,9 @@ const UnitManagement = ({
   const [deviceData, setDeviceData] = useState([]);
   const [pointData, setPointData] = useState([]);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortedRows, setSortedRows] = useState(rows);
+
   // console.log("ididid====", state, id);
   const swalFire = (msg) => {
     MySwal.fire({
@@ -762,7 +765,7 @@ const UnitManagement = ({
       swalFire(response.data);
       setIsLoading(false);
     }
-  }
+  };
 
   const handleClickOpen = (event, id) => {
     setOpen(true);
@@ -826,7 +829,7 @@ const UnitManagement = ({
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const visibleRows = React.useMemo(
+  const visibleRows = useMemo(
     () =>
       stableSort(rows, getComparator(order, orderBy)).slice(
         page * rowsPerPage,
@@ -1039,14 +1042,14 @@ const UnitManagement = ({
       await API.unitPointRegister().then((response) => {
         const dataPayload = response.data;
         console.log("dataPayload====Point", dataPayload, response);
-          if (response.status === 200) {
-            MySwal.fire({
-              icon: "success",
-              confirmButtonText: "ตกลง",
-              text: dataPayload,
-            });
-            getUnitPointData(isIdEdit);
-          }
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          getUnitPointData(isIdEdit);
+        }
         setIsLoading(false);
       });
     } catch (error) {
@@ -1071,7 +1074,7 @@ const UnitManagement = ({
       }
       setIsLoading(false);
     }
-  }
+  };
 
   const openPageFloorDetail = (event, id) => {
     // navigate("/buildingFloorDetail");
@@ -1081,6 +1084,29 @@ const UnitManagement = ({
   const handleCloseView = () => {
     setOpenView(false);
   };
+
+    // Update visibleRows based on the searchQuery
+    const updateVisibleRows = (query) => {
+      if (query) {
+        const filteredRows = rows.filter((row) =>
+          Object.values(row).some(
+            (value) =>
+              typeof value === "string" &&
+              value.toLowerCase().includes(query.toLowerCase())
+          )
+        );
+        console.log("filteredRows", filteredRows);
+        setRows(filteredRows);
+      } else {
+        getUnitList(id);
+      }
+    };
+  
+    const handleSearchChange = (event) => {
+      const query = event.target.value;
+      setSearchQuery(query);
+      updateVisibleRows(query);
+    };
 
   return (
     <Container className={classes.marginRow}>
@@ -1118,7 +1144,7 @@ const UnitManagement = ({
           >
             <Grid item md={5} className={classes.marginRow}>
               <TextField
-                id="input-with-icon-textfield"
+                // id="input-with-icon-textfield"
                 size="small"
                 placeholder={t("floor:searchUnit")}
                 fullWidth
@@ -1130,6 +1156,8 @@ const UnitManagement = ({
                   ),
                 }}
                 variant="outlined"
+                value={searchQuery}
+                onChange={handleSearchChange}
               />
             </Grid>
             <Grid item md={2} className={clsx(classes.marginRow)}>
@@ -1243,17 +1271,32 @@ const UnitManagement = ({
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            <FeedOutlinedIcon className={classes.marginIcon} />
-                            <VisibilityOutlinedIcon
-                              className={classes.marginIcon}
-                              onClick={(event) => handleOpenView(event, row.id)}
+                            <img
+                              src={IconDocument}
+                              alt="IconDocument"
+                              // onClick={(event) => {
+                              //   openPageFlooreUnitDetail(event, row.id);
+                              // }}
                             />
-                            <SettingsOutlinedIcon
-                              onClick={(event) =>
-                                handleClickOpen(event, row.id)
-                              }
+
+                            <img
+                              src={IconShow}
+                              alt="IconShow"
+                              onClick={(event) => {
+                                handleOpenView(event, row.id);
+                              }}
                             />
-                            <DeleteOutlineOutlinedIcon
+
+                            <img
+                              src={IconSetting}
+                              alt="IconSetting"
+                              onClick={(event) => {
+                                handleClickOpen(event, row.id);
+                              }}
+                            />
+                            <img
+                              src={IconDelete}
+                              alt="IconDelete"
                               onClick={(event) => {
                                 handleClickDeleteData(event, row.id);
                               }}
