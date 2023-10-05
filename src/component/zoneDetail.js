@@ -36,6 +36,10 @@ import {
   MenuItem,
   CircularProgress,
 } from "@material-ui/core";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
@@ -394,6 +398,14 @@ EnhancedTableUnitHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
+const not = (a, b) => {
+  return a.filter((value) => b.indexOf(value) === -1);
+};
+
+const intersection = (a, b) => {
+  return a.filter((value) => b.indexOf(value) !== -1);
+};
+
 const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
@@ -457,6 +469,14 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     },
   ]);
 
+  const [openAddZonePoint, setOpenAddZonePoint] = useState(false);
+  const [checked, setChecked] = React.useState([]);
+  const [left, setLeft] = React.useState([0, 1, 2, 3]);
+  const [right, setRight] = React.useState([4, 5, 6, 7]);
+
+  const leftChecked = intersection(checked, left);
+  const rightChecked = intersection(checked, right);
+
   // console.log("ididid====", state, id);
   const swalFire = (msg) => {
     MySwal.fire({
@@ -469,15 +489,15 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   useEffect(() => {
     dispatch(checkToken());
     if (!_.isEmpty(token) && id !== null) {
-      getZoneUnit(id);
+      getZoneUnitData(id);
     }
   }, [token]);
 
-  const getZoneUnit = async (id) => {
+  const getZoneUnitData = async (id) => {
     setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.getUnitList(id).then((response) => {
+      await API.getZoneUnitData(id).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayload", dataPayload);
         setRows(dataPayload);
@@ -505,6 +525,53 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
       }
       setIsLoading(false);
     }
+  };
+
+  const zoneUnitDelete = async (rowId) => {
+    setIsLoading(true);
+    try {
+      const body = [];
+      const data = {
+        id: rowId,
+      };
+      body.push(data);
+      console.log('body', body);
+      await API.connectTokenAPI(token);
+      await API.zoneUnitDelete(body).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          getZoneUnitData(id);
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+  // delete Data //
+  const handleClickDeleteData = (event, id) => {
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        zoneUnitDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
   };
 
   const handleClickOpen = () => {
@@ -635,23 +702,11 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   };
 
   const handleClickOpenAdd = () => {
-    const newRowTemplate = {
-      name: 1,
-      point_name: "",
-      topic: "",
-      data_unit: "",
-      unit_binding: "",
-      device_id: "",
-      action: "",
-    };
-    // Create a copy of the existing rowsPointEdit array
-    const updatedRows = [...rowsPointEdit];
+    setOpenAddZonePoint(true);
+  };
 
-    // Add a new row by pushing a copy of the newRowTemplate into the array
-    updatedRows.push({ ...newRowTemplate });
-
-    // Update the state with the new array
-    setRows(updatedRows);
+  const handleCloseZonePoint = () => {
+    setOpenAddZonePoint(false);
   };
 
   const handleCloseAdd = () => {
@@ -714,7 +769,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
       console.log("filteredRows", filteredRows);
       setRows(filteredRows);
     } else {
-      getZoneUnit(id);
+      getZoneUnitData(id);
     }
   };
 
@@ -724,127 +779,210 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     updateVisibleRows(query);
   };
 
+  const handleToggle = (value) => () => {
+    const currentIndex = checked.indexOf(value);
+    const newChecked = [...checked];
+
+    if (currentIndex === -1) {
+      newChecked.push(value);
+    } else {
+      newChecked.splice(currentIndex, 1);
+    }
+
+    setChecked(newChecked);
+  };
+
+  const handleAllRight = () => {
+    setRight(right.concat(left));
+    setLeft([]);
+  };
+
+  const handleCheckedRight = () => {
+    setRight(right.concat(leftChecked));
+    setLeft(not(left, leftChecked));
+    setChecked(not(checked, leftChecked));
+  };
+
+  const handleCheckedLeft = () => {
+    setLeft(left.concat(rightChecked));
+    setRight(not(right, rightChecked));
+    setChecked(not(checked, rightChecked));
+  };
+
+  const handleAllLeft = () => {
+    setLeft(left.concat(right));
+    setRight([]);
+  };
+
+  const customList = (items) => (
+    <Paper sx={{ width: "100%", height: "100%", overflow: "auto" }}>
+      <List dense component="div" role="list">
+        {items.map((value) => {
+          const labelId = `transfer-list-item-${value}-label`;
+
+          return (
+            <ListItem
+              key={value}
+              role="listitem"
+              button
+              onClick={handleToggle(value)}
+            >
+              <ListItemIcon>
+                <Checkbox
+                  checked={checked.indexOf(value) !== -1}
+                  tabIndex={-1}
+                  disableRipple
+                  inputProps={{
+                    "aria-labelledby": labelId,
+                  }}
+                />
+              </ListItemIcon>
+              <ListItemText id={labelId} primary={`List item ${value + 1}`} />
+            </ListItem>
+          );
+        })}
+      </List>
+    </Paper>
+  );
+
   return (
     <Container className={classes.marginRow}>
-      <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon
-          className={clsx(pageName ? classes.activeColor : classes.alignSelf)}
-        />
-        <Typography
-          variant="h6"
-          className={clsx(pageName ? classes.activeColor : "", classes.cursor)}
-          onClick={openPageFloorDetail}
-        >
-          {" "}
-          / {sideBar} / {pageName}
-        </Typography>
-        <Typography variant="h6">
-          {subPageName ? " / " + subPageName : ""}{" "}
-        </Typography>
-      </Grid>
-      {zoneData && (
-        <Grid item md={12} className={classes.marginRow}>
-          <Card>
-            <CardContent>
-              <Typography variant="h4">{zoneData?.zone}</Typography>
-              <Typography variant="h5" className="pt-3">
-                {zoneData?.zone}
-              </Typography>
-              <Grid
-                item
-                md={12}
-                className={clsx(
-                  classes.flexRow,
-                  classes.justContent,
-                  classes.marginRow
-                )}
-              >
-                <Grid item md={6}>
-                  <Typography variant="body2">
-                    {t("gateway:building")}
-                  </Typography>
-                  <Typography variant="subtitle2" className="pt-1">
-                    {zoneData?.building_name}
-                  </Typography>
-                </Grid>
-                <Grid item md={6}>
-                  <Typography variant="body2">{t("zone:type")}</Typography>
-                  <Typography variant="subtitle2" className="pt-1">
-                    {zoneData?.type}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-      )}
-      <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
-        <Grid item md={5} className={classes.marginRow}>
-          <TextField
-            // id="input-with-icon-textfield"
-            size="small"
-            placeholder={t("floor:searchUnit")}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-        </Grid>
-        <Grid item md={2} className={clsx(classes.marginRow)}>
-          <Button
-            onClick={handleClickOpenAdd}
-            autoFocus
-            // fullWidth
-            className={clsx(classes.backGroundConfrim, classes.width)}
-            variant="outlined"
-          >
-            {t("floor:btnAddUnit")}
-          </Button>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ width: "100%" }} className={classes.marginRow}>
-        <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableUnitToolbar numSelected={selected.length} /> */}
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <Grid item className={classes.flexRow}>
+            <HomeOutlinedIcon
+              className={clsx(
+                pageName ? classes.activeColor : classes.alignSelf
+              )}
+            />
+            <Typography
+              variant="h6"
+              className={clsx(
+                pageName ? classes.activeColor : "",
+                classes.cursor
+              )}
+              onClick={openPageFloorDetail}
             >
-              <EnhancedTableUnitHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                //   onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-                classes={classes}
+              {" "}
+              / {sideBar} / {pageName}
+            </Typography>
+            <Typography variant="h6">
+              {subPageName ? " / " + subPageName : ""}{" "}
+            </Typography>
+          </Grid>
+          {zoneData && (
+            <Grid item md={12} className={classes.marginRow}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h4">{zoneData?.zone}</Typography>
+                  <Typography variant="h5" className="pt-3">
+                    {zoneData?.zone}
+                  </Typography>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.flexRow,
+                      classes.justContent,
+                      classes.marginRow
+                    )}
+                  >
+                    <Grid item md={6}>
+                      <Typography variant="body2">
+                        {t("gateway:building")}
+                      </Typography>
+                      <Typography variant="subtitle2" className="pt-1">
+                        {zoneData?.building_name}
+                      </Typography>
+                    </Grid>
+                    <Grid item md={6}>
+                      <Typography variant="body2">{t("zone:type")}</Typography>
+                      <Typography variant="subtitle2" className="pt-1">
+                        {zoneData?.type}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRow, classes.justContent)}
+          >
+            <Grid item md={5} className={classes.marginRow}>
+              <TextField
+                // id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("floor:searchUnit")}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchOutlinedIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
+                value={searchQuery}
+                onChange={handleSearchChange}
               />
-              <TableBody>
-                {rows.map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+            </Grid>
+            <Grid item md={2} className={clsx(classes.marginRow)}>
+              <Button
+                onClick={handleClickOpenAdd}
+                autoFocus
+                // fullWidth
+                className={clsx(classes.backGroundConfrim, classes.width)}
+                variant="outlined"
+              >
+                {t("floor:btnAddUnit")}
+              </Button>
+            </Grid>
+          </Grid>
 
-                  return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleClick(event, row.name)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.name}
-                      selected={isItemSelected}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      {/* <TableCell padding="checkbox">
+          <Box sx={{ width: "100%" }} className={classes.marginRow}>
+            <Paper sx={{ width: "100%", mb: 2 }}>
+              {/* <EnhancedTableUnitToolbar numSelected={selected.length} /> */}
+              <TableContainer>
+                <Table
+                  sx={{ minWidth: 750 }}
+                  aria-labelledby="tableTitle"
+                  size={dense ? "small" : "medium"}
+                >
+                  <EnhancedTableUnitHead
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    //   onSelectAllClick={handleSelectAllClick}
+                    onRequestSort={handleRequestSort}
+                    rowCount={rows.length}
+                    classes={classes}
+                  />
+                  <TableBody>
+                    {rows.map((row, index) => {
+                      const isItemSelected = isSelected(row.name);
+                      const labelId = `enhanced-table-checkbox-${index}`;
+
+                      console.log("0000000========", row);
+
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) => handleClick(event, row.name)}
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.name}
+                          selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          {/* <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
@@ -853,193 +991,110 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                         }}
                       />
                     </TableCell> */}
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                        className={classes.fontSixeCell}
-                        align="center"
-                      >
-                        {row.name}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.calories ? (
-                          row.calories
-                        ) : (
-                          <TextField
-                            id="input-with-icon-textfield"
-                            size="small"
-                            placeholder={t("floor:unitNumber")}
-                            fullWidth
-                            variant="outlined"
-                            value={unitNumber}
-                            onChange={handleUnitNumber}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.fat ? (
-                          row.fat
-                        ) : (
-                          <TextField
-                            id="input-with-icon-textfield"
-                            size="small"
-                            placeholder={t("floor:description")}
-                            fullWidth
-                            variant="outlined"
-                            value={description}
-                            onChange={handleDescription}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.carbs ? (
-                          row.carbs
-                        ) : (
-                          <TextField
-                            id="input-with-icon-textfield"
-                            size="small"
-                            placeholder={t("floor:unitType")}
-                            fullWidth
-                            variant="outlined"
-                            value={unitType}
-                            onChange={handleUnitType}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.power ? (
-                          row.power
-                        ) : (
-                          <TextField
-                            id="input-with-icon-textfield"
-                            size="small"
-                            placeholder={t("floor:building")}
-                            fullWidth
-                            variant="outlined"
-                            value={building}
-                            onChange={handleBuilding}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.protein ? (
-                          row.protein
-                        ) : (
-                          <TextField
-                            id="input-with-icon-textfield"
-                            size="small"
-                            placeholder={"No of Point"}
-                            fullWidth
-                            variant="outlined"
-                            value={point}
-                            onChange={handlePoint}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.unit ? (
-                          row.unit
-                        ) : (
-                          <TextField
-                            id="input-with-icon-textfield"
-                            size="small"
-                            placeholder={"No of Point"}
-                            fullWidth
-                            variant="outlined"
-                            value={noPoint}
-                            onChange={handleNoPoint}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={clsx(
-                          classes.fontSixeCell,
-                          classes.paddingIcon
-                        )}
-                      >
-                        <img
-                          src={IconDocument}
-                          alt="IconDocument"
-                          // onClick={(event) => {
-                          //   openPageZoneDetail(event, row.id);
-                          //   handleDetailZone(event, row);
-                          // }}
-                        />
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            className={classes.fontSixeCell}
+                            align="center"
+                          >
+                            {row.unit_info_id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.unit}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.description}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.type_id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.building_name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.no_of_point}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.no_of_point}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={clsx(
+                              classes.fontSixeCell,
+                              classes.paddingIcon
+                            )}
+                          >
+                            <img
+                              src={IconDocument}
+                              alt="IconDocument"
+                              // onClick={(event) => {
+                              //   openPageZoneDetail(event, row.id);
+                              //   handleDetailZone(event, row);
+                              // }}
+                            />
 
-                        <img
-                          src={IconShow}
-                          alt="IconShow"
-                          // onClick={(event) => {
-                          //   handleClickOpenView(event, row.id);
-                          // }}
-                        />
+                            <img
+                              src={IconShow}
+                              alt="IconShow"
+                              // onClick={(event) => {
+                              //   handleClickOpenView(event, row.id);
+                              // }}
+                            />
 
-                        <img
-                          src={IconSetting}
-                          alt="IconSetting"
-                          onClick={(event) => {
-                            handleClickOpen(event, row.id);
-                          }}
-                        />
-                        <img
-                          src={IconDelete}
-                          alt="IconDelete"
-                          // onClick={(event) => {
-                          //   handleClickDeleteData(event, row.id);
-                          // }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: (dense ? 33 : 53) * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
-        {/* <FormControlLabel
-        control={<Switch checked={dense} onChange={handleChangeDense} />}
-        label="Dense padding"
-      /> */}
-      </Box>
+                            <img
+                              src={IconSetting}
+                              alt="IconSetting"
+                              // onClick={(event) => {
+                              //   handleClickOpen(event, row.id);
+                              // }}
+                            />
+                            <img
+                              src={IconDelete}
+                              alt="IconDelete"
+                              onClick={(event) => {
+                                handleClickDeleteData(event, row.zone_unit_id);
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+          </Box>
+        </>
+      )}
 
       {/* Modal Edit*/}
       <Dialog
@@ -1063,415 +1118,139 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
           </Grid>
         </DialogTitle>
         <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <></>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Add Zone Point*/}
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openAddZonePoint}
+        onClose={handleCloseZonePoint}
+        aria-labelledby="responsive-dialog-title"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle id="responsive-dialog-title" className="mt-3">
+          <Grid item md={12} className={clsx(classes.flexRow)}>
+            <Grid item md={6}>
+              <Typography variant="h3">
+                {t("floor:building")} : {zoneData?.building_name}{" "}
+              </Typography>
+            </Grid>
+            <Grid item md={6}>
+              <Typography variant="h3">
+                {t("floor:zone")} : {zoneData?.zone}{" "}
+              </Typography>
+            </Grid>
+          </Grid>
+        </DialogTitle>
+        <DialogContent>
           <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRow, classes.modalContent)}
+            container
+            spacing={2}
+            justifyContent="center"
+            alignItems="center"
           >
-            <Grid item md={5}>
-              <Grid
-                item
-                md={12}
-                className={clsx(classes.flexRow, classes.alignItem)}
-              >
-                <Grid item md={6}>
-                  <Typography variant="body2">{t("floor:shopLogo")}</Typography>
-                </Grid>
-                <Grid item md={6}>
-                  <input
-                    className={classes.input}
-                    id={"contained-button-file"}
-                    type="file"
-                    accept="image/jpeg,image/png,application/pdf,image/tiff"
-                    // multiple={isMultiple}
-                    onChange={handleUploadFile}
-                    onClick={(e) => {
-                      console.log("aaaaa");
-                    }}
-                  />
-                  <label
-                    htmlFor={"contained-button-file"}
-                    className={clsx(
-                      classes.flexRow,
-                      classes.justContentCenter,
-                      classes.width
-                    )}
-                  >
-                    <Card
-                      variant="outlined"
-                      style={{ width: 200, height: 200 }}
-                      className={clsx(classes.boxUpload)}
-                    >
-                      {file ? (
-                        <img
-                          src={file}
-                          alt="img-upload"
-                          className={classes.imgWidth}
-                        />
-                      ) : (
-                        <CardContent
-                          className={clsx(
-                            classes.textCenter,
-                            classes.marginTopBox
-                          )}
-                        >
-                          <Typography> +</Typography>
-                          <Typography> upload</Typography>
-                        </CardContent>
-                      )}
-                    </Card>
-                  </label>
-                </Grid>
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="pb-3">
-                  {t("floor:unitNumber")}
-                </Typography>
+            <Grid item md={12} className={classes.marginRow}>
+              <Grid item md={5}>
                 <TextField
-                  id="input-with-icon-textfield"
+                  // id="input-with-icon-textfield"
                   size="small"
-                  placeholder={t("floor:unitNumber")}
+                  placeholder="Search by Unit"
                   fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchOutlinedIcon />
+                      </InputAdornment>
+                    ),
+                  }}
                   variant="outlined"
-                  value={unitNumber}
-                  onChange={handleUnitNumber}
+                  value={searchQuery}
+                  onChange={handleSearchChange}
                 />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:unitName")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:unitName")}
-                  fullWidth
-                  variant="outlined"
-                  value={unitName}
-                  onChange={handleUnitName}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:description")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:description")}
-                  fullWidth
-                  variant="outlined"
-                  value={description}
-                  onChange={handleDescription}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:unitType")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:unitType")}
-                  fullWidth
-                  variant="outlined"
-                  value={unitType}
-                  onChange={handleUnitType}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="h3" className="mt-3 pb-3">
-                  {t("floor:building")}
-                </Typography>
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:building")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:building")}
-                  fullWidth
-                  variant="outlined"
-                  value={building}
-                  onChange={handleBuilding}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:floor")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:floor")}
-                  fullWidth
-                  variant="outlined"
-                  value={floorName}
-                  onChange={handleFloorName}
-                />
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("floor:zone")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("floor:zone")}
-                  fullWidth
-                  variant="outlined"
-                  value={zone}
-                  onChange={handleZone}
-                />
-              </Grid>
-              <Grid
-                item
-                md={12}
-                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-              >
-                <Grid item md={3}>
-                  <Button
-                    // onClick={handleCloseAdd}
-                    className={clsx(classes.backGroundCancel)}
-                    variant="outlined"
-                  >
-                    {t("gateway:btnRefresh")}
-                  </Button>
-                </Grid>
-                <Grid item md={3} className={classes.boxMargin}>
-                  <Button
-                    className={clsx(classes.backGroundConfrim)}
-                    variant="outlined"
-                  >
-                    {t("gateway:btnSave")}
-                  </Button>
-                </Grid>
               </Grid>
             </Grid>
-            <Grid item className={classes.borderBox}></Grid>
-            <Grid item md={6} className={classes.boxMargin}>
-              <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeHead}
-                      >
-                        #
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={clsx(
-                          classes.colorText,
-                          classes.fontSixeHead
-                        )}
-                      >
-                        {t("floor:gateway")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={clsx(
-                          classes.colorText,
-                          classes.fontSixeHead
-                        )}
-                      >
-                        {t("floor:gateway")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={clsx(
-                          classes.colorText,
-                          classes.fontSixeHead
-                        )}
-                      >
-                        {t("floor:gateway")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeHead}
-                      >
-                        {t("floor:action")}
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rowsPointEdit.map((row) => (
-                      <TableRow
-                        key={row.name}
-                        sx={{
-                          "&:last-child td, &:last-child th": { border: 0 },
-                        }}
-                      >
-                        <TableCell
-                          component="th"
-                          scope="row"
-                          className={classes.fontSixeCell}
-                        >
-                          {row.name}
-                        </TableCell>
-                        <TableCell
-                          align="center"
-                          className={classes.fontSixeCell}
-                        >
-                          {row.code ? (
-                            row.code
-                          ) : (
-                            <Grid item className={classes.marginDataTable}>
-                              <FormControl
-                                variant="outlined"
-                                size="small"
-                                fullWidth
-                              >
-                                <Select
-                                  labelId="demo-select-small-label"
-                                  id="demo-select-small"
-                                  value={gatewayMeter}
-                                  placeholder={"Energy Meter"}
-                                  onChange={handleGatewayMeter}
-                                >
-                                  <MenuItem value="none">Energy Meter</MenuItem>
-                                  {/* <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem> */}
-                                </Select>
-                              </FormControl>
-                            </Grid>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          className={classes.fontSixeCell}
-                        >
-                          {row.population ? (
-                            row.population
-                          ) : (
-                            <Grid item className={classes.marginDataTable}>
-                              <FormControl
-                                variant="outlined"
-                                size="small"
-                                fullWidth
-                              >
-                                <Select
-                                  labelId="demo-select-small-label"
-                                  id="demo-select-small"
-                                  value={gatewayMeterTwo}
-                                  placeholder={"Energy Meter"}
-                                  onChange={handleGatewayMeterTwo}
-                                >
-                                  <MenuItem value="none">Energy Meter</MenuItem>
-                                  {/* <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem> */}
-                                </Select>
-                              </FormControl>
-                            </Grid>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          className={classes.fontSixeCell}
-                        >
-                          {row.size ? (
-                            row.size
-                          ) : (
-                            <Grid item className={classes.marginDataTable}>
-                              <FormControl
-                                variant="outlined"
-                                size="small"
-                                fullWidth
-                              >
-                                <Select
-                                  labelId="demo-select-small-label"
-                                  id="demo-select-small"
-                                  value={gatewayMeterThree}
-                                  placeholder={"Energy Meter"}
-                                  onChange={handleGatewayMeterThree}
-                                >
-                                  <MenuItem value="none">Energy Meter</MenuItem>
-                                  {/* <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem> */}
-                                </Select>
-                              </FormControl>
-                            </Grid>
-                          )}
-                        </TableCell>
-                        <TableCell
-                          align="right"
-                          className={classes.fontSixeCell}
-                        >
-                          {row.action ? (
-                            <>
-                              <Typography
-                                className={clsx(
-                                  classes.fontSixeCell,
-                                  classes.activeColor
-                                )}
-                              >
-                                {t("floor:delete")}
-                              </Typography>
-                            </>
-                          ) : (
-                            <Typography
-                              className={clsx(
-                                classes.fontSixeCell,
-                                classes.activeColor
-                              )}
-                            >
-                              {t("floor:delete")}
-                            </Typography>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <Grid
-                item
-                md={12}
-                className={clsx(
-                  classes.marginRow,
-                  classes.flexRow,
-                  classes.justContentCenter
-                )}
-              >
-                <Grid item md={6}>
-                  <Button
-                    variant="outlined"
-                    onClick={addNewRow}
-                    className={clsx(classes.backGroundCancel)}
-                  >
-                    {t("floor:addMeasurement")}
-                  </Button>
-                </Grid>
+            <Grid item md={5}>
+              {customList(left)}
+            </Grid>
+            <Grid item>
+              <Grid container direction="column" alignItems="center">
+                <Button
+                  sx={{ my: 0.5 }}
+                  variant="outlined"
+                  size="small"
+                  onClick={handleAllRight}
+                  disabled={left.length === 0}
+                  aria-label="move all right"
+                >
+                  ≫
+                </Button>
+                <Button
+                  sx={{ my: 0.5 }}
+                  variant="outlined"
+                  size="small"
+                  onClick={handleCheckedRight}
+                  disabled={leftChecked.length === 0}
+                  aria-label="move selected right"
+                >
+                  &gt;
+                </Button>
+                <Button
+                  sx={{ my: 0.5 }}
+                  variant="outlined"
+                  size="small"
+                  onClick={handleCheckedLeft}
+                  disabled={rightChecked.length === 0}
+                  aria-label="move selected left"
+                >
+                  &lt;
+                </Button>
+                <Button
+                  sx={{ my: 0.5 }}
+                  variant="outlined"
+                  size="small"
+                  onClick={handleAllLeft}
+                  disabled={right.length === 0}
+                  aria-label="move all left"
+                >
+                  ≪
+                </Button>
               </Grid>
-
-              <Grid
-                item
-                md={12}
-                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-              >
-                <Grid item md={3}>
-                  <Button
-                    // onClick={handleCloseAdd}
-                    className={clsx(classes.backGroundCancel)}
-                    variant="outlined"
-                  >
-                    {t("gateway:btnRefresh")}
-                  </Button>
-                </Grid>
-                <Grid item md={3} className={classes.boxMargin}>
-                  <Button
-                    className={clsx(classes.backGroundConfrim)}
-                    variant="outlined"
-                  >
-                    {t("gateway:btnSave")}
-                  </Button>
-                </Grid>
+            </Grid>
+            <Grid item md={5}>
+              {customList(right)}
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+            >
+              <Grid item md={3}>
+                <Button
+                  onClick={handleCloseZonePoint}
+                  className={clsx(classes.backGroundCancel)}
+                  variant="outlined"
+                >
+                  {t("gateway:btnCancel")}
+                </Button>
+              </Grid>
+              <Grid item md={3} className={classes.boxMargin}>
+                <Button
+                  className={clsx(classes.backGroundConfrim)}
+                  variant="outlined"
+                >
+                  {t("gateway:btnSave")}
+                </Button>
               </Grid>
             </Grid>
           </Grid>

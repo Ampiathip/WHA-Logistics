@@ -68,6 +68,8 @@ import IconDelete from "../images/icon/Delete.svg";
 import IconDocument from "../images/icon/Document.svg";
 import IconShow from "../images/icon/Show.svg";
 import IconSetting from "../images/icon/Setting.svg";
+import IconEdit from "../images/icon/Edit.svg";
+import IconSave from "../images/icon/TickSquare.svg";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -465,29 +467,12 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   // view //
   const [rowsPerPageView, setRowsPerPageView] = useState(5);
   const [pageView, setPageView] = useState(0);
-  const [rowsPoint, setRowsPoint] = useState([
-    {
-      name: 1,
-      code: "India",
-      population: "IN",
-      size: 1324171354,
-      density: 3287263,
-      unit: "RM001",
-    },
-  ]);
   const columnsPoint = [
     { id: "name", label: "Device ID" },
     { id: "code", label: "Point name" },
     {
       id: "population",
       label: "Topic",
-      // minWidth: 170,
-      align: "center",
-      // format: (value) => value.toLocaleString('en-US'),
-    },
-    {
-      id: "size",
-      label: "Data",
       // minWidth: 170,
       align: "center",
       // format: (value) => value.toLocaleString('en-US'),
@@ -506,13 +491,6 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
       align: "center",
       // format: (value) => value.toFixed(2),
     },
-    // {
-    //   id: 'action',
-    //   label: 'Action',
-    //   minWidth: 170,
-    //   align: 'center',
-    //   format: (value) => value.toFixed(2),
-    // },
   ];
   // edit //
   const [deviceId, setDeviceId] = useState("");
@@ -536,13 +514,13 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
       align: "center",
       // format: (value) => value.toLocaleString('en-US'),
     },
-    {
-      id: "size",
-      label: "Data",
-      // minWidth: 170,
-      align: "center",
-      // format: (value) => value.toLocaleString('en-US'),
-    },
+    // {
+    //   id: "size",
+    //   label: "Data",
+    //   minWidth: 170,
+    //   align: "center",
+    //   format: (value) => value.toLocaleString('en-US'),
+    // },
     {
       id: "density",
       label: "Data Unit",
@@ -572,6 +550,8 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortedRows, setSortedRows] = useState(rows);
+  const [editPoint, setEditPoint] = useState(null);
+  const [disabledFild, setDisabledFild] = useState(null);
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -784,7 +764,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
         console.log("dataPayload", response, dataPayload);
         dataPayload.length > 0 &&
           dataPayload.map((item) => {
-            console.log("9999=======item", item);
+            // console.log("9999=======item", item);
             setDeviceId(item.id);
             setInstallation(item.installation_date);
             setModel(item.model);
@@ -866,6 +846,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
         const dataPayload = response.data;
         console.log("dataPayload====Point", dataPayload);
         setRowsPointEdit(dataPayload);
+        setDisabledFild(true);
         setIsLoading(false);
       });
     } catch (error) {
@@ -896,11 +877,14 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     setOpen(true);
     setIsIdEdit(id);
     deviceView(id);
+    setDisabledFild(true);
+    setEditPoint(null);
   };
 
-  const handleClickOpenView = (event, id) => {
+  const handleClickOpenView = async (event, id) => {
     setOpenView(true);
     deviceView(id);
+    await getPointData(id);
   };
 
   const handleClose = () => {
@@ -1052,13 +1036,14 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   // add row Edit //
   const addNewRow = () => {
     const newRow = {
-      id: rowsPointEdit.length + 1,
+      id: null,
       // name: "New Name",
-      point_name: "",
+      // rowsId: null,
+      name: "",
       topic: "",
       data: "",
-      data_unit: "",
-      unit_binding: "",
+      unit: "",
+      binding: "",
       device_id: "",
       action: "",
     };
@@ -1070,6 +1055,8 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
 
     // Update the state with the new array
     setRowsPointEdit(updatedRows);
+    setDisabledFild(false);
+    setEditPoint(null);
   };
 
   console.log("rowsPointEdit", rowsPointEdit);
@@ -1083,17 +1070,12 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     setPageEdit(0);
   };
 
-  const deleteRow = (rowName) => {
-    // const updatedRows = rowsPointEdit.filter((row) => row.name !== rowName);
-    // setRowsPointEdit(updatedRows);
-  };
-
   const handleDeviceId = (e, row, index) => {
     const newValue = e.target.value;
     // Create a copy of the existing rowsPointEdit array
     const updatedRows = [...rowsPointEdit];
     // Update the device_id of the specific row at the given index
-    updatedRows[index].device_id = newValue;
+    updatedRows[index].id = newValue;
     // Update the state with the new array
     setRowsPointEdit(updatedRows);
     // setDeviceIdPoint(newValue);
@@ -1102,7 +1084,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const handlePointName = (e, row, index) => {
     const newValue = e.target.value;
     const updatedRows = [...rowsPointEdit];
-    updatedRows[index].point_name = newValue;
+    updatedRows[index].name = newValue;
     setRowsPointEdit(updatedRows);
     // setPointName(newValue);
   };
@@ -1126,7 +1108,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const handleDataUnit = (e, row, index) => {
     const newValue = e.target.value;
     const updatedRows = [...rowsPointEdit];
-    updatedRows[index].data_unit = newValue;
+    updatedRows[index].unit = newValue;
     setRowsPointEdit(updatedRows);
     // setDataUnit(newValue);
   };
@@ -1134,7 +1116,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const handleUnitBinding = (e, row, index) => {
     const newValue = e.target.value;
     const updatedRows = [...rowsPointEdit];
-    updatedRows[index].unit_binding = newValue;
+    updatedRows[index].binding = newValue;
     setRowsPointEdit(updatedRows);
     // setUnitBinding(newValue);
   };
@@ -1145,34 +1127,47 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
 
   // save Point //
   const handleAddPoint = async () => {
-    // setIsLoading(true);
-    console.log("------>>>>", rowsPointEdit);
+    setIsLoading(true);
+    setOpen(false);
     try {
       let body = [];
-      rowsPointEdit.length > 0 &&
-        rowsPointEdit.map((row) => {
+      let bodyRow = [];
+
+      rowsPointEdit.length > 0
+        ? (body = rowsPointEdit.filter((row) => {
+            return row.id == null || row.id == "";
+          }))
+        : (body = []);
+
+        body.length > 0 && body.forEach((row) => {
           const data = {
-            point_name: row.point_name,
+            point_name: row.name,
             topic: row.topic,
-            data_unit: row.data_unit,
-            unit_binding: row.unit_binding,
-            device_id: row.device_id,
+            data_unit: row.unit,
+            unit_binding: row.binding,
+            device_id: deviceId,
           };
-          body.push(data);
+          bodyRow.push(data);
         });
-      console.log("body", body);
+      console.log("body", body, bodyRow);
       await API.connectTokenAPI(token);
-      await API.pointRegister(body).then((response) => {
+      await API.pointRegister(bodyRow).then((response) => {
         const dataPayload = response.data;
-        console.log("dataPayload====Point", dataPayload);
-        console.log("dataPayload", dataPayload, response);
         if (response.status === 200) {
           MySwal.fire({
             icon: "success",
             confirmButtonText: "ตกลง",
             text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getPointData(deviceId);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
           });
-          getPointData(deviceId);
+          // getPointData(deviceId);
+          // setOpen(false);
         }
         setIsLoading(false);
       });
@@ -1196,6 +1191,108 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           }
         });
       }
+      setIsLoading(false);
+    }
+  };
+
+  // delete Point //
+
+  const pointDelete = async (rowId) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.pointDelete(rowId).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getPointData(deviceId);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeletePoint = async (event, id) => {
+    setOpen(false);
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        pointDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  // Edit Point //
+  const handleEditPoint = async (event, id) => {
+    setEditPoint(id);
+    setDisabledFild(false);
+  };
+
+  const handleUpdatePoint = async (event, id) => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      let body = [];
+      const idToMatch = id; // Replace with the actual ID you want to match
+      const updatedRow = rowsPointEdit.find((row) => row.id === idToMatch);
+      const data = {
+        id: updatedRow.id,
+        point_name: updatedRow.name,
+        topic: updatedRow.topic,
+        data_unit: updatedRow.unit,
+        unit_binding: updatedRow.binding,
+      };
+      body.push(data);
+      // console.log("rowsPointEdit", rowsPointEdit, id, updatedRow);
+      // console.log("body", body);
+      await API.connectTokenAPI(token);
+      await API.pointUpdate(body).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getPointData(deviceId);
+              setOpen(true);
+              setEditPoint(null);
+              setDisabledFild(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
       setIsLoading(false);
     }
   };
@@ -1667,234 +1764,308 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                   </Grid>
                 </Grid>
 
-                <Paper sx={{ width: "100%", overflow: "hidden" }}>
-                  <TableContainer sx={{ maxHeight: 640 }}>
-                    <Table stickyHeader aria-label="sticky table">
-                      <TableHead>
-                        <TableRow>
-                          {columnsPointEdit.map((column) => (
-                            <TableCell
-                              key={column.id}
-                              align={column.align}
-                              style={{
-                                minWidth: column.minWidth,
-                                fontSize: 16,
-                              }}
-                            >
-                              {column.label}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {rowsPointEdit
-                          .slice(
-                            pageEdit * rowsPerPageEdit,
-                            pageEdit * rowsPerPageEdit + rowsPerPageEdit
-                          )
-                          .map((row, index) => {
-                            console.log("row=======", row, index);
-                            return (
-                              <TableRow
-                                hover
-                                role="checkbox"
-                                tabIndex={-1}
-                                key={row.id}
-                              >
+                {isLoading ? (
+                  <Box mt={4} width={1} display="flex" justifyContent="center">
+                    <CircularProgress color="primary" />
+                  </Box>
+                ) : (
+                  <>
+                    <Paper sx={{ width: "100%", overflow: "hidden" }}>
+                      <TableContainer sx={{ maxHeight: 640 }}>
+                        <Table stickyHeader aria-label="sticky table">
+                          <TableHead>
+                            <TableRow>
+                              {columnsPointEdit.map((column) => (
                                 <TableCell
-                                  component="th"
-                                  id={row.name}
-                                  scope="row"
-                                  padding="none"
-                                  style={{ fontSize: 16 }}
-                                  align="center"
+                                  key={column.id}
+                                  align={column.align}
+                                  style={{
+                                    minWidth: column.minWidth,
+                                    fontSize: 16,
+                                  }}
                                 >
-                                  <Grid
-                                    item
-                                    className={classes.marginDataTable}
+                                  {column.label}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {rowsPointEdit
+                              .slice(
+                                pageEdit * rowsPerPageEdit,
+                                pageEdit * rowsPerPageEdit + rowsPerPageEdit
+                              )
+                              .map((row, index) => {
+                                console.log("row=======", row, index);
+                                return (
+                                  <TableRow
+                                    hover
+                                    role="checkbox"
+                                    tabIndex={-1}
+                                    key={row.id}
                                   >
-                                    <TextField
-                                      value={
-                                        row.device_id
-                                          ? row.device_id
-                                          : deviceIdPoint
-                                      }
-                                      variant="outlined"
-                                      size="small"
-                                      fullWidth
-                                      onChange={(e) =>
-                                        handleDeviceId(e, row, index)
-                                      }
-                                    />
-                                  </Grid>
-                                </TableCell>
-                                <TableCell
-                                  component="th"
-                                  id={row.name}
-                                  scope="row"
-                                  padding="none"
-                                  style={{ fontSize: 16 }}
-                                  align="center"
-                                >
-                                  <Grid
-                                    item
-                                    className={classes.marginDataTable}
-                                  >
-                                    <TextField
-                                      value={
-                                        row.point_name
-                                          ? row.point_name
-                                          : pointName
-                                      }
-                                      variant="outlined"
-                                      size="small"
-                                      fullWidth
-                                      onChange={(e) =>
-                                        handlePointName(e, row, index)
-                                      }
-                                    />
-                                  </Grid>
-                                </TableCell>
-                                <TableCell
-                                  component="th"
-                                  id={row.name}
-                                  scope="row"
-                                  padding="none"
-                                  style={{ fontSize: 16 }}
-                                  align="center"
-                                >
-                                  <Grid
-                                    item
-                                    className={classes.marginDataTable}
-                                  >
-                                    <TextField
-                                      value={row.topic ? row.topic : topic}
-                                      variant="outlined"
-                                      size="small"
-                                      fullWidth
-                                      onChange={(e) =>
-                                        handleTopic(e, row, index)
-                                      }
-                                    />
-                                  </Grid>
-                                </TableCell>
-                                <TableCell
-                                  component="th"
-                                  id={row.name}
-                                  scope="row"
-                                  padding="none"
-                                  style={{ fontSize: 16 }}
-                                  align="center"
-                                >
-                                  <Grid
-                                    item
-                                    className={classes.marginDataTable}
-                                  >
-                                    <TextField
-                                      value={row.data ? row.data : data}
-                                      variant="outlined"
-                                      size="small"
-                                      fullWidth
-                                      onChange={(e) =>
-                                        handleData(e, row, index)
-                                      }
-                                    />
-                                  </Grid>
-                                </TableCell>
-                                <TableCell
-                                  component="th"
-                                  id={row.name}
-                                  scope="row"
-                                  padding="none"
-                                  style={{ fontSize: 16 }}
-                                  align="center"
-                                >
-                                  <Grid
-                                    item
-                                    className={classes.marginDataTable}
-                                  >
-                                    <TextField
-                                      value={
-                                        row.data_unit ? row.data_unit : dataUnit
-                                      }
-                                      variant="outlined"
-                                      size="small"
-                                      fullWidth
-                                      onChange={(e) =>
-                                        handleDataUnit(e, row, index)
-                                      }
-                                    />
-                                  </Grid>
-                                </TableCell>
-                                <TableCell
-                                  component="th"
-                                  id={row.name}
-                                  scope="row"
-                                  padding="none"
-                                  style={{ fontSize: 16 }}
-                                  align="center"
-                                >
-                                  <Grid
-                                    item
-                                    className={classes.marginDataTable}
-                                  >
-                                    <TextField
-                                      value={
-                                        row.unit_binding
-                                          ? row.unit_binding
-                                          : unitBinding
-                                      }
-                                      variant="outlined"
-                                      size="small"
-                                      fullWidth
-                                      onChange={(e) =>
-                                        handleUnitBinding(e, row, index)
-                                      }
-                                    />
-                                  </Grid>
-                                </TableCell>
-                                <TableCell
-                                  component="th"
-                                  id={row.name}
-                                  scope="row"
-                                  padding="none"
-                                  align="center"
-                                >
-                                  {row.action ? (
-                                    <>
-                                      <BorderColorOutlinedIcon />
-                                      <img
-                                        src={IconDelete}
-                                        alt="IconDelete"
-                                        onClick={deleteRow(row.name)}
-                                      />
-                                    </>
-                                  ) : (
-                                    <img
-                                      src={IconDelete}
-                                      alt="IconDelete"
-                                      // onClick={(event) => {
-                                      //   handleClickDeleteData(event, row.id);
-                                      // }}
-                                    />
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                  <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
-                    component="div"
-                    count={rowsPointEdit.length}
-                    rowsPerPage={rowsPerPageEdit}
-                    page={pageEdit}
-                    onPageChange={handleChangePageEdit}
-                    onRowsPerPageChange={handleChangeRowsPerPageEdit}
-                  />
-                </Paper>
+                                    <TableCell
+                                      component="th"
+                                      id={row.id}
+                                      scope="row"
+                                      padding="none"
+                                      style={{ fontSize: 14 }}
+                                      align="center"
+                                    >
+                                      <Grid
+                                        item
+                                        className={classes.marginDataTable}
+                                      >
+                                        <TextField
+                                          value={
+                                            row.id ? row.id : deviceIdPoint
+                                          }
+                                          variant="outlined"
+                                          // disabled={
+                                          //   !disabledFild &&
+                                          //   editPoint === row.id
+                                          //     ? false
+                                          //     : true
+                                          // }
+                                          disabled={true}
+                                          size="small"
+                                          fullWidth
+                                          // onChange={(e) =>
+                                          //   handleDeviceId(e, row, index)
+                                          // }
+                                        />
+                                      </Grid>
+                                    </TableCell>
+                                    <TableCell
+                                      component="th"
+                                      id={row.name}
+                                      scope="row"
+                                      padding="none"
+                                      style={{ fontSize: 14 }}
+                                      align="center"
+                                    >
+                                      <Grid
+                                        item
+                                        className={classes.marginDataTable}
+                                      >
+                                        <TextField
+                                          value={
+                                            row.name ? row.name : pointName
+                                          }
+                                          disabled={
+                                            !disabledFild &&
+                                            editPoint === row.id
+                                              ? false
+                                              : true
+                                          }
+                                          variant="outlined"
+                                          size="small"
+                                          fullWidth
+                                          onChange={(e) =>
+                                            handlePointName(e, row, index)
+                                          }
+                                        />
+                                      </Grid>
+                                    </TableCell>
+                                    <TableCell
+                                      component="th"
+                                      id={row.topic}
+                                      scope="row"
+                                      padding="none"
+                                      style={{ fontSize: 14 }}
+                                      align="center"
+                                    >
+                                      <Grid
+                                        item
+                                        className={clsx(
+                                          classes.marginDataTable,
+                                          classes.flexRow
+                                        )}
+                                      >
+                                        <Typography
+                                          style={{
+                                            fontSize: 14,
+                                            alignSelf: "center",
+                                          }}
+                                        >
+                                          {deviceName && deviceName + "/ "}
+                                        </Typography>
+                                        <TextField
+                                          value={row.topic ? row.topic : topic}
+                                          disabled={
+                                            !disabledFild &&
+                                            editPoint === row.id
+                                              ? false
+                                              : true
+                                          }
+                                          variant="outlined"
+                                          size="small"
+                                          fullWidth
+                                          style={{
+                                            fontSize: 14,
+                                            paddingLeft: 3,
+                                          }}
+                                          onChange={(e) =>
+                                            handleTopic(e, row, index)
+                                          }
+                                        />
+                                      </Grid>
+                                    </TableCell>
+                                    {/* <TableCell
+                                      component="th"
+                                      id={row.name}
+                                      scope="row"
+                                      padding="none"
+                                      style={{ fontSize: 14 }}
+                                      align="center"
+                                    >
+                                      <Grid
+                                        item
+                                        className={classes.marginDataTable}
+                                      >
+                                        <TextField
+                                          value={row.data ? row.data : data}
+                                          variant="outlined"
+                                          size="small"
+                                          fullWidth
+                                          onChange={(e) =>
+                                            handleData(e, row, index)
+                                          }
+                                        />
+                                      </Grid>
+                                    </TableCell> */}
+                                    <TableCell
+                                      component="th"
+                                      id={row.unit}
+                                      scope="row"
+                                      padding="none"
+                                      style={{ fontSize: 14 }}
+                                      align="center"
+                                    >
+                                      <Grid
+                                        item
+                                        className={classes.marginDataTable}
+                                      >
+                                        <TextField
+                                          value={row.unit ? row.unit : dataUnit}
+                                          disabled={
+                                            !disabledFild &&
+                                            editPoint === row.id
+                                              ? false
+                                              : true
+                                          }
+                                          variant="outlined"
+                                          size="small"
+                                          fullWidth
+                                          onChange={(e) =>
+                                            handleDataUnit(e, row, index)
+                                          }
+                                        />
+                                      </Grid>
+                                    </TableCell>
+                                    <TableCell
+                                      component="th"
+                                      id={row.binding}
+                                      scope="row"
+                                      padding="none"
+                                      style={{ fontSize: 14 }}
+                                      align="center"
+                                    >
+                                      <Grid
+                                        item
+                                        className={classes.marginDataTable}
+                                      >
+                                        <TextField
+                                          value={
+                                            row.binding
+                                              ? row.binding
+                                              : unitBinding
+                                          }
+                                          disabled={
+                                            !disabledFild &&
+                                            editPoint === row.id
+                                              ? false
+                                              : true
+                                          }
+                                          variant="outlined"
+                                          size="small"
+                                          fullWidth
+                                          onChange={(e) =>
+                                            handleUnitBinding(e, row, index)
+                                          }
+                                        />
+                                      </Grid>
+                                    </TableCell>
+                                    <TableCell
+                                      component="th"
+                                      id={row.name}
+                                      scope="row"
+                                      padding="none"
+                                      align="center"
+                                    >
+                                      {row.id ? (
+                                        <>
+                                          {editPoint === row.id ? (
+                                            <>
+                                              <img
+                                                src={IconSave}
+                                                alt="IconSave"
+                                                onClick={(event) =>
+                                                  handleUpdatePoint(
+                                                    event,
+                                                    row.id
+                                                  )
+                                                }
+                                              />
+                                            </>
+                                          ) : (
+                                            <>
+                                              <img
+                                                src={IconEdit}
+                                                alt="IconEdit"
+                                                onClick={(event) =>
+                                                  handleEditPoint(event, row.id)
+                                                }
+                                              />
+                                            </>
+                                          )}
+
+                                          <img
+                                            src={IconDelete}
+                                            alt="IconDelete"
+                                            onClick={(event) =>
+                                              handleDeletePoint(event, row.id)
+                                            }
+                                          />
+                                        </>
+                                      ) : (
+                                        <img
+                                          src={IconDelete}
+                                          alt="IconDelete"
+                                          onClick={(event) =>
+                                            handleDeletePoint(event, row.id)
+                                          }
+                                        />
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                      <TablePagination
+                        rowsPerPageOptions={[5, 10, 25]}
+                        component="div"
+                        count={rowsPointEdit.length}
+                        rowsPerPage={rowsPerPageEdit}
+                        page={pageEdit}
+                        onPageChange={handleChangePageEdit}
+                        onRowsPerPageChange={handleChangeRowsPerPageEdit}
+                      />
+                    </Paper>
+                  </>
+                )}
 
                 <Grid
                   item
@@ -1903,7 +2074,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                 >
                   <Grid item md={3}>
                     <Button
-                      // onClick={handleCloseAdd}
+                      onClick={(event) => {
+                        handleClickOpen(event, isIdEdit);
+                      }}
                       className={clsx(classes.backGroundCancel)}
                       variant="outlined"
                     >
@@ -2203,7 +2376,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
       </Dialog>
 
       {/* Modal ViewData */}
-      {/* <Dialog
+      <Dialog
         fullScreen={fullScreenView}
         className={classes.modalWidth}
         open={openView}
@@ -2236,7 +2409,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             </Box>
           ) : (
             <>
-              <Box>
+              <Box className={classes.paddingCol}>
                 <Card className={clsx(classes.cardBoxGeteway)}>
                   <CardContent>
                     <Typography variant="h5">
@@ -2373,76 +2546,104 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                   </CardContent>
                 </Card>
               </Box>
-              <Box>
-                <Paper sx={{ width: "100%", overflow: "hidden" }}>
-                  <TableContainer sx={{ maxHeight: 640 }}>
-                    <Table stickyHeader aria-label="sticky table">
-                      <TableHead>
-                        <TableRow>
-                          {columnsPoint.map((column) => (
-                            <TableCell
-                              key={column.id}
-                              align={column.align}
-                              style={{
-                                minWidth: column.minWidth,
-                                fontSize: 18,
-                              }}
-                            >
-                              {column.label}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {rowsPoint
-                          .slice(
-                            pageView * rowsPerPageView,
-                            pageView * rowsPerPageView + rowsPerPageView
-                          )
-                          .map((row) => {
-                            return (
-                              <TableRow
-                                hover
-                                role="checkbox"
-                                tabIndex={-1}
-                                key={row.code}
-                              >
-                                {columnsPoint.map((column) => {
-                                  const value = row[column.id];
-                                  return (
+              {isLoading ? (
+                <Box mt={4} width={1} display="flex" justifyContent="center">
+                  <CircularProgress color="primary" />
+                </Box>
+              ) : (
+                <>
+                  <Box>
+                    <Paper sx={{ width: "100%", overflow: "hidden" }}>
+                      <TableContainer sx={{ maxHeight: 640 }}>
+                        <Table stickyHeader aria-label="sticky table">
+                          <TableHead>
+                            <TableRow>
+                              {columnsPoint.map((column) => (
+                                <TableCell
+                                  key={column.id}
+                                  align={column.align}
+                                  style={{
+                                    minWidth: column.minWidth,
+                                    fontSize: 18,
+                                  }}
+                                >
+                                  {column.label}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {rowsPointEdit
+                              .slice(
+                                pageView * rowsPerPageView,
+                                pageView * rowsPerPageView + rowsPerPageView
+                              )
+                              .map((row) => {
+                                return (
+                                  <TableRow
+                                    hover
+                                    role="checkbox"
+                                    tabIndex={-1}
+                                    key={row.code}
+                                  >
                                     <TableCell
-                                      key={column.id}
-                                      align={column.align}
-                                      style={{ fontSize: 15 }}
+                                      key={row.id}
+                                      align="center"
+                                      style={{ fontSize: 12 }}
                                     >
-                                      {column.format &&
-                                      typeof value === "number"
-                                        ? column.format(value)
-                                        : value}
+                                      {row.id}
                                     </TableCell>
-                                  );
-                                })}
-                              </TableRow>
-                            );
-                          })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                  <TablePagination
-                    rowsPerPageOptions={[5, 8, 10]}
-                    component="div"
-                    count={rowsPoint.length}
-                    rowsPerPage={rowsPerPageView}
-                    page={pageView}
-                    onPageChange={handleChangePageView}
-                    onRowsPerPageChange={handleChangeRowsPerPageView}
-                  />
-                </Paper>
-              </Box>
+                                    <TableCell
+                                      key={row.id}
+                                      align="left"
+                                      style={{ fontSize: 14 }}
+                                    >
+                                      {row.name}
+                                    </TableCell>
+                                    <TableCell
+                                      key={row.id}
+                                      align="center"
+                                      style={{ fontSize: 14 }}
+                                    >
+                                      {row.topic}
+                                    </TableCell>
+                                    <TableCell
+                                      key={row.id}
+                                      align="center"
+                                      style={{ fontSize: 14 }}
+                                    >
+                                      {row.unit}
+                                    </TableCell>
+                                    <TableCell
+                                      key={row.id}
+                                      align="center"
+                                      style={{ fontSize: 14 }}
+                                    >
+                                      {row.binding}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                      {/* <TablePagination
+                        rowsPerPageOptions={[5, 10, 20]}
+                        component="div"
+                        count={rowsPointEdit.length}
+                        rowsPerPage={rowsPerPageView}
+                        page={pageView}
+                        onPageChange={handleChangePageView}
+                        onRowsPerPageChange={handleChangeRowsPerPageView}
+                      /> */}
+                    </Paper>
+                  </Box>
+                </>
+              )}
             </>
           )}
         </DialogContent>
-      </Dialog> */}
+      </Dialog>
     </Container>
   );
 };

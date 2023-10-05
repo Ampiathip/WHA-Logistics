@@ -66,6 +66,7 @@ import IconDelete from "../images/icon/Delete.svg";
 import IconDocument from "../images/icon/Document.svg";
 import IconShow from "../images/icon/Show.svg";
 import IconSetting from "../images/icon/Setting.svg";
+import IconEdit from "../images/icon/Edit.svg";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -452,6 +453,11 @@ const UnitManagement = ({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortedRows, setSortedRows] = useState(rows);
+  const [gatewayDataSelect, setGatewayDataSelect] = useState("");
+  const [deviceDataSelect, setDeviceDataSelect] = useState("");
+  const [pointDataSelect, setPointDataSelect] = useState("");
+  const [editMeasurement, setEditMeasurement] = useState(null);
+  const [disabledFild, setDisabledFild] = useState(null);
 
   // console.log("ididid====", state, id);
   const swalFire = (msg) => {
@@ -750,29 +756,48 @@ const UnitManagement = ({
     setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.getUnitPointData(id).then((response) => {
-        const dataPayload = response.data;
+      await API.getUnitPointData(id).then(async (response) => {
+        let dataPayload = response?.data;
+         dataPayload.forEach(async (item) => {
+          item.device_list = await getDevice(item.gateway_id);
+          item.point_list = await getPointData(item.device_id);
+          // setDeviceData(await getDevice(item.gateway_id));
+          // setPointData(await getPointData(item.device_id));
+        });
+        // dataPayload.length > 0
+        //   ? (dataPayload = await dataPayload.map(async (item) => {
+        //       console.log("==========UnitPoint", item);
+        //       // let device = [];
+        //       item.device_list = await getDevice(item.gateway_id);
+        //       // item.device_list = [1,2,3];
+        //       return item;
+        //       // getPointData(item.device_id);
+        //       // setGatewayDataSelect(item.gateway_id);
+        //       // setDeviceDataSelect(item.device_id);
+        //       // setPointDataSelect(item.point_id);
+        //       // console.log("deviceDataSelect", deviceDataSelect);
+        //     }))
+        //   : (dataPayload = []);
         console.log("dataPayload", response, dataPayload);
-        dataPayload.length > 0 &&
-          dataPayload.map((item) => {
-            console.log("==========UnitPoint", item);
-          });
+        setRowsPointEdit(dataPayload);
         setIsLoading(false);
       });
     } catch (error) {
       console.log(error);
       const response = error.response;
-      swalFire(response.data);
+      swalFire(response?.data);
       setIsLoading(false);
     }
   };
 
-  const handleClickOpen = (event, id) => {
+  const handleClickOpen = async (event, id) => {
     setOpen(true);
     getUnitView(id);
     setIsIdEdit(id);
     setIsValidate(true);
-    getUnitPointData(id);
+    await getUnitPointData(id);
+    setDisabledFild(true);
+    setEditMeasurement(null);
   };
 
   const handleClose = () => {
@@ -906,9 +931,11 @@ const UnitManagement = ({
     const newRow = {
       id: rowsPointEdit.length + 1,
       unit_id: "",
-      gateway_id: "",
-      device_id: "",
-      point_id: "",
+      new_gateway_id: "none",
+      new_device_id: "none",
+      new_point_id: "none",
+      device_list: [],
+      point_list: [],
     };
     // Create a copy of the existing rowsPointEdit array
     const updatedRows = [...rowsPointEdit];
@@ -918,50 +945,56 @@ const UnitManagement = ({
 
     // Update the state with the new array
     setRowsPointEdit(updatedRows);
+    setDisabledFild(false);
+    setEditMeasurement(rowsPointEdit.length + 1);
   };
 
   const handleGatewayMeterThree = (e, row, index) => {
     const newValue = e.target.value;
     const updatedRows = [...rowsPointEdit];
-    updatedRows[index].point_id = newValue;
+    updatedRows[index].new_point_id = newValue;
     // Update the state with the new array
     setRowsPointEdit(updatedRows);
     setGatewayMeterThree(newValue);
   };
 
-  const handleGatewayMeterTwo = (e, row, index) => {
+  const handleGatewayMeterTwo = async (e, row, index) => {
     const newValue = e.target.value;
     // Create a copy of the existing rowsPointEdit array
     const updatedRows = [...rowsPointEdit];
     // Update the device_id of the specific row at the given index
-    updatedRows[index].device_id = newValue;
+    updatedRows[index].new_device_id = newValue;
     // Update the state with the new array
+    updatedRows[index].point_list = await getPointData(newValue);
     setRowsPointEdit(updatedRows);
-    getPointData(newValue);
-    // setGatewayMeterTwo(newValue);
+    // getPointData(newValue);
+    setGatewayMeterTwo(newValue);
   };
 
-  const handleGatewayMeter = (e, row, index) => {
+  const handleGatewayMeter = async (e, row, index) => {
     const newValue = e.target.value;
     // Create a copy of the existing rowsPointEdit array
     const updatedRows = [...rowsPointEdit];
     // Update the device_id of the specific row at the given index
-    updatedRows[index].gateway_id = newValue;
+    updatedRows[index].new_gateway_id = newValue;
     // Update the state with the new array
+    updatedRows[index].device_list = await getDevice(newValue);
     setRowsPointEdit(updatedRows);
-    getDevice(newValue);
-    // setGatewayMeter(newValue);
+    // getDevice(newValue);
+    setGatewayMeter(newValue);
   };
 
   const getDevice = async (id) => {
-    setIsLoading(true);
+    // setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.getDeviceData(id).then((response) => {
+      return await API.getDeviceData(id).then((response) => {
         const dataPayload = response.data;
-        console.log("dataPayload", dataPayload);
-        setDeviceData(dataPayload);
-        setIsLoading(false);
+        console.log("dataPayload====device", dataPayload);
+        // setDeviceData(dataPayload);
+        return dataPayload;
+        // setDeviceData(dataPayload);
+        // setIsLoading(false);
       });
     } catch (error) {
       console.log(error);
@@ -988,15 +1021,16 @@ const UnitManagement = ({
   };
 
   // get Points //
-  const getPointData = async (id) => {
-    setIsLoading(true);
+  const getPointData = async (id, type) => {
+    // setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.getPointData(id).then((response) => {
+      return await API.getPointData(id).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayload====Point", dataPayload);
-        setPointData(dataPayload);
-        setIsLoading(false);
+        // setPointData(dataPayload);
+        return dataPayload;
+        // setIsLoading(false);
       });
     } catch (error) {
       console.log(error);
@@ -1025,21 +1059,29 @@ const UnitManagement = ({
   // add unit point //
   const addUnitPoint = async () => {
     setIsLoading(true);
+    setOpen(false);
     try {
       let body = [];
       rowsPointEdit.length > 0 &&
-        rowsPointEdit.map((row) => {
-          const data = {
-            unit_id: isIdEdit,
-            gateway_id: row.gateway_id,
-            device_id: row.device_id,
-            point_id: row.point_id ? row.point_id : 0,
-          };
-          body.push(data);
+        rowsPointEdit.forEach((row) => {
+          // ตรวจสอบว่า row.new_point_id ไม่ซ้ำกับค่าใน body
+          const isUnique = !body.some(
+            (data) => data.point_id === row.new_point_id
+          );
+
+          if (row.new_point_id && isUnique) {
+            const data = {
+              unit_id: isIdEdit,
+              gateway_id: row.new_gateway_id,
+              device_id: row.new_device_id,
+              point_id: row.new_point_id,
+            };
+            body.push(data);
+          }
         });
       console.log("body====", body);
       await API.connectTokenAPI(token);
-      await API.unitPointRegister().then((response) => {
+      await API.unitPointRegister(body).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayload====Point", dataPayload, response);
         if (response.status === 200) {
@@ -1047,8 +1089,14 @@ const UnitManagement = ({
             icon: "success",
             confirmButtonText: "ตกลง",
             text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getUnitPointData(isIdEdit);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
           });
-          getUnitPointData(isIdEdit);
         }
         setIsLoading(false);
       });
@@ -1076,6 +1124,108 @@ const UnitManagement = ({
     }
   };
 
+  // delete row Edit //
+
+  const unitPointDelete = async (rowId) => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      await API.connectTokenAPI(token);
+      await API.unitPointDelete(rowId).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getUnitPointData(isIdEdit);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteMeasurement = (event, id) => {
+    setOpen(false);
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        unitPointDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  // edit row Edit //
+
+  const handleUpdateMeasurement = async (event, id) => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      let body = [];
+      const idToMatch = id; // Replace with the actual ID you want to match
+      const updatedRow = rowsPointEdit.find((row) => row.id === idToMatch);
+      const data = {
+        gateway_id: updatedRow.gateway_id,
+        device_id: updatedRow.device_id,
+        point_id: updatedRow.point_id,
+      };
+      body.push(data);
+      console.log("rowsPointEdit", rowsPointEdit, id, updatedRow);
+      console.log("body", body);
+      await API.connectTokenAPI(token);
+      await API.unitPointUpdate(id, body).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getUnitPointData(isIdEdit);
+              setOpen(true);
+              setEditMeasurement(null);
+              setDisabledFild(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditMeasurement = async (event, id) => {
+    setEditMeasurement(id);
+    setDisabledFild(false);
+  };
+
   const openPageFloorDetail = (event, id) => {
     // navigate("/buildingFloorDetail");
     navigate("/buildingFloorDetail", { state: { id: id } });
@@ -1085,28 +1235,28 @@ const UnitManagement = ({
     setOpenView(false);
   };
 
-    // Update visibleRows based on the searchQuery
-    const updateVisibleRows = (query) => {
-      if (query) {
-        const filteredRows = rows.filter((row) =>
-          Object.values(row).some(
-            (value) =>
-              typeof value === "string" &&
-              value.toLowerCase().includes(query.toLowerCase())
-          )
-        );
-        console.log("filteredRows", filteredRows);
-        setRows(filteredRows);
-      } else {
-        getUnitList(id);
-      }
-    };
-  
-    const handleSearchChange = (event) => {
-      const query = event.target.value;
-      setSearchQuery(query);
-      updateVisibleRows(query);
-    };
+  // Update visibleRows based on the searchQuery
+  const updateVisibleRows = (query) => {
+    if (query) {
+      const filteredRows = rows.filter((row) =>
+        Object.values(row).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+      console.log("filteredRows", filteredRows);
+      setRows(filteredRows);
+    } else {
+      getUnitList(id);
+    }
+  };
+
+  const handleSearchChange = (event) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+    updateVisibleRows(query);
+  };
 
   return (
     <Container className={classes.marginRow}>
@@ -1195,8 +1345,6 @@ const UnitManagement = ({
                     {visibleRows.map((row, index) => {
                       const isItemSelected = isSelected(row.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
-
-                      console.log("========>>>>?", row);
 
                       return (
                         <TableRow
@@ -1668,9 +1816,15 @@ const UnitManagement = ({
                                         : gatewayMeter
                                     }
                                     placeholder={"Energy Meter"}
-                                    onChange={(e) =>
-                                      handleGatewayMeter(e, row, index)
+                                    disabled={
+                                      !disabledFild &&
+                                      editMeasurement === row.id
+                                        ? false
+                                        : true
                                     }
+                                    onChange={(e) => {
+                                      handleGatewayMeter(e, row, index);
+                                    }}
                                   >
                                     <MenuItem value="none">Gateway</MenuItem>
                                     {gatewayData.length > 0 &&
@@ -1707,13 +1861,20 @@ const UnitManagement = ({
                                         : gatewayMeterTwo
                                     }
                                     placeholder={"Energy Meter"}
-                                    onChange={(e) =>
-                                      handleGatewayMeterTwo(e, row, index)
+                                    disabled={
+                                      !disabledFild &&
+                                      editMeasurement === row.id
+                                        ? false
+                                        : true
                                     }
+                                    onChange={(e) => {
+                                      handleGatewayMeterTwo(e, row, index);
+                                    }}
                                   >
                                     <MenuItem value="none">Device</MenuItem>
-                                    {deviceData.length > 0 &&
-                                      deviceData.map((item) => {
+                                    {row?.device_list?.length > 0 &&
+                                      row?.device_list.map((item) => {
+                                        console.log("item", item);
                                         return (
                                           <MenuItem
                                             key={item.id}
@@ -1746,13 +1907,19 @@ const UnitManagement = ({
                                         : gatewayMeterThree
                                     }
                                     placeholder={"Energy Meter"}
+                                    disabled={
+                                      !disabledFild &&
+                                      editMeasurement === row.id
+                                        ? false
+                                        : true
+                                    }
                                     onChange={(e) =>
                                       handleGatewayMeterThree(e, row, index)
                                     }
                                   >
                                     <MenuItem value="none">Point</MenuItem>
-                                    {pointData.length > 0 &&
-                                      pointData.map((item) => {
+                                    {row?.point_list?.length > 0 &&
+                                      row?.point_list.map((item) => {
                                         return (
                                           <MenuItem
                                             key={item.id}
@@ -1770,23 +1937,62 @@ const UnitManagement = ({
                               align="right"
                               className={classes.fontSixeCell}
                             >
-                              {row.action ? (
-                                <>
+                              {row.gateway_id ? (
+                                <Grid item className={classes.flexRow}>
+                                  {editMeasurement === row.id ? (
+                                    <>
+                                      <Typography
+                                        className={clsx(
+                                          // classes.fontSixeCell,
+                                          classes.paddingCol,
+                                          classes.cursor
+                                        )}
+                                        onClick={(event) =>
+                                          handleUpdateMeasurement(event, row.id)
+                                        }
+                                      >
+                                        {"save"}
+                                      </Typography>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Typography
+                                        className={clsx(
+                                          // classes.fontSixeCell,
+                                          classes.paddingCol,
+                                          classes.cursor
+                                        )}
+                                        onClick={(event) =>
+                                          handleEditMeasurement(event, row.id)
+                                        }
+                                      >
+                                        {"edit"}
+                                      </Typography>
+                                    </>
+                                  )}
+
                                   <Typography
                                     className={clsx(
-                                      classes.fontSixeCell,
-                                      classes.activeColor
+                                      // classes.fontSixeCell,
+                                      classes.activeColor,
+                                      classes.cursor
                                     )}
+                                    onClick={(event) =>
+                                      handleDeleteMeasurement(event, row.id)
+                                    }
                                   >
                                     {t("floor:delete")}
                                   </Typography>
-                                </>
+                                </Grid>
                               ) : (
                                 <Typography
                                   className={clsx(
-                                    classes.fontSixeCell,
+                                    // classes.fontSixeCell,
                                     classes.activeColor
                                   )}
+                                  onClick={(event) =>
+                                    handleDeleteMeasurement(event, row.id)
+                                  }
                                 >
                                   {t("floor:delete")}
                                 </Typography>
@@ -1824,7 +2030,9 @@ const UnitManagement = ({
                   >
                     <Grid item md={3}>
                       <Button
-                        // onClick={handleCloseAdd}
+                        onClick={(event) => {
+                          handleClickOpen(event, isIdEdit);
+                        }}
                         className={clsx(classes.backGroundCancel)}
                         variant="outlined"
                       >

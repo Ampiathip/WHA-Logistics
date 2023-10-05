@@ -162,12 +162,12 @@ const getAPI = () => {
       return tokenAPI.post(`/api/unit-point/add`, body);
     };
   
-    const unitPointUpdate = (id) => {
-      return tokenAPI.put(`/api/unit-point/update/${id}`);
+    const unitPointUpdate = (id, body) => {
+      return tokenAPI.put(`/api/unit-point/update/${id}`, body);
     };
   
     const unitPointDelete = (id = 0) => {
-      return tokenAPI.delete(`/api/unitpoints/${id}`);
+      return tokenAPI.delete(`/api/unit-point/remove/${id}`);
     };
 
   /* ============== Gateway API ================ */
@@ -338,8 +338,8 @@ const getAPI = () => {
     return tokenAPI.put(`/api/zone-unit/update`, body);
   };
 
-  const zoneUnitDelete = () => {
-    return tokenAPI.delete(`/api/zone-unit/remove`);
+  const zoneUnitDelete = (body) => {
+    return tokenAPI.delete(`/api/zone-unit/remove`, body);
   };
 
   return {
