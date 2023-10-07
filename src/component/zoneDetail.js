@@ -65,6 +65,7 @@ import {
   loading,
   checkToken,
   logout,
+  addZone,
 } from "../js/actions";
 import IconDelete from "../images/icon/Delete.svg";
 import IconDocument from "../images/icon/Document.svg";
@@ -403,7 +404,13 @@ const not = (a, b) => {
 };
 
 const intersection = (a, b) => {
-  return a.filter((value) => b.indexOf(value) !== -1);
+  // return a.filter((value) => b.indexOf(value.unit_info_id) !== -1);
+  return a;
+};
+
+const intersectionLeft = (a, b) => {
+  return a.filter((value) => b.indexOf(value.id) !== -1);
+  // return a;
 };
 
 const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
@@ -431,11 +438,14 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const [description, setDescription] = useState("");
   const [building, setBuilding] = useState("");
   const [zone, setZone] = useState("");
+  const [unitTypeSelect, setUnitTypeSelect] = useState("none");
+  const [billingId, setBillingId] = useState("");
 
   const dispatch = useDispatch();
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
   const token = useSelector((state) => state.token);
+  const setZoneData = useSelector((state) => state.zone);
   const theme = useTheme();
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -456,6 +466,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortedRows, setSortedRows] = useState(rows);
+  const [searchQueryBuilding, setSearchQueryBuilding] = useState("");
 
   const [rowsPointEdit, setRowsPointEdit] = useState([
     {
@@ -470,11 +481,12 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   ]);
 
   const [openAddZonePoint, setOpenAddZonePoint] = useState(false);
-  const [checked, setChecked] = React.useState([]);
-  const [left, setLeft] = React.useState([0, 1, 2, 3]);
-  const [right, setRight] = React.useState([4, 5, 6, 7]);
+  const [checked, setChecked] = useState([]);
+  const [checkedLeft, setCheckedLeft] = useState([]);
+  const [left, setLeft] = useState([]);
+  const [right, setRight] = useState([]);
 
-  const leftChecked = intersection(checked, left);
+  const leftChecked = intersectionLeft(checkedLeft, left);
   const rightChecked = intersection(checked, right);
 
   // console.log("ididid====", state, id);
@@ -490,8 +502,9 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     dispatch(checkToken());
     if (!_.isEmpty(token) && id !== null) {
       getZoneUnitData(id);
+      getUnitTypeList();
     }
-  }, [token]);
+  }, [token, setZoneData]);
 
   const getZoneUnitData = async (id) => {
     setIsLoading(true);
@@ -500,6 +513,11 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
       await API.getZoneUnitData(id).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayload", dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            setBillingId(item.building_id);
+          });
+        setRight(dataPayload);
         setRows(dataPayload);
         setIsLoading(false);
       });
@@ -527,17 +545,155 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     }
   };
 
+  // get uint building //
+  const zoneUnitBuilding = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.zoneUnitBuilding(id).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload====building", dataPayload);
+        const filteredData = dataPayload.filter(
+          (row) => !right.some((item) => item.unit_info_id === row.id)
+        );
+        console.log("=======>>>>", filteredData);
+        setLeft(filteredData);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  // get Unit Type //
+  const getUnitTypeList = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getUnitTypeList().then((response) => {
+        const dataPayload = response.data;
+        setUnitType(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const getUnitView = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getUnitView(id).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("==========View", item);
+            setUnitName(item.unit);
+            // setUnitNumber(item.unit);
+            setDescription(item.description);
+            setUnitTypeSelect(item.type_id);
+            setImagePreviewUrl(item.file);
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleValidate = (type) => {
+    let isValidate = true;
+    if (type === "edit") {
+      if (
+        _.isEmpty(unitNumber) ||
+        _.isEmpty(unitName) ||
+        _.isEmpty(description) ||
+        !unitTypeSelect ||
+        _.isEmpty(imagePreviewUrl)
+      ) {
+        isValidate = false;
+      }
+      setIsValidate(isValidate);
+    }
+
+    if (isValidate) {
+      if (type === "edit") {
+        unitUpdate(isIdEdit);
+      }
+    }
+  };
+
+  const unitUpdate = async (rowId) => {
+    setIsLoading(true);
+    let reader = new window.FileReader();
+    reader.readAsDataURL(file);
+    try {
+      reader.onload = async () => {
+        const base64File = reader.result;
+        const body = {
+          unit: unitName,
+          description: description,
+          type_id: unitTypeSelect,
+          file: base64File,
+          fileOld: "",
+        };
+        await API.connectTokenAPI(token);
+        await API.unitUpdate(rowId, body).then((response) => {
+          const dataPayload = response.data;
+          console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getZoneUnitData(id);
+            handleClose();
+          }
+          setIsLoading(false);
+        });
+      };
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      handleClose();
+      setIsLoading(false);
+    }
+  };
+
   const zoneUnitDelete = async (rowId) => {
     setIsLoading(true);
     try {
-      const body = [];
-      const data = {
-        id: rowId,
-      };
-      body.push(data);
-      console.log('body', body);
       await API.connectTokenAPI(token);
-      await API.zoneUnitDelete(body).then((response) => {
+      await API.unitDelete(rowId).then((response) => {
         const dataPayload = response.data;
         if (response.status === 200) {
           MySwal.fire({
@@ -574,12 +730,19 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     });
   };
 
-  const handleClickOpen = () => {
+  const handleClickOpen = (event, id) => {
     setOpen(true);
+    getUnitView(id);
+    setIsIdEdit(id);
+    setIsValidate(true);
   };
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleCloseView = () => {
+    setOpenView(false);
   };
 
   const handleRequestSort = (event, property) => {
@@ -703,6 +866,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
 
   const handleClickOpenAdd = () => {
     setOpenAddZonePoint(true);
+    zoneUnitBuilding(billingId);
   };
 
   const handleCloseZonePoint = () => {
@@ -713,10 +877,24 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     setOpenAdd(false);
   };
 
+  const handleOpenView = (event, id) => {
+    setOpenView(true);
+    getUnitView(id);
+  };
+
   const handleUploadFile = (e) => {
     // setFile(e.target.files[0]);
-    if (e.target.files.length > 0) {
-      setFile(URL.createObjectURL(e.target.files[0]));
+    e.preventDefault();
+    const fileTypeArray = ["image/png", "image/jpg", "image/jpeg"];
+    let reader = new window.FileReader();
+    let file = e.target.files[0];
+
+    if (fileTypeArray.includes(file.type)) {
+      reader.onloadend = () => {
+        setFile(file);
+        setImagePreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -779,6 +957,31 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     updateVisibleRows(query);
   };
 
+  // Update visibleRows based on the searchQuery
+  const updateVisibleRowsBuilding = (query) => {
+    setIsLoading(true);
+    if (query) {
+      const filteredRows = left.filter((row) =>
+        Object.values(row).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+      console.log("filteredRows", filteredRows);
+      setLeft(filteredRows);
+      setIsLoading(false);
+    } else {
+      zoneUnitBuilding(billingId);
+    }
+  };
+
+  const handleSearchChangeBuilding = (event) => {
+    const query = event.target.value;
+    setSearchQueryBuilding(query);
+    updateVisibleRowsBuilding(query);
+  };
+
   const handleToggle = (value) => () => {
     const currentIndex = checked.indexOf(value);
     const newChecked = [...checked];
@@ -792,6 +995,18 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     setChecked(newChecked);
   };
 
+  const handleToggleLeft = (value) => () => {
+    const currentIndex = checked.indexOf(value.id);
+    const newChecked = [...checked];
+
+    if (currentIndex === -1) {
+      newChecked.push(value);
+    } else {
+      newChecked.splice(currentIndex, 1);
+    }
+    setCheckedLeft(newChecked);
+  };
+
   const handleAllRight = () => {
     setRight(right.concat(left));
     setLeft([]);
@@ -800,13 +1015,14 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const handleCheckedRight = () => {
     setRight(right.concat(leftChecked));
     setLeft(not(left, leftChecked));
-    setChecked(not(checked, leftChecked));
+    setCheckedLeft(not(checkedLeft, leftChecked));
   };
 
   const handleCheckedLeft = () => {
     setLeft(left.concat(rightChecked));
     setRight(not(right, rightChecked));
     setChecked(not(checked, rightChecked));
+    handleCheckedDeleteData(rightChecked);
   };
 
   const handleAllLeft = () => {
@@ -814,22 +1030,131 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     setRight([]);
   };
 
+  const zoneUnitCheckedDelete = async (rowId) => {
+    setIsLoading(true);
+    try {
+      let body = [];
+      rowId.map((value) => {
+        const data = {
+          id: value,
+        };
+        console.log('data====', data);
+        body.push(data);
+      });
+      console.log("8888888=======", body);
+      API.connectTokenAPI(token);
+      await API.zoneUnitDelete(body).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          });
+          zoneUnitBuilding(billingId);
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+  // delete Data //
+  const handleCheckedDeleteData = (id) => {
+    setOpenAddZonePoint(false);
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        zoneUnitCheckedDelete(id);
+        setOpenAddZonePoint(true);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  const handleSaveZonePoint = async () => {
+    setOpenAddZonePoint(false);
+    setIsLoading(true);
+    try {
+      let body = [];
+      checkedLeft.map((value) => {
+        const data = {
+          zone_id: id,
+          unit_id: value,
+        };
+        body.push(data);
+      });
+      console.log("checkedLeft", checkedLeft, body);
+      API.connectTokenAPI(token);
+      await API.zoneUnitRegister(body).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload====Point", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getZoneUnitData(id);
+              setOpenAddZonePoint(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
   const customList = (items) => (
     <Paper sx={{ width: "100%", height: "100%", overflow: "auto" }}>
       <List dense component="div" role="list">
         {items.map((value) => {
-          const labelId = `transfer-list-item-${value}-label`;
+          const labelId = `transfer-list-item-${value.zone_unit_id}-label`;
 
           return (
             <ListItem
-              key={value}
+              key={value.zone_unit_id}
               role="listitem"
               button
-              onClick={handleToggle(value)}
+              onClick={handleToggle(value.unit_info_id)}
             >
               <ListItemIcon>
                 <Checkbox
-                  checked={checked.indexOf(value) !== -1}
+                  checked={checked.indexOf(value.unit_info_id) !== -1}
                   tabIndex={-1}
                   disableRipple
                   inputProps={{
@@ -837,7 +1162,39 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                   }}
                 />
               </ListItemIcon>
-              <ListItemText id={labelId} primary={`List item ${value + 1}`} />
+              <ListItemText id={labelId} primary={value.unit} />
+            </ListItem>
+          );
+        })}
+      </List>
+    </Paper>
+  );
+
+  const customListLeft = (items) => (
+    <Paper sx={{ width: "100%", height: "100%", overflow: "auto" }}>
+      <List dense component="div" role="list">
+        {items.map((value) => {
+          const labelId = `transfer-list-item-${value.id}-label`;
+
+          return (
+            <ListItem
+              key={value.id}
+              role="listitem"
+              button
+              onClick={handleToggleLeft(value.id)}
+            >
+              <ListItemIcon>
+                <Checkbox
+                  checked={checkedLeft.indexOf(value.id) !== -1}
+                  // checked={checkedLeft.map((items) => items.id)}
+                  tabIndex={-1}
+                  disableRipple
+                  inputProps={{
+                    "aria-labelledby": labelId,
+                  }}
+                />
+              </ListItemIcon>
+              <ListItemText id={labelId} primary={value.unit} />
             </ListItem>
           );
         })}
@@ -941,7 +1298,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                 className={clsx(classes.backGroundConfrim, classes.width)}
                 variant="outlined"
               >
-                {t("floor:btnAddUnit")}
+                {t("floor:btnAddUnitZone")}
               </Button>
             </Grid>
           </Grid>
@@ -965,21 +1322,19 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                     classes={classes}
                   />
                   <TableBody>
-                    {rows.map((row, index) => {
-                      const isItemSelected = isSelected(row.name);
+                    {rows.map((rowItem, index) => {
+                      const isItemSelected = isSelected(rowItem.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
-
-                      console.log("0000000========", row);
 
                       return (
                         <TableRow
                           hover
-                          onClick={(event) => handleClick(event, row.name)}
+                          onClick={(event) => handleClick(event, rowItem.name)}
                           role="checkbox"
-                          aria-checked={isItemSelected}
-                          tabIndex={-1}
-                          key={row.name}
-                          selected={isItemSelected}
+                          // aria-checked={isItemSelected}
+                          // tabIndex={-1}
+                          key={rowItem.zone_unit_id}
+                          // selected={isItemSelected}
                           sx={{ cursor: "pointer" }}
                         >
                           {/* <TableCell padding="checkbox">
@@ -999,43 +1354,43 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                             className={classes.fontSixeCell}
                             align="center"
                           >
-                            {row.unit_info_id}
+                            {rowItem.unit_info_id}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.unit}
+                            {rowItem.unit}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.description}
+                            {rowItem.description}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.type_id}
+                            {rowItem.type_id}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.building_name}
+                            {rowItem.building_name}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_point}
+                            {rowItem.no_of_point}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_point}
+                            {rowItem.no_of_point}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1056,23 +1411,23 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                             <img
                               src={IconShow}
                               alt="IconShow"
-                              // onClick={(event) => {
-                              //   handleClickOpenView(event, row.id);
-                              // }}
+                              onClick={(event) => {
+                                handleOpenView(event, rowItem.unit_info_id);
+                              }}
                             />
 
                             <img
                               src={IconSetting}
                               alt="IconSetting"
-                              // onClick={(event) => {
-                              //   handleClickOpen(event, row.id);
-                              // }}
+                              onClick={(event) => {
+                                handleClickOpen(event, rowItem.unit_info_id);
+                              }}
                             />
                             <img
                               src={IconDelete}
                               alt="IconDelete"
                               onClick={(event) => {
-                                handleClickDeleteData(event, row.zone_unit_id);
+                                handleClickDeleteData(event, rowItem.unit_info_id);
                               }}
                             />
                           </TableCell>
@@ -1098,7 +1453,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
 
       {/* Modal Edit*/}
       <Dialog
-        fullScreen={fullScreenEdit}
+        fullScreen={fullScreen}
         // className={classes.modalWidth}
         open={open}
         onClose={handleClose}
@@ -1112,9 +1467,6 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
             <Grid item md={6}>
               <Typography variant="h3">{t("floor:description")}</Typography>
             </Grid>
-            <Grid item md={6}>
-              <Typography variant="h3">{t("floor:measurement")}</Typography>
-            </Grid>
           </Grid>
         </DialogTitle>
         <DialogContent>
@@ -1123,7 +1475,310 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
               <CircularProgress color="primary" />
             </Box>
           ) : (
-            <></>
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRow, classes.alignItem)}
+              >
+                <Grid item md={3}>
+                  <Typography variant="body2">{t("floor:shopLogo")}</Typography>
+                </Grid>
+                <Grid item md={6}>
+                  <input
+                    className={classes.input}
+                    id={"contained-button-file"}
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf,image/tiff"
+                    // multiple={isMultiple}
+                    onChange={handleUploadFile}
+                    onClick={(e) => {
+                      console.log("aaaaa");
+                    }}
+                  />
+                  <label
+                    htmlFor={"contained-button-file"}
+                    className={clsx(
+                      classes.flexRow,
+                      classes.justContentCenter,
+                      classes.width
+                    )}
+                  >
+                    <Card
+                      variant="outlined"
+                      style={{ width: 200, height: 200 }}
+                      className={clsx(classes.boxUpload)}
+                    >
+                      {imagePreviewUrl ? (
+                        <img
+                          src={imagePreviewUrl}
+                          alt="img-upload"
+                          className={classes.imgWidth}
+                        />
+                      ) : (
+                        <CardContent
+                          className={clsx(
+                            classes.textCenter,
+                            classes.marginTopBox
+                          )}
+                        >
+                          <Typography> +</Typography>
+                          <Typography> upload</Typography>
+                        </CardContent>
+                      )}
+                    </Card>
+                  </label>
+                </Grid>
+                {_.isEmpty(imagePreviewUrl) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="pb-3">
+                  {t("floor:unitNumber")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("floor:unitNumber")}
+                  fullWidth
+                  variant="outlined"
+                  value={unitNumber}
+                  onChange={handleUnitNumber}
+                  error={_.isEmpty(unitNumber) && !isValidate}
+                />
+                {_.isEmpty(unitNumber) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("floor:unitName")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("floor:unitName")}
+                  fullWidth
+                  variant="outlined"
+                  value={unitName}
+                  onChange={handleUnitName}
+                  error={_.isEmpty(unitName) && !isValidate}
+                />
+                {_.isEmpty(unitName) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("floor:description")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("floor:description")}
+                  fullWidth
+                  variant="outlined"
+                  value={description}
+                  onChange={handleDescription}
+                  error={_.isEmpty(unitName) && !isValidate}
+                />
+                {_.isEmpty(unitName) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("floor:unitType")}
+                </Typography>
+                <FormControl variant="outlined" size="small" fullWidth>
+                  <Select
+                    labelId="demo-select-small-label"
+                    // id="demo-select-small"
+                    value={unitType.length > 0 ? unitTypeSelect : "none"}
+                    placeholder={t("floor:unitType")}
+                    onChange={handleUnitType}
+                    error={unitTypeSelect === "none" && !isValidate}
+                  >
+                    <MenuItem value="none">{t("floor:unitType")}</MenuItem>
+                    {unitType.length > 0 &&
+                      unitType.map((item) => {
+                        return (
+                          <MenuItem
+                            id={"selectCommunication-" + item.id}
+                            key={item.id}
+                            value={item.id}
+                          >
+                            {item.type}
+                          </MenuItem>
+                        );
+                      })}
+                  </Select>
+                </FormControl>
+                {unitTypeSelect === "none" && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="h3" className="mt-3 pb-3">
+                  {t("floor:building")}
+                </Typography>
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("floor:building")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("floor:building")}
+                  fullWidth
+                  variant="outlined"
+                  value={building}
+                  onChange={handleBuilding}
+                />
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("floor:floor")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("floor:floor")}
+                  fullWidth
+                  variant="outlined"
+                  value={floorName}
+                  onChange={handleFloorName}
+                />
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("floor:zone")}
+                </Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  placeholder={t("floor:zone")}
+                  fullWidth
+                  variant="outlined"
+                  value={zone}
+                  onChange={handleZone}
+                />
+              </Grid>
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+              >
+                <Grid item md={3}>
+                  <Button
+                    // onClick={handleCloseAdd}
+                    className={clsx(classes.backGroundCancel)}
+                    variant="outlined"
+                  >
+                    {t("gateway:btnRefresh")}
+                  </Button>
+                </Grid>
+                <Grid item md={3} className={classes.boxMargin}>
+                  <Button
+                    className={clsx(classes.backGroundConfrim)}
+                    variant="outlined"
+                    onClick={() => handleValidate("edit")}
+                  >
+                    {t("gateway:btnSave")}
+                  </Button>
+                </Grid>
+              </Grid>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal View */}
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openView}
+        onClose={handleCloseView}
+        aria-labelledby="responsive-dialog-title-view"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle
+          id="responsive-dialog-title-view"
+          className={clsx(
+            classes.flexRow,
+            classes.justContent,
+            classes.borderBottom
+          )}
+        >
+          <Typography variant="h3">{unitName}</Typography>
+          <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
+        </DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(
+                  classes.alignItem,
+                  classes.marginRow,
+                  classes.flexRow
+                )}
+              >
+                <Grid item md={3} className={classes.borderImg}>
+                  <img
+                    src={imagePreviewUrl}
+                    alt="img-test"
+                    className={classes.imgWidth}
+                  />
+                </Grid>
+                <Grid item md={9}>
+                  <Grid
+                    item
+                    className={clsx(classes.boxMargin, classes.marginRow)}
+                  >
+                    <Typography variant="h5">
+                      {unitName ? unitName : "-"}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:unitNumber")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {unitNumber ? unitNumber : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:description")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {description ? description : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:unitType")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {unitTypeSelect ? unitTypeSelect : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </>
           )}
         </DialogContent>
       </Dialog>
@@ -1154,106 +1809,115 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
           </Grid>
         </DialogTitle>
         <DialogContent>
-          <Grid
-            container
-            spacing={2}
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Grid item md={12} className={classes.marginRow}>
-              <Grid item md={5}>
-                <TextField
-                  // id="input-with-icon-textfield"
-                  size="small"
-                  placeholder="Search by Unit"
-                  fullWidth
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchOutlinedIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                  variant="outlined"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                container
+                spacing={2}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Grid item md={12} className={classes.marginRow}>
+                  <Grid item md={5}>
+                    <TextField
+                      // id="input-with-icon-textfield"
+                      size="small"
+                      placeholder="Search by Unit"
+                      fullWidth
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchOutlinedIcon />
+                          </InputAdornment>
+                        ),
+                      }}
+                      variant="outlined"
+                      value={searchQueryBuilding}
+                      onChange={handleSearchChangeBuilding}
+                    />
+                  </Grid>
+                </Grid>
+                <Grid item md={5}>
+                  {customListLeft(left)}
+                </Grid>
+                <Grid item>
+                  <Grid container direction="column" alignItems="center">
+                    <Button
+                      sx={{ my: 0.5 }}
+                      variant="outlined"
+                      size="small"
+                      onClick={handleAllRight}
+                      disabled={left.length === 0}
+                      aria-label="move all right"
+                    >
+                      ≫
+                    </Button>
+                    <Button
+                      sx={{ my: 0.5 }}
+                      variant="outlined"
+                      size="small"
+                      onClick={handleCheckedRight}
+                      disabled={leftChecked.length === 0}
+                      aria-label="move selected right"
+                    >
+                      &gt;
+                    </Button>
+                    <Button
+                      sx={{ my: 0.5 }}
+                      variant="outlined"
+                      size="small"
+                      onClick={handleCheckedLeft}
+                      disabled={rightChecked.length === 0}
+                      aria-label="move selected left"
+                    >
+                      &lt;
+                    </Button>
+                    <Button
+                      sx={{ my: 0.5 }}
+                      variant="outlined"
+                      size="small"
+                      onClick={handleAllLeft}
+                      disabled={right.length === 0}
+                      aria-label="move all left"
+                    >
+                      ≪
+                    </Button>
+                  </Grid>
+                </Grid>
+                <Grid item md={5}>
+                  {customList(right)}
+                </Grid>
+                <Grid
+                  item
+                  md={12}
+                  className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+                >
+                  <Grid item md={3}>
+                    <Button
+                      onClick={handleCloseZonePoint}
+                      className={clsx(classes.backGroundCancel)}
+                      variant="outlined"
+                    >
+                      {t("gateway:btnCancel")}
+                    </Button>
+                  </Grid>
+                  <Grid item md={3} className={classes.boxMargin}>
+                    <Button
+                      onClick={handleSaveZonePoint}
+                      className={clsx(classes.backGroundConfrim)}
+                      variant="outlined"
+                    >
+                      {t("gateway:btnSave")}
+                    </Button>
+                  </Grid>
+                </Grid>
               </Grid>
-            </Grid>
-            <Grid item md={5}>
-              {customList(left)}
-            </Grid>
-            <Grid item>
-              <Grid container direction="column" alignItems="center">
-                <Button
-                  sx={{ my: 0.5 }}
-                  variant="outlined"
-                  size="small"
-                  onClick={handleAllRight}
-                  disabled={left.length === 0}
-                  aria-label="move all right"
-                >
-                  ≫
-                </Button>
-                <Button
-                  sx={{ my: 0.5 }}
-                  variant="outlined"
-                  size="small"
-                  onClick={handleCheckedRight}
-                  disabled={leftChecked.length === 0}
-                  aria-label="move selected right"
-                >
-                  &gt;
-                </Button>
-                <Button
-                  sx={{ my: 0.5 }}
-                  variant="outlined"
-                  size="small"
-                  onClick={handleCheckedLeft}
-                  disabled={rightChecked.length === 0}
-                  aria-label="move selected left"
-                >
-                  &lt;
-                </Button>
-                <Button
-                  sx={{ my: 0.5 }}
-                  variant="outlined"
-                  size="small"
-                  onClick={handleAllLeft}
-                  disabled={right.length === 0}
-                  aria-label="move all left"
-                >
-                  ≪
-                </Button>
-              </Grid>
-            </Grid>
-            <Grid item md={5}>
-              {customList(right)}
-            </Grid>
-            <Grid
-              item
-              md={12}
-              className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-            >
-              <Grid item md={3}>
-                <Button
-                  onClick={handleCloseZonePoint}
-                  className={clsx(classes.backGroundCancel)}
-                  variant="outlined"
-                >
-                  {t("gateway:btnCancel")}
-                </Button>
-              </Grid>
-              <Grid item md={3} className={classes.boxMargin}>
-                <Button
-                  className={clsx(classes.backGroundConfrim)}
-                  variant="outlined"
-                >
-                  {t("gateway:btnSave")}
-                </Button>
-              </Grid>
-            </Grid>
-          </Grid>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </Container>
@@ -1264,6 +1928,7 @@ const mapStateToProps = (state) => {
   return {
     login: state.login,
     token: state.token,
+    zone: state.zone,
   };
 };
 

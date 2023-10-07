@@ -342,6 +342,10 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/zone-unit/remove`, body);
   };
 
+  const zoneUnitBuilding = (id) => {
+    return tokenAPI.get(`/api/unit-building/list/${id}`);
+  };
+
   return {
     connectTokenAPI,
 
@@ -426,6 +430,8 @@ const getAPI = () => {
     zoneUnitRegister,
     zoneUnitUpdate,
     zoneUnitDelete,
+
+    zoneUnitBuilding,
     
   };
 };

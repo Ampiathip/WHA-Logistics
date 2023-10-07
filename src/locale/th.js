@@ -152,6 +152,7 @@ let th = {
       "unitLogo": "Unit Logo",
       "device": "*Device",
       "point": "*Point",
+      "btnAddUnitZone": "Add Zone Unit",
     },
     gateway: {
       "search": "Search by Gateway name",

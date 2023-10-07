@@ -456,8 +456,8 @@ const UnitManagement = ({
   const [gatewayDataSelect, setGatewayDataSelect] = useState("");
   const [deviceDataSelect, setDeviceDataSelect] = useState("");
   const [pointDataSelect, setPointDataSelect] = useState("");
-  const [editMeasurement, setEditMeasurement] = useState(null);
-  const [disabledFild, setDisabledFild] = useState(null);
+  // const [editMeasurement, setEditMeasurement] = useState(null);
+  // const [disabledFild, setDisabledFild] = useState(null);
 
   // console.log("ididid====", state, id);
   const swalFire = (msg) => {
@@ -752,42 +752,70 @@ const UnitManagement = ({
     });
   };
 
+  // const getUnitPointData = async (id) => {
+  //   setIsLoading(true);
+  //   try {
+  //     await API.connectTokenAPI(token);
+  //     await API.getUnitPointData(id).then(async (response) => {
+  //       let dataPayload = response?.data;
+  //       dataPayload.forEach(async (item) => {
+  //         item.device_list = await getDevice(item.gateway_id);
+  //         item.point_list = await getPointData(item.device_id);
+  //         // setDeviceData(await getDevice(item.gateway_id));
+  //         // setPointData(await getPointData(item.device_id));
+  //       });
+  //       // dataPayload.length > 0
+  //       //   ? (dataPayload = await dataPayload.map(async (item) => {
+  //       //       console.log("==========UnitPoint", item);
+  //       //       // let device = [];
+  //       //       item.device_list = await getDevice(item.gateway_id);
+  //       //       // item.device_list = [1,2,3];
+  //       //       return item;
+  //       //       // getPointData(item.device_id);
+  //       //       // setGatewayDataSelect(item.gateway_id);
+  //       //       // setDeviceDataSelect(item.device_id);
+  //       //       // setPointDataSelect(item.point_id);
+  //       //       // console.log("deviceDataSelect", deviceDataSelect);
+  //       //     }))
+  //       //   : (dataPayload = []);
+  //       console.log("dataPayload", response, dataPayload);
+  //       setRowsPointEdit(dataPayload);
+  //       setIsLoading(false);
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //     const response = error.response;
+  //     swalFire(response?.data);
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const getUnitPointData = async (id) => {
-    setIsLoading(true);
+    // setIsLoading(true);
+    let list = [];
     try {
-      await API.connectTokenAPI(token);
+      API.connectTokenAPI(token);
       await API.getUnitPointData(id).then(async (response) => {
         let dataPayload = response?.data;
-         dataPayload.forEach(async (item) => {
+        dataPayload.forEach(async (item) => {
           item.device_list = await getDevice(item.gateway_id);
           item.point_list = await getPointData(item.device_id);
           // setDeviceData(await getDevice(item.gateway_id));
           // setPointData(await getPointData(item.device_id));
         });
-        // dataPayload.length > 0
-        //   ? (dataPayload = await dataPayload.map(async (item) => {
-        //       console.log("==========UnitPoint", item);
-        //       // let device = [];
-        //       item.device_list = await getDevice(item.gateway_id);
-        //       // item.device_list = [1,2,3];
-        //       return item;
-        //       // getPointData(item.device_id);
-        //       // setGatewayDataSelect(item.gateway_id);
-        //       // setDeviceDataSelect(item.device_id);
-        //       // setPointDataSelect(item.point_id);
-        //       // console.log("deviceDataSelect", deviceDataSelect);
-        //     }))
-        //   : (dataPayload = []);
         console.log("dataPayload", response, dataPayload);
-        setRowsPointEdit(dataPayload);
-        setIsLoading(false);
+        // setRowsPointEdit(dataPayload);
+        // setIsLoading(false);
+        list = dataPayload;
       });
     } catch (error) {
       console.log(error);
-      const response = error.response;
-      swalFire(response?.data);
-      setIsLoading(false);
+      return error.response;
+      // const response = error.response;
+      // swalFire(response?.data);
+      // setIsLoading(false);
     }
+    return list;
   };
 
   const handleClickOpen = async (event, id) => {
@@ -795,9 +823,25 @@ const UnitManagement = ({
     getUnitView(id);
     setIsIdEdit(id);
     setIsValidate(true);
-    await getUnitPointData(id);
-    setDisabledFild(true);
-    setEditMeasurement(null);
+    const data = await getUnitPointData(id);
+    setRowsPointEdit(data);
+    // setDisabledFild(true);
+    // setEditMeasurement(null);
+  };
+
+  const getUpdateData = async (id) => {
+    const data = await getUnitPointData(id);
+    setRowsPointEdit(data);
+  };
+
+  const getUpdateRow = async (id, index, rowId) => {
+    const data = await getUnitPointData(id);
+    const foundData = data.find((f) => f.id === rowId);;
+    const updatedRows = [...rowsPointEdit];
+    updatedRows[index] = foundData;
+    console.log('foundData', foundData);
+    // Update the state with the new array
+    setRowsPointEdit(updatedRows);
   };
 
   const handleClose = () => {
@@ -929,13 +973,14 @@ const UnitManagement = ({
   // add row Edit //
   const addNewRow = () => {
     const newRow = {
-      id: rowsPointEdit.length + 1,
+      id: null,
       unit_id: "",
-      new_gateway_id: "none",
-      new_device_id: "none",
-      new_point_id: "none",
+      gateway_id: null,
+      device_id: null,
+      point_id: null,
       device_list: [],
       point_list: [],
+      isEdit: true,
     };
     // Create a copy of the existing rowsPointEdit array
     const updatedRows = [...rowsPointEdit];
@@ -945,14 +990,14 @@ const UnitManagement = ({
 
     // Update the state with the new array
     setRowsPointEdit(updatedRows);
-    setDisabledFild(false);
-    setEditMeasurement(rowsPointEdit.length + 1);
+    // setDisabledFild(false);
+    // setEditMeasurement();
   };
 
   const handleGatewayMeterThree = (e, row, index) => {
     const newValue = e.target.value;
     const updatedRows = [...rowsPointEdit];
-    updatedRows[index].new_point_id = newValue;
+    updatedRows[index].point_id = newValue;
     // Update the state with the new array
     setRowsPointEdit(updatedRows);
     setGatewayMeterThree(newValue);
@@ -963,7 +1008,7 @@ const UnitManagement = ({
     // Create a copy of the existing rowsPointEdit array
     const updatedRows = [...rowsPointEdit];
     // Update the device_id of the specific row at the given index
-    updatedRows[index].new_device_id = newValue;
+    updatedRows[index].device_id = newValue;
     // Update the state with the new array
     updatedRows[index].point_list = await getPointData(newValue);
     setRowsPointEdit(updatedRows);
@@ -976,7 +1021,7 @@ const UnitManagement = ({
     // Create a copy of the existing rowsPointEdit array
     const updatedRows = [...rowsPointEdit];
     // Update the device_id of the specific row at the given index
-    updatedRows[index].new_gateway_id = newValue;
+    updatedRows[index].gateway_id = newValue;
     // Update the state with the new array
     updatedRows[index].device_list = await getDevice(newValue);
     setRowsPointEdit(updatedRows);
@@ -1065,22 +1110,22 @@ const UnitManagement = ({
       rowsPointEdit.length > 0 &&
         rowsPointEdit.forEach((row) => {
           // ตรวจสอบว่า row.new_point_id ไม่ซ้ำกับค่าใน body
-          const isUnique = !body.some(
-            (data) => data.point_id === row.new_point_id
-          );
+          // const isUnique = !body.some(
+          //   (data) => row.id === null
+          // );
 
-          if (row.new_point_id && isUnique) {
+          if (!row.id) {
             const data = {
               unit_id: isIdEdit,
-              gateway_id: row.new_gateway_id,
-              device_id: row.new_device_id,
-              point_id: row.new_point_id,
+              gateway_id: row.gateway_id,
+              device_id: row.device_id,
+              point_id: row.point_id,
             };
             body.push(data);
           }
         });
       console.log("body====", body);
-      await API.connectTokenAPI(token);
+      API.connectTokenAPI(token);
       await API.unitPointRegister(body).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayload====Point", dataPayload, response);
@@ -1091,7 +1136,7 @@ const UnitManagement = ({
             text: dataPayload,
           }).then((result) => {
             if (result.isConfirmed) {
-              getUnitPointData(isIdEdit);
+              getUpdateData(isIdEdit);
               setOpen(true);
             } else if (result.isDismissed) {
               setIsLoading(false);
@@ -1140,7 +1185,7 @@ const UnitManagement = ({
             text: dataPayload,
           }).then((result) => {
             if (result.isConfirmed) {
-              getUnitPointData(isIdEdit);
+              getUpdateData(isIdEdit);
               setOpen(true);
             } else if (result.isDismissed) {
               setIsLoading(false);
@@ -1177,23 +1222,23 @@ const UnitManagement = ({
 
   // edit row Edit //
 
-  const handleUpdateMeasurement = async (event, id) => {
+  const handleUpdateMeasurement = async (event, row, index) => {
     setIsLoading(true);
     setOpen(false);
     try {
       let body = [];
-      const idToMatch = id; // Replace with the actual ID you want to match
-      const updatedRow = rowsPointEdit.find((row) => row.id === idToMatch);
+      // const idToMatch = row.id; // Replace with the actual ID you want to match
+      // const updatedRow = rowsPointEdit.find((item) => item.id === idToMatch);
       const data = {
-        gateway_id: updatedRow.gateway_id,
-        device_id: updatedRow.device_id,
-        point_id: updatedRow.point_id,
+        gateway_id: row.gateway_id,
+        device_id: row.device_id,
+        point_id: row.point_id,
       };
       body.push(data);
-      console.log("rowsPointEdit", rowsPointEdit, id, updatedRow);
+      console.log("rowsPointEdit", row);
       console.log("body", body);
       await API.connectTokenAPI(token);
-      await API.unitPointUpdate(id, body).then((response) => {
+      await API.unitPointUpdate(row.id, body).then((response) => {
         const dataPayload = response.data;
         if (response.status === 200) {
           MySwal.fire({
@@ -1202,10 +1247,9 @@ const UnitManagement = ({
             text: dataPayload,
           }).then((result) => {
             if (result.isConfirmed) {
-              getUnitPointData(isIdEdit);
+              getUpdateRow(isIdEdit, index, row.id);
               setOpen(true);
-              setEditMeasurement(null);
-              setDisabledFild(true);
+              handleEditMeasurement(row, index, false)
             } else if (result.isDismissed) {
               setIsLoading(false);
             }
@@ -1221,9 +1265,12 @@ const UnitManagement = ({
     }
   };
 
-  const handleEditMeasurement = async (event, id) => {
-    setEditMeasurement(id);
-    setDisabledFild(false);
+  const handleEditMeasurement = async (row, index, isEdit = true) => {
+    const updatedRows = [...rowsPointEdit];
+    // Update the device_id of the specific row at the given index
+    updatedRows[index].isEdit = isEdit;
+    // Update the state with the new array
+    setRowsPointEdit(updatedRows);
   };
 
   const openPageFloorDetail = (event, id) => {
@@ -1342,18 +1389,18 @@ const UnitManagement = ({
                     classes={classes}
                   />
                   <TableBody>
-                    {visibleRows.map((row, index) => {
-                      const isItemSelected = isSelected(row.name);
+                    {visibleRows.map((rowItem, index) => {
+                      const isItemSelected = isSelected(rowItem.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
 
                       return (
                         <TableRow
                           hover
-                          onClick={(event) => handleClick(event, row.name)}
+                          onClick={(event) => handleClick(event, rowItem.name)}
                           role="checkbox"
                           // aria-checked={isItemSelected}
                           tabIndex={-1}
-                          key={row.name}
+                          key={rowItem.id}
                           // selected={isItemSelected}
                           sx={{ cursor: "pointer" }}
                         >
@@ -1374,19 +1421,19 @@ const UnitManagement = ({
                             className={classes.fontSixeCell}
                             align="center"
                           >
-                            {row.id}
+                            {rowItem.id}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.unit}
+                            {rowItem.unit}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.description}
+                            {rowItem.description}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1395,25 +1442,25 @@ const UnitManagement = ({
                             {/* {row.type_id
                               ? unitType.find((f) => f.id === row.type_id).type
                               : ""} */}
-                            {row.type_id}
+                            {rowItem.type_id}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.building_name}
+                            {rowItem.building_name}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_point}
+                            {rowItem.no_of_point}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_point}
+                            {rowItem.no_of_point}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1431,7 +1478,7 @@ const UnitManagement = ({
                               src={IconShow}
                               alt="IconShow"
                               onClick={(event) => {
-                                handleOpenView(event, row.id);
+                                handleOpenView(event, rowItem.id);
                               }}
                             />
 
@@ -1439,14 +1486,14 @@ const UnitManagement = ({
                               src={IconSetting}
                               alt="IconSetting"
                               onClick={(event) => {
-                                handleClickOpen(event, row.id);
+                                handleClickOpen(event, rowItem.id);
                               }}
                             />
                             <img
                               src={IconDelete}
                               alt="IconDelete"
                               onClick={(event) => {
-                                handleClickDeleteData(event, row.id);
+                                handleClickDeleteData(event, rowItem.id);
                               }}
                             />
                           </TableCell>
@@ -1716,7 +1763,7 @@ const UnitManagement = ({
                   >
                     <Grid item md={3}>
                       <Button
-                        // onClick={handleCloseAdd}
+                        onClick={handleClose}
                         className={clsx(classes.backGroundCancel)}
                         variant="outlined"
                       >
@@ -1807,38 +1854,49 @@ const UnitManagement = ({
                                   size="small"
                                   fullWidth
                                 >
-                                  <Select
-                                    labelId="demo-select-small-label"
-                                    id="demo-select-small"
-                                    value={
-                                      row.gateway_id
-                                        ? row.gateway_id
-                                        : gatewayMeter
-                                    }
-                                    placeholder={"Energy Meter"}
-                                    disabled={
-                                      !disabledFild &&
-                                      editMeasurement === row.id
-                                        ? false
-                                        : true
-                                    }
-                                    onChange={(e) => {
-                                      handleGatewayMeter(e, row, index);
-                                    }}
-                                  >
-                                    <MenuItem value="none">Gateway</MenuItem>
-                                    {gatewayData.length > 0 &&
-                                      gatewayData.map((item) => {
-                                        return (
-                                          <MenuItem
-                                            key={item.id}
-                                            value={item.id}
-                                          >
-                                            {item.name}
-                                          </MenuItem>
-                                        );
-                                      })}
-                                  </Select>
+                                  {row.isEdit ? (
+                                    <Select
+                                      labelId="demo-select-small-label"
+                                      id="demo-select-small"
+                                      value={
+                                        row.gateway_id
+                                          // ? row.gateway_id
+                                          // : gatewayMeter
+                                      }
+                                      placeholder={"Energy Meter"}
+                                      // disabled={
+                                      //   !disabledFild &&
+                                      //   editMeasurement === row.id
+                                      //     ? false
+                                      //     : true
+                                      // }
+                                      onChange={(e) => {
+                                        handleGatewayMeter(e, row, index);
+                                      }}
+                                    >
+                                      <MenuItem value="none">Gateway</MenuItem>
+                                      {gatewayData.length > 0 &&
+                                        gatewayData.map((item) => {
+                                          return (
+                                            <MenuItem
+                                              key={item.id}
+                                              value={item.id}
+                                            >
+                                              {item.name}
+                                            </MenuItem>
+                                          );
+                                        })}
+                                    </Select>
+                                  ) : (
+                                    <TextField
+                                      // id="input-with-icon-textfield"
+                                      size="small"
+                                      fullWidth
+                                      variant="outlined"
+                                      value={row.gateway_name}
+                                      disabled={true}
+                                    />
+                                  )}
                                 </FormControl>
                               </Grid>
                             </TableCell>
@@ -1852,39 +1910,50 @@ const UnitManagement = ({
                                   size="small"
                                   fullWidth
                                 >
-                                  <Select
-                                    labelId="demo-select-small-label"
-                                    id="demo-select-small"
-                                    value={
-                                      row.device_id
-                                        ? row.device_id
-                                        : gatewayMeterTwo
-                                    }
-                                    placeholder={"Energy Meter"}
-                                    disabled={
-                                      !disabledFild &&
-                                      editMeasurement === row.id
-                                        ? false
-                                        : true
-                                    }
-                                    onChange={(e) => {
-                                      handleGatewayMeterTwo(e, row, index);
-                                    }}
-                                  >
-                                    <MenuItem value="none">Device</MenuItem>
-                                    {row?.device_list?.length > 0 &&
-                                      row?.device_list.map((item) => {
-                                        console.log("item", item);
-                                        return (
-                                          <MenuItem
-                                            key={item.id}
-                                            value={item.id}
-                                          >
-                                            {item.devicename}
-                                          </MenuItem>
-                                        );
-                                      })}
-                                  </Select>
+                                  {row.isEdit ? (
+                                    <Select
+                                      labelId="demo-select-small-label"
+                                      id="demo-select-small"
+                                      value={
+                                        row.device_id
+                                          // ? row.device_id
+                                          // : gatewayMeterTwo
+                                      }
+                                      placeholder={"Energy Meter"}
+                                      // disabled={
+                                      //   !disabledFild &&
+                                      //   editMeasurement === row.id
+                                      //     ? false
+                                      //     : true
+                                      // }
+                                      onChange={(e) => {
+                                        handleGatewayMeterTwo(e, row, index);
+                                      }}
+                                    >
+                                      <MenuItem value="none">Device</MenuItem>
+                                      {row?.device_list.length > 0 &&
+                                        row?.device_list.map((item) => {
+                                          console.log("item", item);
+                                          return (
+                                            <MenuItem
+                                              key={item.id}
+                                              value={item.id}
+                                            >
+                                              {item.devicename}
+                                            </MenuItem>
+                                          );
+                                        })}
+                                    </Select>
+                                  ) : (
+                                    <TextField
+                                      // id="input-with-icon-textfield"
+                                      size="small"
+                                      fullWidth
+                                      variant="outlined"
+                                      value={row.device_name}
+                                      disabled={true}
+                                    />
+                                  )}
                                 </FormControl>
                               </Grid>
                             </TableCell>
@@ -1898,38 +1967,49 @@ const UnitManagement = ({
                                   size="small"
                                   fullWidth
                                 >
-                                  <Select
-                                    labelId="demo-select-small-label"
-                                    id="demo-select-small"
-                                    value={
-                                      row.point_id
-                                        ? row.point_id
-                                        : gatewayMeterThree
-                                    }
-                                    placeholder={"Energy Meter"}
-                                    disabled={
-                                      !disabledFild &&
-                                      editMeasurement === row.id
-                                        ? false
-                                        : true
-                                    }
-                                    onChange={(e) =>
-                                      handleGatewayMeterThree(e, row, index)
-                                    }
-                                  >
-                                    <MenuItem value="none">Point</MenuItem>
-                                    {row?.point_list?.length > 0 &&
-                                      row?.point_list.map((item) => {
-                                        return (
-                                          <MenuItem
-                                            key={item.id}
-                                            value={item.id}
-                                          >
-                                            {item.name}
-                                          </MenuItem>
-                                        );
-                                      })}
-                                  </Select>
+                                  {row.isEdit ? (
+                                    <Select
+                                      labelId="demo-select-small-label"
+                                      id="demo-select-small"
+                                      value={
+                                        row.point_id
+                                          // ? row.point_id
+                                          // : gatewayMeterThree
+                                      }
+                                      placeholder={"Energy Meter"}
+                                      // disabled={
+                                      //   !disabledFild &&
+                                      //   editMeasurement === row.id
+                                      //     ? false
+                                      //     : true
+                                      // }
+                                      onChange={(e) =>
+                                        handleGatewayMeterThree(e, row, index)
+                                      }
+                                    >
+                                      <MenuItem value="none">Point</MenuItem>
+                                      {row?.point_list.length > 0 &&
+                                        row?.point_list.map((item) => {
+                                          return (
+                                            <MenuItem
+                                              key={item.id}
+                                              value={item.id}
+                                            >
+                                              {item.name}
+                                            </MenuItem>
+                                          );
+                                        })}
+                                    </Select>
+                                  ) : (
+                                    <TextField
+                                      // id="input-with-icon-textfield"
+                                      size="small"
+                                      fullWidth
+                                      variant="outlined"
+                                      value={row.point_name}
+                                      disabled={true}
+                                    />
+                                  )}
                                 </FormControl>
                               </Grid>
                             </TableCell>
@@ -1937,9 +2017,9 @@ const UnitManagement = ({
                               align="right"
                               className={classes.fontSixeCell}
                             >
-                              {row.gateway_id ? (
+                              {row.gateway_id && row.id ? (
                                 <Grid item className={classes.flexRow}>
-                                  {editMeasurement === row.id ? (
+                                  {row.isEdit && row.id  ? (
                                     <>
                                       <Typography
                                         className={clsx(
@@ -1948,7 +2028,7 @@ const UnitManagement = ({
                                           classes.cursor
                                         )}
                                         onClick={(event) =>
-                                          handleUpdateMeasurement(event, row.id)
+                                          handleUpdateMeasurement(event, row, index)
                                         }
                                       >
                                         {"save"}
@@ -1962,9 +2042,7 @@ const UnitManagement = ({
                                           classes.paddingCol,
                                           classes.cursor
                                         )}
-                                        onClick={(event) =>
-                                          handleEditMeasurement(event, row.id)
-                                        }
+                                        onClick={() => handleEditMeasurement(row, index)}
                                       >
                                         {"edit"}
                                       </Typography>
