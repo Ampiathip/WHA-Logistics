@@ -409,8 +409,8 @@ const intersection = (a, b) => {
 };
 
 const intersectionLeft = (a, b) => {
-  return a.filter((value) => b.indexOf(value.id) !== -1);
-  // return a;
+  // return a.filter((value) => b.indexOf(value.id) !== -1);
+  return a;
 };
 
 const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
@@ -866,7 +866,9 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
 
   const handleClickOpenAdd = () => {
     setOpenAddZonePoint(true);
-    zoneUnitBuilding(billingId);
+    if (billingId) {
+      zoneUnitBuilding(billingId);
+    }
   };
 
   const handleCloseZonePoint = () => {
@@ -991,13 +993,12 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     } else {
       newChecked.splice(currentIndex, 1);
     }
-
     setChecked(newChecked);
   };
 
   const handleToggleLeft = (value) => () => {
-    const currentIndex = checked.indexOf(value.id);
-    const newChecked = [...checked];
+    const currentIndex = checkedLeft.indexOf(value);
+    const newChecked = [...checkedLeft];
 
     if (currentIndex === -1) {
       newChecked.push(value);
@@ -1010,48 +1011,71 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const handleAllRight = () => {
     setRight(right.concat(left));
     setLeft([]);
+    handleUpdateZonePoint('all');
   };
 
   const handleCheckedRight = () => {
     setRight(right.concat(leftChecked));
     setLeft(not(left, leftChecked));
     setCheckedLeft(not(checkedLeft, leftChecked));
+    handleUpdateZonePoint();
   };
 
   const handleCheckedLeft = () => {
     setLeft(left.concat(rightChecked));
     setRight(not(right, rightChecked));
     setChecked(not(checked, rightChecked));
-    handleCheckedDeleteData(rightChecked);
+    handleCheckedDeleteData();
+    // zoneUnitCheckedDelete();
   };
 
   const handleAllLeft = () => {
     setLeft(left.concat(right));
     setRight([]);
+    handleCheckedDeleteData("all");
   };
 
-  const zoneUnitCheckedDelete = async (rowId) => {
+  const zoneUnitCheckedDelete = async (type) => {
+    setOpenAddZonePoint(false);
     setIsLoading(true);
     try {
       let body = [];
-      rowId.map((value) => {
-        const data = {
-          id: value,
-        };
-        console.log('data====', data);
-        body.push(data);
-      });
-      console.log("8888888=======", body);
+      if (type === "all") {
+        right.length > 0 &&
+          right.map((item) => {
+            const array = {
+              id: item.zone_unit_id,
+            };
+            body.push(array);
+          });
+      } else {
+        checked.map((value) => {
+          const data = {
+            id: value,
+          };
+          body.push(data);
+        });
+      }
+      console.log("8888888=======", body, checked, right);
       API.connectTokenAPI(token);
       await API.zoneUnitDelete(body).then((response) => {
         const dataPayload = response.data;
+        console.log("dataPayload", dataPayload);
         if (response.status === 200) {
           MySwal.fire({
             icon: "success",
             confirmButtonText: "ตกลง",
             text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getZoneUnitData(id);
+              // setOpenAddZonePoint(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
           });
-          zoneUnitBuilding(billingId);
+          // zoneUnitBuilding(billingId);
+          // getZoneUnitData(id);
         }
         // console.log("dataPayload", response);
         setIsLoading(false);
@@ -1064,7 +1088,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     }
   };
   // delete Data //
-  const handleCheckedDeleteData = (id) => {
+  const handleCheckedDeleteData = (type) => {
     setOpenAddZonePoint(false);
     MySwal.fire({
       icon: "warning",
@@ -1074,8 +1098,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
       text: "คุณต้องการลบข้อมูลหรือไม่",
     }).then((result) => {
       if (result.isConfirmed) {
-        zoneUnitCheckedDelete(id);
-        setOpenAddZonePoint(true);
+        zoneUnitCheckedDelete(type);
       } else if (result.isDismissed) {
         setIsLoading(false);
       }
@@ -1094,11 +1117,11 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
         };
         body.push(data);
       });
-      console.log("checkedLeft", checkedLeft, body);
+      // console.log("checkedLeft", checkedLeft, body);
       API.connectTokenAPI(token);
       await API.zoneUnitRegister(body).then((response) => {
         const dataPayload = response.data;
-        console.log("dataPayload====Point", dataPayload, response);
+        // console.log("dataPayload====Point", dataPayload, response);
         if (response.status === 200) {
           MySwal.fire({
             icon: "success",
@@ -1107,7 +1130,9 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
           }).then((result) => {
             if (result.isConfirmed) {
               getZoneUnitData(id);
-              setOpenAddZonePoint(true);
+              setCheckedLeft([]);
+              // await zoneUnitBuilding(billingId);
+              // setOpenAddZonePoint(true);
             } else if (result.isDismissed) {
               setIsLoading(false);
             }
@@ -1139,66 +1164,134 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     }
   };
 
+  const handleUpdateZonePoint = async (type) => {
+    setOpenAddZonePoint(false);
+    setIsLoading(true);
+    try {
+      let body = [];
+      if (type === 'all') {
+        left.length > 0 && left.map((item) => {
+          const array = {
+            id: id,
+            zone_id: item.zone_unit_id,
+            unit_id: item.unit_info_id,
+          };
+          body.push(array);
+        });
+      } else {
+        checkedLeft.map((value) => {
+          const data = {
+            id: id,
+            zone_id: id,
+            unit_id: value,
+          };
+          body.push(data);
+        });
+      }
+      console.log("checkedLeft", checkedLeft, body);
+      API.connectTokenAPI(token);
+      await API.zoneUnitUpdate(body).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload====Point", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getZoneUnitData(id);
+              // setOpenAddZonePoint(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
   const customList = (items) => (
     <Paper sx={{ width: "100%", height: "100%", overflow: "auto" }}>
-      <List dense component="div" role="list">
-        {items.map((value) => {
-          const labelId = `transfer-list-item-${value.zone_unit_id}-label`;
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <List dense component="div" role="list">
+            {items.map((value) => {
+              const labelId = `transfer-list-item-${value.zone_unit_id}-label`;
 
-          return (
-            <ListItem
-              key={value.zone_unit_id}
-              role="listitem"
-              button
-              onClick={handleToggle(value.unit_info_id)}
-            >
-              <ListItemIcon>
-                <Checkbox
-                  checked={checked.indexOf(value.unit_info_id) !== -1}
-                  tabIndex={-1}
-                  disableRipple
-                  inputProps={{
-                    "aria-labelledby": labelId,
-                  }}
-                />
-              </ListItemIcon>
-              <ListItemText id={labelId} primary={value.unit} />
-            </ListItem>
-          );
-        })}
-      </List>
+              return (
+                <ListItem
+                  key={value.zone_unit_id}
+                  role="listitem"
+                  button
+                  onClick={handleToggle(value.zone_unit_id)}
+                >
+                  <ListItemIcon>
+                    <Checkbox
+                      checked={checked.indexOf(value.zone_unit_id) !== -1}
+                      tabIndex={-1}
+                      disableRipple
+                      inputProps={{
+                        "aria-labelledby": labelId,
+                      }}
+                    />
+                  </ListItemIcon>
+                  <ListItemText id={labelId} primary={value.unit} />
+                </ListItem>
+              );
+            })}
+          </List>
+        </>
+      )}
     </Paper>
   );
 
   const customListLeft = (items) => (
     <Paper sx={{ width: "100%", height: "100%", overflow: "auto" }}>
-      <List dense component="div" role="list">
-        {items.map((value) => {
-          const labelId = `transfer-list-item-${value.id}-label`;
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <List dense component="div" role="list">
+            {items.map((value) => {
+              const labelId = `transfer-list-item-${value.id}-label`;
 
-          return (
-            <ListItem
-              key={value.id}
-              role="listitem"
-              button
-              onClick={handleToggleLeft(value.id)}
-            >
-              <ListItemIcon>
-                <Checkbox
-                  checked={checkedLeft.indexOf(value.id) !== -1}
-                  // checked={checkedLeft.map((items) => items.id)}
-                  tabIndex={-1}
-                  disableRipple
-                  inputProps={{
-                    "aria-labelledby": labelId,
-                  }}
-                />
-              </ListItemIcon>
-              <ListItemText id={labelId} primary={value.unit} />
-            </ListItem>
-          );
-        })}
-      </List>
+              return (
+                <ListItem
+                  key={value.id}
+                  role="listitem"
+                  button
+                  onClick={handleToggleLeft(value.id)}
+                >
+                  <ListItemIcon>
+                    <Checkbox
+                      checked={checkedLeft.indexOf(value.id) !== -1}
+                      tabIndex={-1}
+                      disableRipple
+                      inputProps={{
+                        "aria-labelledby": labelId,
+                      }}
+                    />
+                  </ListItemIcon>
+                  <ListItemText id={labelId} primary={value.unit} />
+                </ListItem>
+              );
+            })}
+          </List>
+        </>
+      )}
     </Paper>
   );
 
@@ -1427,7 +1520,10 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                               src={IconDelete}
                               alt="IconDelete"
                               onClick={(event) => {
-                                handleClickDeleteData(event, rowItem.unit_info_id);
+                                handleClickDeleteData(
+                                  event,
+                                  rowItem.unit_info_id
+                                );
                               }}
                             />
                           </TableCell>

@@ -338,6 +338,10 @@ const getAPI = () => {
     return tokenAPI.put(`/api/zone-unit/update`, body);
   };
 
+  // const zoneUnitDelete = (body) => {
+  //   return tokenAPI.delete(`/api/zone-unit/remove`, body);
+  // };
+
   const zoneUnitDelete = (body) => {
     return tokenAPI.delete(`/api/zone-unit/remove`, body);
   };
