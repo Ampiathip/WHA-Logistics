@@ -86,6 +86,7 @@ const useStyles = makeStyles((theme) => ({
   },
   fontSixeHead: {
     fontSize: "14px !important",
+    padding: "9px !important",
   },
   fontSixeCell: {
     fontSize: "12px !important",
@@ -259,30 +260,35 @@ const headCells = [
     numeric: false,
     disablePadding: true,
     label: "Device ID",
+    width: 150,
   },
   {
     id: "calories",
     numeric: true,
     disablePadding: false,
     label: "Device Name",
+    width: 150,
   },
   {
     id: "fat",
     numeric: true,
     disablePadding: false,
     label: "Device Brand",
+    width: 150,
   },
   {
     id: "device",
     numeric: true,
     disablePadding: false,
     label: "Device Model",
+    width: 150,
   },
   {
     id: "carbs",
     numeric: true,
     disablePadding: false,
     label: "Gateway Name",
+    width: 150,
   },
   {
     id: "power",
@@ -295,18 +301,21 @@ const headCells = [
     numeric: true,
     disablePadding: false,
     label: "No. Of Point",
+    width: 150,
   },
   {
     id: "unit",
     numeric: true,
     disablePadding: false,
     label: "Installation Date",
+    width: 150,
   },
   {
     id: "action",
     numeric: false,
     disablePadding: false,
     label: "Action",
+    width: 150,
   },
 ];
 
@@ -342,8 +351,9 @@ function EnhancedTableHead(props) {
           <TableCell
             key={headCell.id}
             align={headCell.numeric ? "right" : "center"}
-            padding={headCell.disablePadding ? "none" : "normal"}
+            // padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
+            width={headCell.width}
             className={classes.fontSixeHead}
           >
             <TableSortLabel
@@ -468,7 +478,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const [rowsPerPageView, setRowsPerPageView] = useState(5);
   const [pageView, setPageView] = useState(0);
   const columnsPoint = [
-    { id: "name", label: "Device ID" },
+    { id: "name", label: "Device ID", minWidth: 170 },
     { id: "code", label: "Point name" },
     {
       id: "population",
@@ -883,7 +893,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
 
   const handleClickOpenView = async (event, id) => {
     setOpenView(true);
-    deviceView(id);
+    await deviceView(id);
     await getPointData(id);
   };
 
@@ -1139,7 +1149,8 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           }))
         : (body = []);
 
-        body.length > 0 && body.forEach((row) => {
+      body.length > 0 &&
+        body.forEach((row) => {
           const data = {
             point_name: row.name,
             topic: row.topic,
@@ -1626,7 +1637,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                       {t("gateway:DeviceInfo")}
                     </Typography>
                     <Grid item md={12} className={clsx(classes.flexRow)}>
-                      <Grid item md={6} className={classes.marginIcon}>
+                      <Grid item md={5} className={classes.marginIcon}>
                         {imagePreviewUrl ? (
                           <img
                             src={imagePreviewUrl}
@@ -1643,23 +1654,27 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           />
                         )}
                       </Grid>
-                      <Grid item md={6}>
-                        <Grid
-                          item
+                      <Grid item md={7}>
+                        <Box
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
-                          <Typography variant="h6"> Device ID</Typography>
-                          <Typography variant="h6">
-                            {" "}
-                            {deviceId ? deviceId : "-"}
-                          </Typography>
-                        </Grid>
+                          <Grid item className={clsx(classes.width)}>
+                            <Typography variant="h6"> Device ID</Typography>
+                          </Grid>
+                          <Grid item>
+                            <Typography variant="caption">
+                              {" "}
+                              {deviceId ? deviceId : "-"}
+                            </Typography>
+                          </Grid>
+                        </Box>
+
                         <Grid
                           item
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
                           <Typography variant="h6"> Device name</Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {deviceName ? deviceName : "-"}
                           </Typography>
@@ -1669,7 +1684,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
                           <Typography variant="h6"> Brand</Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {deviceBrand ? deviceBrand : "-"}
                           </Typography>
@@ -1679,7 +1694,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
                           <Typography variant="h6"> Model</Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {model ? model : "-"}e
                           </Typography>
@@ -1689,7 +1704,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
                           <Typography variant="h6"> Type</Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {communicationTypeSelect
                               ? communicationTypeSelect
@@ -1704,7 +1719,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             {" "}
                             Installation Date
                           </Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {installation ? installation : "-"}
                           </Typography>
@@ -2458,7 +2473,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                       {t("gateway:DeviceInfo")}
                     </Typography>
                     <Grid item md={12} className={clsx(classes.flexRow)}>
-                      <Grid item md={6} className={classes.marginIcon}>
+                      <Grid item md={5} className={classes.marginIcon}>
                         {imagePreviewUrl ? (
                           <img
                             src={imagePreviewUrl}
@@ -2475,23 +2490,27 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           />
                         )}
                       </Grid>
-                      <Grid item md={6}>
-                        <Grid
-                          item
+                      <Grid item md={7}>
+                        <Box
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
-                          <Typography variant="h6"> Device ID</Typography>
-                          <Typography variant="h6">
-                            {" "}
-                            {deviceId ? deviceId : "-"}{" "}
-                          </Typography>
-                        </Grid>
+                          <Grid item className={clsx(classes.width)}>
+                            <Typography variant="h6"> Device ID</Typography>
+                          </Grid>
+                          <Grid item>
+                            <Typography variant="caption">
+                              {" "}
+                              {deviceId ? deviceId : "-"}{" "}
+                            </Typography>
+                          </Grid>
+                        </Box>
+
                         <Grid
                           item
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
                           <Typography variant="h6"> Device name</Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {deviceName ? deviceName : "-"}
                           </Typography>
@@ -2501,7 +2520,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
                           <Typography variant="h6"> Brand</Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {deviceBrand ? deviceBrand : "-"}
                           </Typography>
@@ -2511,7 +2530,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
                           <Typography variant="h6"> Model</Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {model ? model : "-"}
                           </Typography>
@@ -2521,7 +2540,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
                           <Typography variant="h6"> Type</Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {communicationTypeSelect
                               ? communicationTypeSelect
@@ -2536,7 +2555,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             {" "}
                             Installation Date
                           </Typography>
-                          <Typography variant="h6">
+                          <Typography variant="caption">
                             {" "}
                             {installation ? installation : "-"}
                           </Typography>
@@ -2563,8 +2582,8 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                   key={column.id}
                                   align={column.align}
                                   style={{
-                                    minWidth: column.minWidth,
-                                    fontSize: 18,
+                                    width: column.minWidth,
+                                    fontSize: 16,
                                   }}
                                 >
                                   {column.label}

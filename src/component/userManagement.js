@@ -223,12 +223,14 @@ const headCells = [
     numeric: true,
     disablePadding: false,
     label: "First Name",
+    width: 150,
   },
   {
     id: "fat",
     numeric: true,
     disablePadding: false,
     label: "Last Name",
+    width: 150,
   },
   {
     id: "carbs",
@@ -253,6 +255,7 @@ const headCells = [
     numeric: true,
     disablePadding: false,
     label: "Phone No.",
+    width: 150,
   },
   {
     id: "last",
@@ -270,7 +273,7 @@ const headCells = [
     id: "enabel",
     numeric: true,
     disablePadding: false,
-    label: "Enabel",
+    label: "Enable",
   },
   {
     id: "action",
@@ -314,6 +317,7 @@ function EnhancedTableHead(props) {
             align={headCell.numeric ? "right" : "center"}
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
+            width={headCell.width}
             className={clsx(classes.fontSixeHead, classes.paddingHead)}
           >
             <TableSortLabel

@@ -93,7 +93,7 @@ let en = {
       "role": "Role",
       "pass": "Password",
       "rePass": "Re-password",
-      "active": "Enabel",
+      "active": "Enable",
       "cancel": "Cancel",
       "confrim": "Confirm",
       "placeholderEmail": "Enter your email",

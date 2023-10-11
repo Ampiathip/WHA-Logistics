@@ -1,6 +1,28 @@
 import { createTheme, responsiveFontSizes } from "@mui/material/styles";
 
 const theme = createTheme({
+  components: {
+    'MuiTablePagination' : {
+      'styleOverrides': {
+        'selectLabel': {
+          fontSize: 14,
+          marginBottom: 10,
+        },
+        'displayedRows': {
+          fontSize: 14,
+          marginBottom: 0,
+        },
+      }
+    },
+    'MuiSvgIcon': {
+      'styleOverrides': {
+        'root': {
+          fontSize: 20,
+        }
+      }
+    }
+  },
+
   palette: {
     primary: {
       main: "#007bff",
@@ -29,14 +51,14 @@ const theme = createTheme({
       fontSize: 18,
     },
     h6: {
-      fontSize: 15,
+      fontSize: 14,
     },
     overline: {
       fontSize: 15,
       lineHeight: 0,
     },
     caption: {
-      fontSize: 16,
+      fontSize: 12,
     },
     button: {
       fontSize: 19,

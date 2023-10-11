@@ -1942,7 +1942,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                 </Grid>
                 <Grid item>
                   <Grid container direction="column" alignItems="center">
-                    <Button
+                    {/* <Button
                       sx={{ my: 0.5 }}
                       variant="outlined"
                       size="small"
@@ -1951,8 +1951,8 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                       aria-label="move all right"
                     >
                       ≫
-                    </Button>
-                    <Button
+                    </Button> */}
+                    {/* <Button
                       sx={{ my: 0.5 }}
                       variant="outlined"
                       size="small"
@@ -1961,7 +1961,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                       aria-label="move selected right"
                     >
                       &gt;
-                    </Button>
+                    </Button> */}
                     <Button
                       sx={{ my: 0.5 }}
                       variant="outlined"
