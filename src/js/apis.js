@@ -343,7 +343,7 @@ const getAPI = () => {
   // };
 
   const zoneUnitDelete = (body) => {
-    return tokenAPI.delete(`/api/zone-unit/remove`, body);
+    return tokenAPI.post(`/api/zone-unit/remove`, body);
   };
 
   const zoneUnitBuilding = (id) => {

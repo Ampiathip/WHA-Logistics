@@ -1056,7 +1056,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
           body.push(data);
         });
       }
-      console.log("8888888=======", body, checked, right);
+      // console.log("8888888=======", body, checked, right);
       API.connectTokenAPI(token);
       await API.zoneUnitDelete(body).then((response) => {
         const dataPayload = response.data;
