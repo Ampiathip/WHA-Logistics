@@ -3,7 +3,7 @@ import Layout from "../component/layout";
 import UserManagement from "../component/userManagement";
 
 const User = () => {
-  const { t, i18n } = useTranslation(["user"]);
+  const { t, i18n } = useTranslation(["user", "building", "floor"]);
 
   return (
     <>

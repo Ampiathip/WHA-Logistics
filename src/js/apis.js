@@ -65,6 +65,14 @@ const getAPI = () => {
     return tokenAPI.put(`/api/users/update-user/${id}`, body);
   };
 
+  const buildingUser = (body) => {
+    return tokenAPI.post(`/api/building-user/add`, body);
+  };
+
+  const delectBuildingUser = (id) => {
+    return tokenAPI.delete(`/api/building-user/remove/${id}`);
+  };
+
   /* ============== Building API ================ */
   const getBuildingData = () => {
     return tokenAPI.get(`/api/building/list`);
@@ -360,6 +368,9 @@ const getAPI = () => {
     getUserView,
     userDelete,
     userUpdate,
+
+    buildingUser,
+    delectBuildingUser,
 
     getBuildingData,
     BuildingRegister,

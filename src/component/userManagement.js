@@ -144,6 +144,7 @@ const useStyles = makeStyles((theme) => ({
     padding: "24px !important",
   },
   backGroundCancel: {
+    width: "100%",
     backgroundColor: "#fff !important",
     color: "#1A1C1D !important",
     border: "1px solid #1A1C1D !important",
@@ -176,6 +177,12 @@ const useStyles = makeStyles((theme) => ({
   },
   paddingIcon: {
     padding: "0px !important",
+  },
+  justContentCenter: {
+    justifyContent: "center",
+  },
+  activeColor: {
+    color: "#3E6DC5",
   },
 }));
 
@@ -411,7 +418,7 @@ const UserManagement = ({ t, login }) => {
   const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [fitterSelect, setFitterSelect] = useState("none");
-  const [userId, setUserId] = useState("");
+  const [userName, setUserName] = useState("");
   const [emailUser, setEmailUser] = useState("");
   const [fristName, setFristName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -421,6 +428,7 @@ const UserManagement = ({ t, login }) => {
   const [rePassword, setRePassword] = useState("");
   const [active, setActive] = useState(null);
   const [selectInput, setSelectInput] = useState("none");
+  const [userId, setUserId] = useState("");
   // const [activeEdit, setActiveEdit] = useState(false);
 
   // modal reset //
@@ -458,6 +466,9 @@ const UserManagement = ({ t, login }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortedRows, setSortedRows] = useState(rows);
 
+  // edit Building //
+  const [rowsBuildingEdit, setRowsBuildingEdit] = useState([]);
+  const [buildingData, setBuildingData] = useState([]);
 
   // user view //
   // const [userView, setUserView] = useState([]);
@@ -469,16 +480,19 @@ const UserManagement = ({ t, login }) => {
     dispatch(checkToken());
     if (!_.isEmpty(token)) {
       getUser();
+      getBuilding();
     }
     console.log("token", token, login);
   }, [token]);
 
   useEffect(() => {
     if (user && user?.user) {
-      setUserId(user?.user.username);
+      setUserName(user?.user.username);
+      setUserId(user?.user.id);
     }
-  }, [user, userId]);
+  }, [user, userName, userId]);
 
+  console.log("buildingData", buildingData);
   // useEffect(() => {
   //   if (!isValidate) {
   //     handleValidate();
@@ -777,6 +791,7 @@ const UserManagement = ({ t, login }) => {
     setOpenEditUser(true);
     setIsIdEdit(id);
     userViewData(id);
+    getBuildingViewUser();
   };
 
   const handleCloseEditUser = () => {
@@ -1012,6 +1027,182 @@ const UserManagement = ({ t, login }) => {
     const query = event.target.value;
     setSearchQuery(query);
     updateVisibleRows(query);
+  };
+
+  // add row Edit //
+  const addNewRow = () => {
+    const newRow = {
+      id: null,
+      building_info_id: "",
+      isEdit: true,
+    };
+    // Create a copy of the existing rowsPointEdit array
+    const updatedRows = [...rowsBuildingEdit];
+
+    // Add the new row to the array
+    updatedRows.push(newRow);
+
+    // Update the state with the new array
+    setRowsBuildingEdit(updatedRows);
+  };
+
+  const getBuildingViewUser = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getBuildingViewUser(userId).then((response) => {
+        const dataPayload = response.data;
+        setRowsBuildingEdit(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const getBuilding = async () => {
+    setIsLoading(true);
+    try {
+      API.connectTokenAPI(token);
+      await API.getBuildingData().then((response) => {
+        const dataPayload = response.data;
+        setBuildingData(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const handleBuildingName = (e, row, index) => {
+    const newValue = e.target.value;
+    const updatedRows = [...rowsBuildingEdit];
+    updatedRows[index].building_info_id = newValue;
+    // Update the state with the new array
+    setRowsBuildingEdit(updatedRows);
+  };
+
+  const handleUpdateMeasurement = async (event, row, index) => {
+    setIsLoading(true);
+    setOpenEditUser(false);
+    try {
+      const body = {
+        buildingId: row?.building_info_id,
+        userId: userId,
+      };
+      // console.log("rowsPointEdit", row, body);
+      API.connectTokenAPI(token);
+      await API.buildingUser(body).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getBuildingViewUser(userId);
+              setOpenEditUser(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteMeasurement = (event, id) => {
+    setOpenEditUser(false);
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        delectBuildingUser(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  const delectBuildingUser = async (rowId) => {
+    setIsLoading(true);
+    setOpenEditUser(false);
+    try {
+      await API.connectTokenAPI(token);
+      await API.delectBuildingUser(rowId).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getBuildingViewUser(userId);
+              setOpenEditUser(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -1313,7 +1504,7 @@ const UserManagement = ({ t, login }) => {
                   size="small"
                   fullWidth
                   variant="outlined"
-                  value={userId}
+                  value={userName}
                   disabled
                 />
               </Grid>
@@ -1593,7 +1784,7 @@ const UserManagement = ({ t, login }) => {
                       size="small"
                       fullWidth
                       variant="outlined"
-                      value={userId}
+                      value={userName}
                       disabled
                     />
                   </Grid>
@@ -1724,6 +1915,173 @@ const UserManagement = ({ t, login }) => {
                 </Grid>
               </Grid>
 
+              {/* add building user */}
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h4">{t("gateway:building")}</Typography>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <TableContainer component={Paper}>
+                  <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell
+                          align="center"
+                          className={classes.fontSixeHead}
+                        >
+                          #
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          className={clsx(
+                            classes.colorText,
+                            classes.fontSixeHead
+                          )}
+                        >
+                          {t("building:buildingName")}
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          className={classes.fontSixeHead}
+                        >
+                          {t("floor:action")}
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {rowsBuildingEdit.map((row, index) => (
+                        <TableRow
+                          key={row.building_user_id}
+                          sx={{
+                            "&:last-child td, &:last-child th": { border: 0 },
+                          }}
+                        >
+                          {console.log("row=======", row, index)}
+                          <TableCell
+                            component="th"
+                            scope="row"
+                            className={classes.fontSixeCell}
+                            align="center"
+                          >
+                            {row.building_info_id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            <Grid item className={classes.marginDataTable}>
+                              <FormControl
+                                variant="outlined"
+                                size="small"
+                                fullWidth
+                              >
+                                {row.isEdit ? (
+                                  <Select
+                                    labelId="demo-select-small-label"
+                                    id="demo-select-small"
+                                    value={row.building_info_id}
+                                    placeholder={"Building name"}
+                                    onChange={(e) => {
+                                      handleBuildingName(e, row, index);
+                                    }}
+                                  >
+                                    <MenuItem value="none">
+                                      Building name
+                                    </MenuItem>
+                                    {buildingData.length > 0 &&
+                                      buildingData.map((item) => {
+                                        return (
+                                          <MenuItem
+                                            key={item.id}
+                                            value={item.id}
+                                          >
+                                            {item.name}
+                                          </MenuItem>
+                                        );
+                                      })}
+                                  </Select>
+                                ) : (
+                                  <Select
+                                    labelId="demo-select-small-label"
+                                    id="demo-select-small"
+                                    value={row.building_info_id}
+                                    placeholder={"Building name"}
+                                    disabled={
+                                      row.building_info_id ? true : false
+                                    }
+                                  >
+                                    <MenuItem value="none">
+                                      Building name
+                                    </MenuItem>
+                                    {buildingData.length > 0 &&
+                                      buildingData.map((item) => {
+                                        return (
+                                          <MenuItem
+                                            key={item.id}
+                                            value={item.id}
+                                          >
+                                            {item.name}
+                                          </MenuItem>
+                                        );
+                                      })}
+                                  </Select>
+                                )}
+                              </FormControl>
+                            </Grid>
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.isEdit && row.building_info_id ? (
+                              <Typography
+                                className={clsx(classes.cuserPoint)}
+                                onClick={(event) =>
+                                  handleUpdateMeasurement(event, row, index)
+                                }
+                              >
+                                {"save"}
+                              </Typography>
+                            ) : (
+                              <Typography
+                                className={clsx(
+                                  classes.activeColor,
+                                  classes.cuserPoint
+                                )}
+                                onClick={(event) =>
+                                  handleDeleteMeasurement(event, row.building_user_id)
+                                }
+                              >
+                                {t("floor:delete")}
+                              </Typography>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <Grid
+                  item
+                  md={12}
+                  className={clsx(
+                    classes.marginRow,
+                    classes.flexRow,
+                    classes.justContentCenter
+                  )}
+                >
+                  <Grid item md={6}>
+                    <Button
+                      variant="outlined"
+                      onClick={addNewRow}
+                      className={clsx(classes.backGroundCancel)}
+                    >
+                      {t("floor:addMeasurement")}
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Grid>
+
               <Grid item md={3} className={classes.marginRow}>
                 <Typography
                   variant="body1"
@@ -1851,7 +2209,7 @@ const UserManagement = ({ t, login }) => {
             </Grid>
             <Grid item md={9}>
               <Grid item className={classes.boxMargin}>
-                <Typography variant="h3">{userId}</Typography>
+                <Typography variant="h3">{userName}</Typography>
               </Grid>
               <Grid item className={clsx(classes.boxMargin, classes.marginRow)}>
                 <Typography variant="h5">{user}</Typography>
@@ -1902,7 +2260,7 @@ const UserManagement = ({ t, login }) => {
       <UserView
         open={openViewUser}
         close={handleCloseView}
-        userId={userId}
+        userName={userName}
         user={emailUser}
         t={t}
         emailUser={emailUser}
