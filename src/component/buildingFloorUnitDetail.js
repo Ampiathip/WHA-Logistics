@@ -575,8 +575,7 @@ const UnitManagement = ({
         _.isEmpty(unitNumber) ||
         _.isEmpty(unitName) ||
         _.isEmpty(description) ||
-        !unitTypeSelect ||
-        _.isEmpty(imagePreviewUrl)
+        !unitTypeSelect
       ) {
         isValidate = false;
       }
@@ -586,8 +585,7 @@ const UnitManagement = ({
         _.isEmpty(unitNumber) ||
         _.isEmpty(unitName) ||
         _.isEmpty(description) ||
-        !unitTypeSelect ||
-        _.isEmpty(imagePreviewUrl)
+        !unitTypeSelect
       ) {
         isValidate = false;
       }
@@ -607,16 +605,49 @@ const UnitManagement = ({
   const unitRegister = async () => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result;
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result;
+          const body = {
+            unit: unitName,
+            floor_id: id,
+            description: description,
+            type_id: unitTypeSelect,
+            file: base64File,
+          };
+          await API.connectTokenAPI(token);
+          await API.UnitRegister(body).then((response) => {
+            const dataPayload = response.data;
+            console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getUnitList(id);
+              handleCloseAdd();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           unit: unitName,
           floor_id: id,
           description: description,
           type_id: unitTypeSelect,
-          file: base64File,
+          file: "",
         };
         await API.connectTokenAPI(token);
         await API.UnitRegister(body).then((response) => {
@@ -633,28 +664,61 @@ const UnitManagement = ({
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleCloseAdd();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
     }
   };
 
   const unitUpdate = async (rowId) => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result;
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result;
+          const body = {
+            unit: unitName,
+            description: description,
+            type_id: unitTypeSelect,
+            file: base64File,
+            fileOld: "",
+          };
+          await API.connectTokenAPI(token);
+          await API.unitUpdate(rowId, body).then((response) => {
+            const dataPayload = response.data;
+            console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getUnitList(id);
+              handleClose();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           unit: unitName,
           description: description,
           type_id: unitTypeSelect,
-          file: base64File,
+          file: "",
           fileOld: "",
         };
         await API.connectTokenAPI(token);
@@ -672,13 +736,13 @@ const UnitManagement = ({
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleClose();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
     }
   };
 
@@ -836,10 +900,10 @@ const UnitManagement = ({
 
   const getUpdateRow = async (id, index, rowId) => {
     const data = await getUnitPointData(id);
-    const foundData = data.find((f) => f.id === rowId);;
+    const foundData = data.find((f) => f.id === rowId);
     const updatedRows = [...rowsPointEdit];
     updatedRows[index] = foundData;
-    console.log('foundData', foundData);
+    console.log("foundData", foundData);
     // Update the state with the new array
     setRowsPointEdit(updatedRows);
   };
@@ -1249,7 +1313,7 @@ const UnitManagement = ({
             if (result.isConfirmed) {
               getUpdateRow(isIdEdit, index, row.id);
               setOpen(true);
-              handleEditMeasurement(row, index, false)
+              handleEditMeasurement(row, index, false);
             } else if (result.isDismissed) {
               setIsLoading(false);
             }
@@ -1619,9 +1683,9 @@ const UnitManagement = ({
                         </Card>
                       </label>
                     </Grid>
-                    {_.isEmpty(imagePreviewUrl) && !isValidate && (
+                    {/* {_.isEmpty(imagePreviewUrl) && !isValidate && (
                       <Validate errorText={"กรุณาระบุข้อมูล"} />
-                    )}
+                    )} */}
                   </Grid>
                   <Grid item md={12}>
                     <Typography variant="subtitle2" className="pb-3">
@@ -1860,8 +1924,8 @@ const UnitManagement = ({
                                       id="demo-select-small"
                                       value={
                                         row.gateway_id
-                                          // ? row.gateway_id
-                                          // : gatewayMeter
+                                        // ? row.gateway_id
+                                        // : gatewayMeter
                                       }
                                       placeholder={"Energy Meter"}
                                       // disabled={
@@ -1916,8 +1980,8 @@ const UnitManagement = ({
                                       id="demo-select-small"
                                       value={
                                         row.device_id
-                                          // ? row.device_id
-                                          // : gatewayMeterTwo
+                                        // ? row.device_id
+                                        // : gatewayMeterTwo
                                       }
                                       placeholder={"Energy Meter"}
                                       // disabled={
@@ -1973,8 +2037,8 @@ const UnitManagement = ({
                                       id="demo-select-small"
                                       value={
                                         row.point_id
-                                          // ? row.point_id
-                                          // : gatewayMeterThree
+                                        // ? row.point_id
+                                        // : gatewayMeterThree
                                       }
                                       placeholder={"Energy Meter"}
                                       // disabled={
@@ -2019,7 +2083,7 @@ const UnitManagement = ({
                             >
                               {row.gateway_id && row.id ? (
                                 <Grid item className={classes.flexRow}>
-                                  {row.isEdit && row.id  ? (
+                                  {row.isEdit && row.id ? (
                                     <>
                                       <Typography
                                         className={clsx(
@@ -2028,7 +2092,11 @@ const UnitManagement = ({
                                           classes.cursor
                                         )}
                                         onClick={(event) =>
-                                          handleUpdateMeasurement(event, row, index)
+                                          handleUpdateMeasurement(
+                                            event,
+                                            row,
+                                            index
+                                          )
                                         }
                                       >
                                         {"save"}
@@ -2042,7 +2110,9 @@ const UnitManagement = ({
                                           classes.paddingCol,
                                           classes.cursor
                                         )}
-                                        onClick={() => handleEditMeasurement(row, index)}
+                                        onClick={() =>
+                                          handleEditMeasurement(row, index)
+                                        }
                                       >
                                         {"edit"}
                                       </Typography>
@@ -2200,9 +2270,9 @@ const UnitManagement = ({
                 </Card>
               </label>
             </Grid>
-            {_.isEmpty(imagePreviewUrl) && !isValidate && (
+            {/* {_.isEmpty(imagePreviewUrl) && !isValidate && (
               <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
+            )} */}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="pb-3">

@@ -304,6 +304,7 @@ function Login(props) {
                       inputProps={{ maxLength: 70 }}
                       onChange={handlePasswordChange}
                       fullWidth
+                      type="password"
                     ></TextField>
                   </Typography>
                 </Grid>

@@ -653,15 +653,48 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const unitUpdate = async (rowId) => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result;
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result;
+          const body = {
+            unit: unitName,
+            description: description,
+            type_id: unitTypeSelect,
+            file: base64File,
+            fileOld: "",
+          };
+          await API.connectTokenAPI(token);
+          await API.unitUpdate(rowId, body).then((response) => {
+            const dataPayload = response.data;
+            console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getZoneUnitData(id);
+              handleClose();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           unit: unitName,
           description: description,
           type_id: unitTypeSelect,
-          file: base64File,
+          file: "",
           fileOld: "",
         };
         await API.connectTokenAPI(token);
@@ -679,13 +712,13 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleClose();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
     }
   };
 
@@ -1011,7 +1044,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const handleAllRight = () => {
     setRight(right.concat(left));
     setLeft([]);
-    handleUpdateZonePoint('all');
+    handleUpdateZonePoint("all");
   };
 
   const handleCheckedRight = () => {
@@ -1169,15 +1202,16 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     setIsLoading(true);
     try {
       let body = [];
-      if (type === 'all') {
-        left.length > 0 && left.map((item) => {
-          const array = {
-            id: id,
-            zone_id: item.zone_unit_id,
-            unit_id: item.unit_info_id,
-          };
-          body.push(array);
-        });
+      if (type === "all") {
+        left.length > 0 &&
+          left.map((item) => {
+            const array = {
+              id: id,
+              zone_id: item.zone_unit_id,
+              unit_id: item.unit_info_id,
+            };
+            body.push(array);
+          });
       } else {
         checkedLeft.map((value) => {
           const data = {

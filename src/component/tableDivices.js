@@ -457,10 +457,47 @@ const DeviceManagement = ({ t, login }) => {
   const deviceRegister = async () => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result; // Extract the base64 data
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            deviceName: meterName,
+            gatewayID: "",
+            deviceBand: band,
+            model: series,
+            serialNumber: numberSN,
+            installationDate: installation,
+            communicationType: "",
+            description: remark,
+            file: base64File, // Include the Base64 encoded file
+          };
+          await API.connectTokenAPI(token);
+          await API.deviceRegister(body).then((response) => {
+            const dataPayload = response.data;
+            console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getDevice();
+              handleCloseAdd();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           deviceName: meterName,
           gatewayID: "",
@@ -470,7 +507,7 @@ const DeviceManagement = ({ t, login }) => {
           installationDate: installation,
           communicationType: "",
           description: remark,
-          file: base64File, // Include the Base64 encoded file
+          file: "", // Include the Base64 encoded file
         };
         await API.connectTokenAPI(token);
         await API.deviceRegister(body).then((response) => {
@@ -487,23 +524,60 @@ const DeviceManagement = ({ t, login }) => {
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleCloseAdd();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
     }
   };
 
   const deviceUpdate = async (id) => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result; // Extract the base64 data
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            deviceName: meterName,
+            gatewayID: "",
+            deviceBand: band,
+            model: series,
+            serialNumber: numberSN,
+            installationDate: installation,
+            communicationType: "",
+            description: remark,
+            file: base64File, // Include the Base64 encoded file
+          };
+          await API.connectTokenAPI(token);
+          await API.deviceUpdate(id, body).then((response) => {
+            const dataPayload = response.data;
+            // console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getDevice();
+              handleClose();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           deviceName: meterName,
           gatewayID: "",
@@ -513,7 +587,7 @@ const DeviceManagement = ({ t, login }) => {
           installationDate: installation,
           communicationType: "",
           description: remark,
-          file: base64File, // Include the Base64 encoded file
+          file: "", // Include the Base64 encoded file
         };
         await API.connectTokenAPI(token);
         await API.deviceUpdate(id, body).then((response) => {
@@ -530,13 +604,13 @@ const DeviceManagement = ({ t, login }) => {
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleClose();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
     }
   };
 
@@ -728,28 +802,28 @@ const DeviceManagement = ({ t, login }) => {
     }
   };
 
-    // Update visibleRows based on the searchQuery
-    const updateVisibleRows = (query) => {
-      if (query) {
-        const filteredRows = rows.filter((row) =>
-          Object.values(row).some(
-            (value) =>
-              typeof value === "string" &&
-              value.toLowerCase().includes(query.toLowerCase())
-          )
-        );
-        console.log("filteredRows", filteredRows);
-        setRows(filteredRows);
-      } else {
-        getDevice();
-      }
-    };
-  
-    const handleSearchChange = (event) => {
-      const query = event.target.value;
-      setSearchQuery(query);
-      updateVisibleRows(query);
-    };
+  // Update visibleRows based on the searchQuery
+  const updateVisibleRows = (query) => {
+    if (query) {
+      const filteredRows = rows.filter((row) =>
+        Object.values(row).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+      console.log("filteredRows", filteredRows);
+      setRows(filteredRows);
+    } else {
+      getDevice();
+    }
+  };
+
+  const handleSearchChange = (event) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+    updateVisibleRows(query);
+  };
 
   return (
     <Container className={classes.marginRow}>

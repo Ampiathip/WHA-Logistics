@@ -174,6 +174,9 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "flex-end",
   },
+  displayContents: {
+    display: "contents",
+  },
 }));
 
 function descendingComparator(a, b, orderBy) {
@@ -469,8 +472,7 @@ const BuildingManagement = ({ t, login }) => {
         _.isEmpty(buildingName) ||
         !lattitude ||
         !longtitude ||
-        !area ||
-        _.isEmpty(file)
+        !area
       ) {
         isValidate = false;
       }
@@ -481,8 +483,7 @@ const BuildingManagement = ({ t, login }) => {
         _.isEmpty(buildingName) ||
         _.isEmpty(lattitude) ||
         _.isEmpty(longtitude) ||
-        _.isEmpty(area) ||
-        _.isNull(file)
+        _.isEmpty(area)
       ) {
         isValidate = false;
       }
@@ -502,18 +503,51 @@ const BuildingManagement = ({ t, login }) => {
   const buildingRegister = async () => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result; // Extract the base64 data
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            name: buildingName,
+            latitude: lattitude,
+            longitude: longtitude,
+            area: area,
+            file: base64File, // Include the Base64 encoded file
+          };
+          API.connectTokenAPI(token);
+          await API.BuildingRegister(body).then((response) => {
+            const dataPayload = response.data;
+            console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getBuilding();
+              handleCloseAdd();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           name: buildingName,
           latitude: lattitude,
           longitude: longtitude,
           area: area,
-          file: base64File, // Include the Base64 encoded file
+          file: "", // Include the Base64 encoded file
         };
-        await API.connectTokenAPI(token);
+        API.connectTokenAPI(token);
         await API.BuildingRegister(body).then((response) => {
           const dataPayload = response.data;
           console.log("dataPayload", dataPayload, response);
@@ -528,32 +562,66 @@ const BuildingManagement = ({ t, login }) => {
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleCloseAdd();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
     }
   };
 
   const buildingUpdate = async (id) => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result; // Extract the base64 data
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            name: buildingName,
+            latitude: lattitude,
+            longitude: longtitude,
+            area: area,
+            file: base64File,
+            fileOld: "",
+          };
+          API.connectTokenAPI(token);
+          await API.buildingUpdate(id, body).then((response) => {
+            const dataPayload = response.data;
+            // console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getBuilding();
+              handleClose();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           name: buildingName,
           latitude: lattitude,
           longitude: longtitude,
           area: area,
-          file: base64File,
+          file: "",
           fileOld: "",
         };
-        await API.connectTokenAPI(token);
+        API.connectTokenAPI(token);
         await API.buildingUpdate(id, body).then((response) => {
           const dataPayload = response.data;
           // console.log("dataPayload", dataPayload, response);
@@ -568,13 +636,13 @@ const BuildingManagement = ({ t, login }) => {
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleClose();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
     }
   };
 
@@ -592,7 +660,7 @@ const BuildingManagement = ({ t, login }) => {
             setLattitude(item.latitude);
             setLongtitude(item.longitude);
             setArea(item.area);
-            setFile(item.file);
+            setImagePreviewUrl(item.file);
           });
         setIsLoading(false);
       });
@@ -1148,7 +1216,7 @@ const BuildingManagement = ({ t, login }) => {
                   md={12}
                   //   className={clsx(classes.flexRow, classes.justContentCenter)}
                 >
-                  <Grid item md={6}>
+                  <Grid item md={6} className={classes.displayContents}>
                     <input
                       className={classes.input}
                       id={"contained-button-file"}
@@ -1173,9 +1241,9 @@ const BuildingManagement = ({ t, login }) => {
                         style={{ width: 200, height: 200 }}
                         className={clsx(classes.boxUpload)}
                       >
-                        {file ? (
+                        {imagePreviewUrl ? (
                           <img
-                            src={`data:image/png;base64,${file}`}
+                            src={imagePreviewUrl}
                             alt="img-upload"
                             className={classes.imgWidth}
                           />
@@ -1194,9 +1262,9 @@ const BuildingManagement = ({ t, login }) => {
                     </label>
                   </Grid>
 
-                  {!isValidate && _.isNull(file) ? (
+                  {/* {!isValidate && _.isNull(file) ? (
                     <Validate errorText={"กรุณาระบุข้อมูล"} />
-                  ) : null}
+                  ) : null} */}
                 </Grid>
               </Grid>
 
@@ -1326,7 +1394,7 @@ const BuildingManagement = ({ t, login }) => {
               md={12}
               //   className={clsx(classes.flexRow, classes.justContentCenter)}
             >
-              <Grid item md={6}>
+              <Grid item md={6} className={classes.displayContents}>
                 <input
                   className={classes.input}
                   id={"contained-button-file"}
@@ -1372,9 +1440,9 @@ const BuildingManagement = ({ t, login }) => {
                 </label>
               </Grid>
 
-              {!isValidate && _.isNull(imagePreviewUrl) ? (
+              {/* {!isValidate && _.isNull(imagePreviewUrl) ? (
                 <Validate errorText={"กรุณาระบุข้อมูล"} />
-              ) : null}
+              ) : null} */}
             </Grid>
           </Grid>
           {/* <DialogContentText>

@@ -230,14 +230,14 @@ const headCells = [
     numeric: true,
     disablePadding: false,
     label: "First Name",
-    width: 150,
+    // width: 150,
   },
   {
     id: "fat",
     numeric: true,
     disablePadding: false,
     label: "Last Name",
-    width: 150,
+    // width: 150,
   },
   {
     id: "carbs",
@@ -245,37 +245,37 @@ const headCells = [
     disablePadding: false,
     label: "Role",
   },
-  {
-    id: "power",
-    numeric: true,
-    disablePadding: false,
-    label: "Position",
-  },
+  // {
+  //   id: "power",
+  //   numeric: true,
+  //   disablePadding: false,
+  //   label: "Position",
+  // },
   {
     id: "protein",
     numeric: true,
     disablePadding: false,
     label: "Department",
   },
-  {
-    id: "phone",
-    numeric: true,
-    disablePadding: false,
-    label: "Phone No.",
-    width: 150,
-  },
+  // {
+  //   id: "phone",
+  //   numeric: true,
+  //   disablePadding: false,
+  //   label: "Phone No.",
+  //   width: 150,
+  // },
   {
     id: "last",
     numeric: true,
     disablePadding: false,
     label: "Last Login",
   },
-  {
-    id: "remark",
-    numeric: true,
-    disablePadding: false,
-    label: "Remark",
-  },
+  // {
+  //   id: "remark",
+  //   numeric: true,
+  //   disablePadding: false,
+  //   label: "Remark",
+  // },
   {
     id: "enabel",
     numeric: true,
@@ -522,6 +522,7 @@ const UserManagement = ({ t, login }) => {
       await API.connectTokenAPI(token);
       await API.getUserData().then((response) => {
         const dataPayload = response.data;
+        console.log('dataPayload', dataPayload);
         setRows(dataPayload);
         setIsLoading(false);
       });
@@ -900,8 +901,13 @@ const UserManagement = ({ t, login }) => {
     setPage(0);
   };
 
-  const handleChangeDense = (event) => {
-    setDense(event.target.checked);
+  const handleChangeDense = (event, row, index) => {
+    const newValue = event.target.checked;
+    const updatedRows = [...rows];
+    updatedRows[index].enabled = newValue;
+    // Update the state with the new array
+    setRows(updatedRows);
+    // setDense(!enabled);
   };
 
   const isSelected = (name) => selected.indexOf(name) !== -1;
@@ -1345,36 +1351,36 @@ const UserManagement = ({ t, login }) => {
                           >
                             {row.role}
                           </TableCell>
-                          <TableCell
+                          {/* <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
                             {row.position}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
                             {row.department}
                           </TableCell>
-                          <TableCell
+                          {/* <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
                             {row.phone_number}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
                             {row.last_login}
                           </TableCell>
-                          <TableCell
+                          {/* <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
                             {row.remark}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
@@ -1383,7 +1389,7 @@ const UserManagement = ({ t, login }) => {
                               control={
                                 <Switch
                                   checked={row.enabled ? row.enabled : dense}
-                                  onChange={handleChangeDense}
+                                  onChange={(event) => handleChangeDense(event, row, index)}
                                 />
                               }
                             />

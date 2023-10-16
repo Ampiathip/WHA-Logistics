@@ -500,8 +500,7 @@ const GatewayManagement = ({ t, login }) => {
         _.isEmpty(gatewayName) ||
         !buildingSelect ||
         _.isEmpty(deviceBrand) ||
-        !communicationTypeSelect ||
-        _.isEmpty(imagePreviewUrl)
+        !communicationTypeSelect
       ) {
         isValidate = false;
       }
@@ -512,8 +511,7 @@ const GatewayManagement = ({ t, login }) => {
         _.isEmpty(gatewayName) ||
         !buildingSelect ||
         _.isEmpty(deviceBrand) ||
-        !communicationTypeSelect ||
-        _.isEmpty(imagePreviewUrl)
+        !communicationTypeSelect
       ) {
         isValidate = false;
       }
@@ -533,10 +531,45 @@ const GatewayManagement = ({ t, login }) => {
   const gatewayRegister = async () => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result; // Extract the base64 data
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            name: gatewayName,
+            band: deviceBrand,
+            communication_id: communicationTypeSelect,
+            installation_date: new Date(),
+            description: "",
+            building_id: buildingSelect,
+            file: base64File, // Include the Base64 encoded file
+          };
+          await API.connectTokenAPI(token);
+          await API.gatewayRegister(body).then((response) => {
+            const dataPayload = response.data;
+            console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getGateway();
+              handleCloseAdd();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           name: gatewayName,
           band: deviceBrand,
@@ -544,7 +577,7 @@ const GatewayManagement = ({ t, login }) => {
           installation_date: new Date(),
           description: "",
           building_id: buildingSelect,
-          file: base64File, // Include the Base64 encoded file
+          file: "", // Include the Base64 encoded file
         };
         await API.connectTokenAPI(token);
         await API.gatewayRegister(body).then((response) => {
@@ -561,23 +594,59 @@ const GatewayManagement = ({ t, login }) => {
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleCloseAdd();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
     }
   };
 
   const gatewayUpdate = async (id) => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result; // Extract the base64 data
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            name: gatewayName,
+            band: deviceBrand,
+            communication_id: communicationTypeSelect,
+            installation_date: new Date(),
+            description: "",
+            building_id: buildingSelect,
+            file: base64File, // Include the Base64 encoded file
+            fileOld: "",
+          };
+          await API.connectTokenAPI(token);
+          await API.gatewayUpdate(id, body).then((response) => {
+            const dataPayload = response.data;
+            // console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getGateway();
+              handleClose();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           name: gatewayName,
           band: deviceBrand,
@@ -585,7 +654,7 @@ const GatewayManagement = ({ t, login }) => {
           installation_date: new Date(),
           description: "",
           building_id: buildingSelect,
-          file: base64File, // Include the Base64 encoded file
+          file: "", // Include the Base64 encoded file
           fileOld: "",
         };
         await API.connectTokenAPI(token);
@@ -603,13 +672,13 @@ const GatewayManagement = ({ t, login }) => {
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleClose();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
     }
   };
 
@@ -1232,9 +1301,9 @@ const GatewayManagement = ({ t, login }) => {
                     </Card>
                   </label>
                 </Grid>
-                {_.isEmpty(file) && !isValidate && (
+                {/* {_.isEmpty(file) && !isValidate && (
                   <Validate errorText={"กรุณาระบุข้อมูล"} />
-                )}
+                )} */}
               </Grid>
               <Grid
                 item
@@ -1437,9 +1506,9 @@ const GatewayManagement = ({ t, login }) => {
                 </Card>
               </label>
             </Grid>
-            {_.isEmpty(imagePreviewUrl) && !isValidate && (
+            {/* {_.isEmpty(imagePreviewUrl) && !isValidate && (
               <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
+            )} */}
           </Grid>
           {/* <DialogContentText>
             Let Google help apps determine location. This means sending

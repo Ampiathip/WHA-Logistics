@@ -77,8 +77,13 @@ const SideBar = () => {
       cancelButtonText: "ยกเลิก",
       showCancelButton: true,
       text: "คุณต้องการออกจากระบบ",
-    }).then(() => {
-      dispatch(logout(false));
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // dispatch(loading(false))
+        dispatch(logout(false));
+      } else if (result.isDismissed) {
+        // dispatch(loading(false))
+      }
     });
   };
 
@@ -214,7 +219,7 @@ const SideBar = () => {
             <ListItemText primary={t("sidebar:parameter")} />
           </ListItem>
         </Link>
-        <Link
+        {/* <Link
           to={"/group"}
           className={`${
             sideBar == "group" ? classes.activeIcon : classes.LinkColor
@@ -230,7 +235,7 @@ const SideBar = () => {
             </ListItemIcon>
             <ListItemText primary={t("sidebar:group")} />
           </ListItem>
-        </Link>
+        </Link> */}
         <Link
           to={"/user"}
           className={`${

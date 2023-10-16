@@ -70,6 +70,10 @@ import IconShow from "../images/icon/Show.svg";
 import IconSetting from "../images/icon/Setting.svg";
 import IconEdit from "../images/icon/Edit.svg";
 import IconSave from "../images/icon/TickSquare.svg";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -451,7 +455,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const [deviceName, setDeviceName] = useState("");
   const [model, setModel] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
-  const [installation, setInstallation] = useState("");
+  const [installation, setInstallation] = useState(null);
 
   const dispatch = useDispatch();
   const classes = useStyles();
@@ -587,6 +591,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
       await API.getDeviceData(id).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayload", dataPayload);
+        dataPayload.map((item) => {
+          setGatewayName(item.gatewayname)
+        });
         setRows(dataPayload);
         setIsLoading(false);
       });
@@ -654,14 +661,13 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     let isValidate = true;
     if (
       _.isEmpty(deviceName) ||
-      _.isEmpty(gatewayName) ||
+      // _.isEmpty(gatewayName) ||
       _.isEmpty(deviceBrand) ||
       !communicationTypeSelect ||
       !billingTypeSelect ||
       _.isEmpty(model) ||
       _.isEmpty(serialNumber) ||
-      _.isEmpty(installation) ||
-      _.isEmpty(imagePreviewUrl)
+      _.isNull(installation)
     ) {
       isValidate = false;
     }
@@ -680,10 +686,48 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const deviceRegister = async () => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result; // Extract the base64 data
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            deviceName: deviceName,
+            gatewayID: id,
+            deviceBand: deviceBrand,
+            model: model,
+            serialNumber: serialNumber,
+            installationDate: installation,
+            communicationType: communicationTypeSelect,
+            billingType_id: billingTypeSelect,
+            description: "",
+            file: base64File, // Include the Base64 encoded file
+          };
+          API.connectTokenAPI(token);
+          await API.deviceRegister(body).then((response) => {
+            const dataPayload = response.data;
+            console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getDevice(id);
+              handleCloseAdd();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           deviceName: deviceName,
           gatewayID: id,
@@ -694,9 +738,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           communicationType: communicationTypeSelect,
           billingType_id: billingTypeSelect,
           description: "",
-          file: base64File, // Include the Base64 encoded file
+          file: "", // Include the Base64 encoded file
         };
-        await API.connectTokenAPI(token);
+        API.connectTokenAPI(token);
         await API.deviceRegister(body).then((response) => {
           const dataPayload = response.data;
           console.log("dataPayload", dataPayload, response);
@@ -711,23 +755,61 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleCloseAdd();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAdd();
+        setIsLoading(false);
+      }
     }
   };
 
   const deviceUpdate = async (rowId) => {
     setIsLoading(true);
     let reader = new window.FileReader();
-    reader.readAsDataURL(file);
-    try {
-      reader.onload = async () => {
-        const base64File = reader.result; // Extract the base64 data
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            deviceName: deviceName,
+            gatewayID: id,
+            deviceBand: deviceBrand,
+            model: model,
+            serialNumber: serialNumber,
+            installationDate: installation,
+            communicationType: communicationTypeSelect,
+            billingType_id: billingTypeSelect,
+            description: "",
+            file: base64File, // Include the Base64 encoded file
+          };
+          await API.connectTokenAPI(token);
+          await API.deviceUpdate(rowId, body).then((response) => {
+            const dataPayload = response.data;
+            // console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getDevice(id);
+              handleClose();
+            }
+            setIsLoading(false);
+          });
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
+    } else {
+      try {
         const body = {
           deviceName: deviceName,
           gatewayID: id,
@@ -738,9 +820,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           communicationType: communicationTypeSelect,
           billingType_id: billingTypeSelect,
           description: "",
-          file: base64File, // Include the Base64 encoded file
+          file: "", // Include the Base64 encoded file
         };
-        await API.connectTokenAPI(token);
+        API.connectTokenAPI(token);
         await API.deviceUpdate(rowId, body).then((response) => {
           const dataPayload = response.data;
           // console.log("dataPayload", dataPayload, response);
@@ -755,13 +837,13 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           }
           setIsLoading(false);
         });
-      };
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleClose();
-      setIsLoading(false);
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleClose();
+        setIsLoading(false);
+      }
     }
   };
 
@@ -977,9 +1059,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     setDeviceBrand(event.target.value);
   };
 
-  const handleGatewayName = (event) => {
-    setGatewayName(event.target.value);
-  };
+  // const handleGatewayName = (event) => {
+  //   setGatewayName(event.target.value);
+  // };
 
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
@@ -988,10 +1070,10 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     setCommunicationTypeSelect("none");
     setDeviceBrand("");
     setDeviceName("");
-    setGatewayName("");
+    // setGatewayName("");
     setModel("");
     setSerialNumber("");
-    setInstallation("");
+    setInstallation(null);
     setImagePreviewUrl("");
   };
 
@@ -1039,8 +1121,8 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     setSerialNumber(event.target.value);
   };
 
-  const handleInstallation = (event) => {
-    setInstallation(event.target.value);
+  const handleInstallation = (value) => {
+    setInstallation(value);
   };
 
   // add row Edit //
@@ -1469,7 +1551,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.name}
+                            {row.gatewayname}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1618,7 +1700,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                       </Grid>
                       <Grid item md={6} className={classes.textAlignEnd}>
                         <Typography variant="h6">Gateway1</Typography>
-                        <Typography variant="body1">JCA GATEWAY</Typography>
+                        <Typography variant="body1">{gatewayName}</Typography>
                         <Typography variant="subtitle2">Building 1</Typography>
                         <Button
                           variant="outlined"
@@ -2158,12 +2240,13 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
               fullWidth
               variant="outlined"
               value={gatewayName}
-              onChange={handleGatewayName}
-              error={_.isEmpty(gatewayName) && !isValidate}
+              disabled={true}
+              // onChange={handleGatewayName}
+              // error={_.isEmpty(gatewayName) && !isValidate}
             />
-            {_.isEmpty(gatewayName) && !isValidate && (
+            {/* {_.isEmpty(gatewayName) && !isValidate && (
               <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
+            )} */}
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
@@ -2223,7 +2306,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:Installation")}
             </Typography>
-            <TextField
+            {/* <TextField
               // id="input-with-icon-textfield"
               size="small"
               placeholder={t("gateway:Installation")}
@@ -2232,8 +2315,22 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
               value={installation}
               onChange={handleInstallation}
               error={_.isEmpty(installation) && !isValidate}
-            />
-            {_.isEmpty(installation) && !isValidate && (
+            /> */}
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DemoContainer components={["DatePicker"]}>
+                <DatePicker
+                  className={classes.width}
+                  value={installation}
+                  onChange={(newValue) => handleInstallation(newValue)}
+                  slotProps={{
+                    textField: {
+                      error: _.isEmpty(installation) && !isValidate,
+                    },
+                  }}
+                />
+              </DemoContainer>
+            </LocalizationProvider>
+            {_.isNull(installation) && !isValidate && (
               <Validate errorText={"กรุณาระบุข้อมูล"} />
             )}
           </Grid>
@@ -2359,9 +2456,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                 </Card>
               </label>
             </Grid>
-            {_.isEmpty(imagePreviewUrl) && !isValidate && (
+            {/* {_.isEmpty(imagePreviewUrl) && !isValidate && (
               <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
+            )} */}
           </Grid>
           <Grid
             item
@@ -2454,7 +2551,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                       </Grid>
                       <Grid item md={6} className={classes.textAlignEnd}>
                         <Typography variant="h6">Gateway1</Typography>
-                        <Typography variant="body1">JCA GATEWAY</Typography>
+                        <Typography variant="body1">{gatewayName}</Typography>
                         <Typography variant="subtitle2">Building 1</Typography>
                         <Button
                           variant="outlined"
