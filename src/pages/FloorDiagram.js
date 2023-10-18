@@ -162,6 +162,9 @@ const useStyles = makeStyles((theme) => ({
   backgroundBoxFloor7: {
     backgroundColor: "#92D2E0",
   },
+  marginRow: {
+    marginTop: 15,
+  },
 }));
 
 const FloorDiagram = () => {
@@ -713,7 +716,7 @@ const FloorDiagram = () => {
         {/* <Grid container className="FlexRowCard"> */}
         {/* <Grid item md={2}></Grid> */}
         <Box
-          className={clsx(classes.flexRow, classes.marginBox, classes.flexWrap)}
+          className={clsx(classes.flexRow, classes.marginRow, classes.flexWrap)}
         >
           <Grid item md={3}>
             <Card>

@@ -111,6 +111,11 @@ const useStyles = makeStyles((theme) => ({
     width: "90% !important",
     height: "90% !important",
   },
+  modalEditWidth: {
+    width: "90% !important",
+    height: "90% !important",
+    maxWidth: 'none !important',
+  },
   modalContent: {
     justifyContent: "space-around",
   },
@@ -1370,7 +1375,7 @@ const UnitManagement = ({
   };
 
   return (
-    <Container className={classes.marginRow}>
+    <Box className={classes.marginRow}>
       {isLoading ? (
         <Box mt={4} width={1} display="flex" justifyContent="center">
           <CircularProgress color="primary" />
@@ -1602,7 +1607,7 @@ const UnitManagement = ({
         onClose={handleClose}
         aria-labelledby="responsive-dialog-title"
         classes={{
-          paper: classes.modalWidth,
+          paper: classes.modalEditWidth,
         }}
       >
         <DialogTitle id="responsive-dialog-title" className="mt-3">
@@ -2474,7 +2479,7 @@ const UnitManagement = ({
           )}
         </DialogContent>
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 

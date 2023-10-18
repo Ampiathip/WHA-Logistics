@@ -106,6 +106,7 @@ const useStyles = makeStyles((theme) => ({
   modalWidth: {
     width: "90% !important",
     height: "90% !important",
+    
   },
   modalContent: {
     justifyContent: "space-around",
@@ -904,7 +905,7 @@ const BuildingManagement = ({ t, login }) => {
   };
 
   return (
-    <Container className={classes.marginRow}>
+    <Box className={classes.marginRow}>
       {isLoading ? (
         <Box mt={4} width={1} display="flex" justifyContent="center">
           <CircularProgress color="primary" />
@@ -1564,7 +1565,7 @@ const BuildingManagement = ({ t, login }) => {
           )}
         </DialogContent>
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 

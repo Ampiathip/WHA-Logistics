@@ -24,6 +24,7 @@ import UserView from "./modalUserView";
 import { useTranslation } from "react-i18next";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { Link } from "react-router-dom";
 
 const MySwal = withReactContent(Swal);
 
@@ -48,10 +49,21 @@ const useStyles = makeStyles((theme) => ({
     marginRight: 20,
     cursor: "pointer",
   },
+  activeIcon: {
+    color: "#000",
+    textDecoration: "blink",
+    "&:hover": {
+      color: "#000",
+    },
+  },
+  LinkColor: {
+    color: "#000",
+    textDecoration: "blink",
+  },
 }));
 
 function Header({ type, matches }) {
-  const { t, i18n } = useTranslation(["user"]);
+  const { t, i18n } = useTranslation(["user", "sidebar"]);
   const dispatch = useDispatch();
   const classes = useStyles();
   const user = useSelector((state) => state.user);
@@ -207,9 +219,123 @@ function Header({ type, matches }) {
                   "aria-labelledby": "basic-button",
                 }}
               >
-                <MenuItem onClick={handleClose}>Profile</MenuItem>
-                <MenuItem onClick={handleClose}>My account</MenuItem>
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                {matches ? (
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                ) : (
+                  <>
+                    <Link
+                      to={"/dashboard"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:dashboard")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/floorDiagram"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:FloorDiagram")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/divices"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:myDevices")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/historicalData"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:historicalData")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/systemOverview"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:systemOverview")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/parameter"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:parameter")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/user"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:user")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/building"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:Building")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/gateway"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:Gateway")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/zone"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem>{t("sidebar:zone")}</MenuItem>
+                    </Link>
+
+                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                  </>
+                )}
               </Menu>
             </Grid>
           </Grid>

@@ -74,6 +74,7 @@ import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import helper from "../js/helper"
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -118,6 +119,11 @@ const useStyles = makeStyles((theme) => ({
   modalWidth: {
     width: "90% !important",
     height: "90% !important",
+  },
+  modalEditWidth: {
+    width: "90% !important",
+    height: "90% !important",
+    maxWidth: 'none !important',
   },
   modalContent: {
     justifyContent: "space-around",
@@ -312,7 +318,7 @@ const headCells = [
     numeric: true,
     disablePadding: false,
     label: "Installation Date",
-    width: 150,
+    width: 160,
   },
   {
     id: "action",
@@ -354,7 +360,7 @@ function EnhancedTableHead(props) {
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            align={headCell.numeric ? "right" : "center"}
+            align={"center"}
             // padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
             width={headCell.width}
@@ -1414,7 +1420,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   };
 
   return (
-    <Container className={classes.marginRow}>
+    <Box className={classes.marginRow}>
       {isLoading ? (
         <Box mt={4} width={1} display="flex" justifyContent="center">
           <CircularProgress color="primary" />
@@ -1569,7 +1575,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.installation_date}
+                            {helper.momentTime(row.installation_date)}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1647,7 +1653,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
         onClose={handleClose}
         aria-labelledby="responsive-dialog-title"
         classes={{
-          paper: classes.modalWidth,
+          paper: classes.modalEditWidth,
         }}
       >
         <DialogTitle id="responsive-dialog-title">
@@ -2490,12 +2496,12 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
       {/* Modal ViewData */}
       <Dialog
         fullScreen={fullScreenView}
-        className={classes.modalWidth}
+        // className={classes.modalWidth}
         open={openView}
         onClose={handleCloseView}
         aria-labelledby="responsive-dialog-title"
         classes={{
-          paper: classes.modalWidth,
+          paper: classes.modalEditWidth,
         }}
       >
         <DialogTitle id="responsive-dialog-title">
@@ -2760,7 +2766,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           )}
         </DialogContent>
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 

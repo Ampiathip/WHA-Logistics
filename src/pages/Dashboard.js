@@ -66,7 +66,7 @@ const useStyles = makeStyles((theme) => ({
   positionImg: {
     position: "relative",
     // zIndex: -1,
-    width: "70em",
+    width: "63em",
     height: "50em",
   },
   btnBox: {
@@ -79,7 +79,7 @@ const useStyles = makeStyles((theme) => ({
   },
   positionAbImg: {
     position: "absolute",
-    width: "70em",
+    width: "63em",
     height: "100%",
   },
   positionBox: {
@@ -97,6 +97,9 @@ const useStyles = makeStyles((theme) => ({
     fontSize: 12,
     fontWeight: "normal",
     fontFamily: "Poppins, sans-serif !important",
+  },
+  marginRow: {
+    marginTop: 15,
   },
 }));
 
@@ -528,7 +531,7 @@ const Dashboard = () => {
         {/* <Grid container className="FlexRowCard"> */}
         {/* <Grid item md={2}></Grid> */}
         <Box
-          className={clsx(classes.flexRow, classes.marginBox, classes.flexWrap)}
+          className={clsx(classes.flexRow, classes.marginRow, classes.flexWrap)}
         >
           <Grid item md={3}>
             <Card>

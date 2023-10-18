@@ -66,7 +66,7 @@ const SideBarPage = ({ children, t }) => {
       {/* <Grid container> */}
       <Box className={clsx(classes.flexRow, classes.marginRow, classes.justify)}>
         {/* <Grid item md={1}></Grid> */}
-        <Grid item md={matches ? 2 : 3}>
+        <Grid item md={matches ? 3 : 3}>
           {/* <Drawer
             className={classes.drawer}
             variant="permanent"
@@ -89,7 +89,7 @@ const SideBarPage = ({ children, t }) => {
             </Card>
           {/* </Drawer> */}
         </Grid>
-        <Grid item md={9}>
+        <Grid item md={11}>
           {children}
         </Grid>
         {/* <Grid item md={1}></Grid> */}

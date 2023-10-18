@@ -108,6 +108,7 @@ const useStyles = makeStyles((theme) => ({
   modalWidth: {
     width: "90% !important",
     height: "90% !important",
+    maxWidth: 'none !important'
   },
   modalContent: {
     justifyContent: "space-around",
@@ -826,7 +827,7 @@ const DeviceManagement = ({ t, login }) => {
   };
 
   return (
-    <Container className={classes.marginRow}>
+    <Box className={classes.marginRow}>
       <Grid item className={classes.flexRow}>
         <HomeOutlinedIcon className={classes.alignSelf} />
         <Typography variant="h6"> / {sideBar}</Typography>
@@ -2480,7 +2481,7 @@ const DeviceManagement = ({ t, login }) => {
           </Button>
         </DialogActions> */}
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 

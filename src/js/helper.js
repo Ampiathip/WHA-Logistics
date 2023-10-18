@@ -80,8 +80,8 @@ export default {
     }
   },
   momentTime(time) {
-    let datetime = moment().format("YYYY-MM-DD " + time);
-    return moment(datetime).format("HH:mm [น.]");
+    // let datetime = moment(time).format("YYYY-MM-DD " + time);
+    return moment(time).format("DD-MM-YYYY h:mm a");
   },
   momentDateTime(datetime, type = "short", setTime = false) {
     let year = parseInt(moment(datetime).format("YYYY")) + 543;

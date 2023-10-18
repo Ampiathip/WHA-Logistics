@@ -1330,7 +1330,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   );
 
   return (
-    <Container className={classes.marginRow}>
+    <Box className={classes.marginRow}>
       {isLoading ? (
         <Box mt={4} width={1} display="flex" justifyContent="center">
           <CircularProgress color="primary" />
@@ -2050,7 +2050,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
           )}
         </DialogContent>
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 

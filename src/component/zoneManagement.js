@@ -788,7 +788,7 @@ const ZoneManagement = ({ t }) => {
   };
 
   return (
-    <Container className={classes.marginRow}>
+    <Box className={classes.marginRow}>
       {isLoading ? (
         <Box mt={4} width={1} display="flex" justifyContent="center">
           <CircularProgress color="primary" />
@@ -1302,7 +1302,7 @@ const ZoneManagement = ({ t }) => {
           )}
         </DialogContent>
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 

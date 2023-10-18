@@ -9,9 +9,18 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   Box,
   CircularProgress,
+  makeStyles,
 } from "@material-ui/core";
 
+const useStyles = makeStyles((theme) => ({
+  flexRow: {
+    display: "flex",
+    justifyContent: "center",
+  },
+}));
+
 const Layout = ({ children, type }) => {
+  const classes = useStyles();
   const dispatch = useDispatch();
   const matches = useMediaQuery("(min-width:1024px)");
   const loading = useSelector((state) => state.loading);
@@ -42,13 +51,14 @@ const Layout = ({ children, type }) => {
         <>
           <Header matches={matches} />
           {/* <Container> */}
-          <Grid container>
+          <Grid container className={classes.flexRow}>
             {matches && (
               <Grid item xs={2}>
                 <SideBar />
               </Grid>
             )}
-            <Grid item xs={matches ? 10 : 12}>
+            {/* <Grid item xs={1}></Grid> */}
+            <Grid item xs={matches ? 9 : 12}>
               {children}
             </Grid>
           </Grid>

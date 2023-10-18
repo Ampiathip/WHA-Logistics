@@ -113,6 +113,7 @@ const useStyles = makeStyles((theme) => ({
   modalWidth: {
     width: "60% !important",
     height: "90% !important",
+    maxWidth: 'none !important',
   },
   modalContent: {
     justifyContent: "space-around",
@@ -321,7 +322,7 @@ function EnhancedTableHead(props) {
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            align={headCell.numeric ? "right" : "center"}
+            align={"center"}
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
             width={headCell.width}
@@ -1212,7 +1213,7 @@ const UserManagement = ({ t, login }) => {
   };
 
   return (
-    <Container className={classes.marginRow}>
+    <Box className={classes.marginRow}>
       {isLoading ? (
         <Box mt={4} width={1} display="flex" justifyContent="center">
           <CircularProgress color="primary" />
@@ -2274,7 +2275,7 @@ const UserManagement = ({ t, login }) => {
         role={role}
         loading={isLoading}
       />
-    </Container>
+    </Box>
   );
 };
 

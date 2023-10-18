@@ -129,7 +129,7 @@ const ParameterData = ({ t }) => {
   };
 
   return (
-    <Container>
+    <>
       <Box
         className={clsx(
           classes.alignCenter,
@@ -311,7 +311,7 @@ const ParameterData = ({ t }) => {
           </TableContainer>
         </Box>
       )}
-    </Container>
+    </>
   );
 };
 

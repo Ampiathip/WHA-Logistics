@@ -66,6 +66,7 @@ import IconDelete from "../images/icon/Delete.svg";
 import IconDocument from "../images/icon/Document.svg";
 import IconShow from "../images/icon/Show.svg";
 import IconSetting from "../images/icon/Setting.svg";
+import helper from "../js/helper"
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -176,6 +177,9 @@ const useStyles = makeStyles((theme) => ({
   flexRowBtnModal: {
     display: "flex",
     justifyContent: "flex-end",
+  },
+  marginBox: {
+    margin: 15,
   },
 }));
 
@@ -293,7 +297,7 @@ function EnhancedTableHead(props) {
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            align={headCell.numeric ? "right" : "center"}
+            align={"center"}
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
             className={classes.fontSixeHead}
@@ -917,7 +921,7 @@ const GatewayManagement = ({ t, login }) => {
   };
 
   return (
-    <Container className={classes.marginRow}>
+    <Box className={clsx(classes.marginRow)}>
       {isLoading ? (
         <Box mt={4} width={1} display="flex" justifyContent="center">
           <CircularProgress color="primary" />
@@ -1051,7 +1055,7 @@ const GatewayManagement = ({ t, login }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.installation_date}
+                            {helper.momentTime(row.installation_date)}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1627,7 +1631,7 @@ const GatewayManagement = ({ t, login }) => {
           )}
         </DialogContent>
       </Dialog>
-    </Container>
+    </Box>
   );
 };
 
