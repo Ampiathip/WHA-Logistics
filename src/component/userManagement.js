@@ -113,7 +113,7 @@ const useStyles = makeStyles((theme) => ({
   modalWidth: {
     width: "60% !important",
     height: "90% !important",
-    maxWidth: 'none !important',
+    maxWidth: "none !important",
   },
   modalContent: {
     justifyContent: "space-around",
@@ -430,6 +430,7 @@ const UserManagement = ({ t, login }) => {
   const [active, setActive] = useState(null);
   const [selectInput, setSelectInput] = useState("none");
   const [userId, setUserId] = useState("");
+  const [roleList, setRoleList] = useState([]);
   // const [activeEdit, setActiveEdit] = useState(false);
 
   // modal reset //
@@ -482,6 +483,7 @@ const UserManagement = ({ t, login }) => {
     if (!_.isEmpty(token)) {
       getUser();
       getBuilding();
+      getRoleTypeList();
     }
     console.log("token", token, login);
   }, [token]);
@@ -517,13 +519,31 @@ const UserManagement = ({ t, login }) => {
     });
   };
 
+  const getRoleTypeList = async () => {
+    setIsLoading(true);
+    try {
+      API.connectTokenAPI(token);
+      await API.roleTypeList().then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", dataPayload);
+        setRoleList(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
   const getUser = async () => {
     setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
       await API.getUserData().then((response) => {
         const dataPayload = response.data;
-        console.log('dataPayload', dataPayload);
+        console.log("dataPayload", dataPayload);
         setRows(dataPayload);
         setIsLoading(false);
       });
@@ -612,7 +632,7 @@ const UserManagement = ({ t, login }) => {
         enabled: active,
         position: "",
         department: "",
-        // role: "",
+        role: role,
       };
       await API.connectTokenAPI(token);
       await API.userRegister(body).then((response) => {
@@ -740,7 +760,7 @@ const UserManagement = ({ t, login }) => {
         enabled: active,
         position: "",
         department: "",
-        role: "",
+        role: role,
         remark: "",
       };
       await API.connectTokenAPI(token);
@@ -1390,7 +1410,9 @@ const UserManagement = ({ t, login }) => {
                               control={
                                 <Switch
                                   checked={row.enabled ? row.enabled : dense}
-                                  onChange={(event) => handleChangeDense(event, row, index)}
+                                  onChange={(event) =>
+                                    handleChangeDense(event, row, index)
+                                  }
                                 />
                               }
                             />
@@ -1620,12 +1642,21 @@ const UserManagement = ({ t, login }) => {
                   id="demo-select-small"
                   value={role}
                   placeholder={t("user:selectRole")}
-                  onChange={handleRoleChange}
+                  onChange={(e) => handleRoleChange(e)}
                 >
                   <MenuItem value="Admin">{t("user:selectRole")}</MenuItem>
-                  {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
+                  {roleList.length > 0 &&
+                    roleList.map((item) => {
+                      return (
+                        <MenuItem
+                          id={"roleListSelect-" + item.id}
+                          key={item.id}
+                          value={item.id}
+                        >
+                          {item.name}
+                        </MenuItem>
+                      );
+                    })}
                 </Select>
               </FormControl>
             </Grid>
@@ -1911,12 +1942,21 @@ const UserManagement = ({ t, login }) => {
                       id="demo-select-small"
                       value={role}
                       placeholder={t("user:selectInput")}
-                      onChange={handleRoleChange}
+                      onChange={(e) => handleRoleChange(e)}
                     >
                       <MenuItem value="Admin">{t("user:selectInput")}</MenuItem>
-                      {/* <MenuItem value={10}>Ten</MenuItem>
-                    <MenuItem value={20}>Twenty</MenuItem>
-                    <MenuItem value={30}>Thirty</MenuItem> */}
+                      {roleList.length > 0 &&
+                        roleList.map((item) => {
+                          return (
+                            <MenuItem
+                              id={"roleListSelect-" + item.id}
+                              key={item.id}
+                              value={item.id}
+                            >
+                              {item.name}
+                            </MenuItem>
+                          );
+                        })}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -2056,7 +2096,10 @@ const UserManagement = ({ t, login }) => {
                                   classes.cuserPoint
                                 )}
                                 onClick={(event) =>
-                                  handleDeleteMeasurement(event, row.building_user_id)
+                                  handleDeleteMeasurement(
+                                    event,
+                                    row.building_user_id
+                                  )
                                 }
                               >
                                 {t("floor:delete")}

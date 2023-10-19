@@ -354,9 +354,32 @@ const getAPI = () => {
     return tokenAPI.post(`/api/zone-unit/remove`, body);
   };
 
-  const zoneUnitBuilding = (id) => {
+  const zoneUnitBuilding = (id = 0) => {
     return tokenAPI.get(`/api/unit-building/list/${id}`);
   };
+
+  /* ============== Role-type API ================ */
+
+  const roleTypeList = () => {
+    return tokenAPI.get(`/api/role-type/list`);
+  };
+
+  /* ============== Realtimedata API ================ */
+
+  const realtimeData = (id = 0) => {
+    return tokenAPI.get(`/api/realtimedata/${id}`);
+  };
+
+  const myDevice = () => {
+    return tokenAPI.get(`/api/my-device`);
+  };
+
+  /* ============== Historicaldata API ================ */
+
+  const historicaldata = (dateTimeFormat = '', startTime = '', endTime = '', body) => {
+    return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}&startTime=${startTime}&endTime=${endTime}`, body);
+  };
+
 
   return {
     connectTokenAPI,
@@ -448,6 +471,12 @@ const getAPI = () => {
 
     zoneUnitBuilding,
     
+    roleTypeList,
+
+    realtimeData,
+    myDevice,
+
+    historicaldata,
   };
 };
 export default {

@@ -74,7 +74,7 @@ import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import helper from "../js/helper"
+import helper from "../js/helper";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -123,7 +123,8 @@ const useStyles = makeStyles((theme) => ({
   modalEditWidth: {
     width: "90% !important",
     height: "90% !important",
-    maxWidth: 'none !important',
+    maxWidth: "none !important",
+    flexWrap: "wrap",
   },
   modalContent: {
     justifyContent: "space-around",
@@ -528,6 +529,11 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     { id: "name", label: "Device ID", minWidth: 120 },
     { id: "code", label: "Point name" },
     {
+      id: "",
+      label: "",
+      align: "center",
+    },
+    {
       id: "population",
       label: "Topic",
       // minWidth: 170,
@@ -598,7 +604,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
         const dataPayload = response.data;
         console.log("dataPayload", dataPayload);
         dataPayload.map((item) => {
-          setGatewayName(item.gatewayname)
+          setGatewayName(item.gatewayname);
         });
         setRows(dataPayload);
         setIsLoading(false);
@@ -1981,8 +1987,8 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                       <Grid
                                         item
                                         className={clsx(
-                                          classes.marginDataTable,
-                                          classes.flexRow
+                                          classes.marginDataTable
+                                          // classes.flexRow
                                         )}
                                       >
                                         <Typography
@@ -1993,25 +1999,56 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                         >
                                           {deviceName && deviceName + "/ "}
                                         </Typography>
-                                        <TextField
-                                          value={row.topic ? row.topic : topic}
-                                          disabled={
-                                            !disabledFild &&
-                                            editPoint === row.id
-                                              ? false
-                                              : true
-                                          }
-                                          variant="outlined"
-                                          size="small"
-                                          fullWidth
-                                          style={{
-                                            fontSize: 14,
-                                            paddingLeft: 3,
-                                          }}
-                                          onChange={(e) =>
-                                            handleTopic(e, row, index)
-                                          }
-                                        />
+                                      </Grid>
+                                    </TableCell>
+                                    <TableCell
+                                      component="th"
+                                      id={row.topic}
+                                      scope="row"
+                                      padding="none"
+                                      style={{ fontSize: 14 }}
+                                      align="center"
+                                    >
+                                      <Grid
+                                        item
+                                        className={clsx(
+                                          classes.marginDataTable
+                                          // classes.flexRow
+                                        )}
+                                      >
+                                        {/* <Grid item>
+                                          <Typography
+                                            style={{
+                                              fontSize: 14,
+                                              alignSelf: "center",
+                                            }}
+                                          >
+                                            {deviceName && deviceName + "/ "}
+                                          </Typography>
+                                        </Grid> */}
+                                        <Grid item>
+                                          <TextField
+                                            value={
+                                              row.topic ? row.topic : topic
+                                            }
+                                            disabled={
+                                              !disabledFild &&
+                                              editPoint === row.id
+                                                ? false
+                                                : true
+                                            }
+                                            variant="outlined"
+                                            size="small"
+                                            fullWidth
+                                            style={{
+                                              fontSize: 14,
+                                              paddingLeft: 3,
+                                            }}
+                                            onChange={(e) =>
+                                              handleTopic(e, row, index)
+                                            }
+                                          />
+                                        </Grid>
                                       </Grid>
                                     </TableCell>
                                     {/* <TableCell

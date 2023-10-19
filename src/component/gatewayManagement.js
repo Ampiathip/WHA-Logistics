@@ -513,9 +513,9 @@ const GatewayManagement = ({ t, login }) => {
     } else {
       if (
         _.isEmpty(gatewayName) ||
-        !buildingSelect ||
+        buildingSelect == 'none' ||
         _.isEmpty(deviceBrand) ||
-        !communicationTypeSelect
+        communicationTypeSelect == 'none'
       ) {
         isValidate = false;
       }
@@ -1359,7 +1359,7 @@ const GatewayManagement = ({ t, login }) => {
               {t("gateway:gatewayName")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("gateway:gatewayName")}
               fullWidth
@@ -1379,7 +1379,7 @@ const GatewayManagement = ({ t, login }) => {
             <FormControl variant="outlined" size="small" fullWidth>
               <Select
                 labelId="demo-select-small-label"
-                id="demo-select-small"
+                // id="demo-select-small"
                 value={building.length > 0 ? buildingSelect : "none"}
                 placeholder={t("gateway:selectCommunication")}
                 onChange={handleBuilding}
@@ -1409,7 +1409,7 @@ const GatewayManagement = ({ t, login }) => {
               {t("gateway:deviceBrand")}
             </Typography>
             <TextField
-              id="input-with-icon-textfield"
+              // id="input-with-icon-textfield"
               size="small"
               placeholder={t("gateway:deviceBrand")}
               fullWidth
@@ -1429,7 +1429,7 @@ const GatewayManagement = ({ t, login }) => {
             <FormControl variant="outlined" size="small" fullWidth>
               <Select
                 labelId="demo-select-small-label"
-                id="demo-select-small"
+                // id="demo-select-small"
                 value={
                   communicationType.length > 0
                     ? communicationTypeSelect
