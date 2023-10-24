@@ -424,13 +424,12 @@ const UserManagement = ({ t, login }) => {
   const [fristName, setFristName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [role, setRole] = useState("Admin");
+  const [role, setRole] = useState("none");
   const [password, setPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
   const [active, setActive] = useState(null);
   const [selectInput, setSelectInput] = useState("none");
   const [userId, setUserId] = useState("");
-  const [roleList, setRoleList] = useState([]);
   // const [activeEdit, setActiveEdit] = useState(false);
 
   // modal reset //
@@ -450,7 +449,7 @@ const UserManagement = ({ t, login }) => {
   const [openViewUser, setOpenViewUser] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("xl"));
   const [isLoading, setIsLoading] = useState(false);
-  const [rows, setRows] = useState([]);
+  const [roleList, setRoleList] = useState([]);
   const [isValidate, setIsValidate] = useState(true);
   const [isValidateEmail, setIsValidateEmail] = useState(true);
   const [message, setMessage] = useState("");
@@ -458,32 +457,39 @@ const UserManagement = ({ t, login }) => {
   const [messagePhone, setMessagePhone] = useState("");
   const [messagePass, setMessagePass] = useState("");
   const [messagePassRe, setMessagePassRe] = useState("");
+  const [rows, setRows] = useState([]);
   const [isValidateEdit, setIsValidateEdit] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
 
   // validate pass forget //
   const [isValidateForget, setIsValidateForget] = useState(false);
   const [messageForget, setMessageForget] = useState("");
-
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortedRows, setSortedRows] = useState(rows);
 
   // edit Building //
   const [rowsBuildingEdit, setRowsBuildingEdit] = useState([]);
   const [buildingData, setBuildingData] = useState([]);
-
+  const [sortedRows, setSortedRows] = useState(rows);
   // user view //
   // const [userView, setUserView] = useState([]);
 
   let emailPattern =
     /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
+  };
+
   useEffect(() => {
     dispatch(checkToken());
     if (!_.isEmpty(token)) {
       getUser();
-      getBuilding();
       getRoleTypeList();
+      getBuilding();
     }
     console.log("token", token, login);
   }, [token]);
@@ -494,48 +500,6 @@ const UserManagement = ({ t, login }) => {
       setUserId(user?.user.id);
     }
   }, [user, userName, userId]);
-
-  console.log("buildingData", buildingData);
-  // useEffect(() => {
-  //   if (!isValidate) {
-  //     handleValidate();
-  //   }
-  // }, [
-  //   emailUser,
-  //   fristName,
-  //   lastName,
-  //   phoneNumber,
-  //   password,
-  //   rePassword,
-  //   active,
-  //   isValidate,
-  // ]);
-
-  const swalFire = (msg) => {
-    MySwal.fire({
-      icon: "error",
-      confirmButtonText: "ตกลง",
-      text: msg,
-    });
-  };
-
-  const getRoleTypeList = async () => {
-    setIsLoading(true);
-    try {
-      API.connectTokenAPI(token);
-      await API.roleTypeList().then((response) => {
-        const dataPayload = response.data;
-        console.log("dataPayload", dataPayload);
-        setRoleList(dataPayload);
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      setIsLoading(false);
-    }
-  };
 
   const getUser = async () => {
     setIsLoading(true);
@@ -567,6 +531,24 @@ const UserManagement = ({ t, login }) => {
           }
         });
       }
+      setIsLoading(false);
+    }
+  };
+
+  // get getRoleTypeListData //
+  const getRoleTypeList = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.roleTypeList().then((response) => {
+        const dataPayload = response.data;
+        setRoleList(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
       setIsLoading(false);
     }
   };
@@ -686,13 +668,13 @@ const UserManagement = ({ t, login }) => {
   const userViewData = async (id) => {
     setIsLoading(true);
     try {
-      await API.connectTokenAPI(token);
+      API.connectTokenAPI(token);
       await API.getUserView(id).then((response) => {
         const dataPayload = response.data;
         // console.log("dataPayload", response, dataPayload);
         dataPayload.length > 0 &&
           dataPayload.map((item) => {
-            console.log("9999=======item", item);
+            // console.log("9999=======item", item, roleList);
             setEmailUser(item.username);
             setFristName(item.first_name);
             setLastName(item.last_name);
@@ -787,7 +769,7 @@ const UserManagement = ({ t, login }) => {
     }
   };
 
-  const handleClickOpenAddUser = () => {
+  const handleClickOpenAddUser = async () => {
     setOpenAddUser(true);
     setIsValidate(true);
     setMessage("");
@@ -797,7 +779,7 @@ const UserManagement = ({ t, login }) => {
     setEmailUser("");
     setFristName("");
     setLastName("");
-    setRole("");
+    setRole("none");
     setPassword("");
     setPhoneNumber("");
     setRePassword("");
@@ -809,11 +791,11 @@ const UserManagement = ({ t, login }) => {
   };
 
   // Edit //
-  const handleClickOpenEditUser = (event, id) => {
+  const handleClickOpenEditUser = async (event, id) => {
     setOpenEditUser(true);
     setIsIdEdit(id);
     userViewData(id);
-    getBuildingViewUser();
+    getBuildingViewUser(id);
   };
 
   const handleCloseEditUser = () => {
@@ -1073,11 +1055,11 @@ const UserManagement = ({ t, login }) => {
     setRowsBuildingEdit(updatedRows);
   };
 
-  const getBuildingViewUser = async () => {
+  const getBuildingViewUser = async (id) => {
     setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.getBuildingViewUser(userId).then((response) => {
+      await API.getBuildingViewUser(id).then((response) => {
         const dataPayload = response.data;
         setRowsBuildingEdit(dataPayload);
         setIsLoading(false);
@@ -1109,7 +1091,7 @@ const UserManagement = ({ t, login }) => {
   const getBuilding = async () => {
     setIsLoading(true);
     try {
-      API.connectTokenAPI(token);
+      await API.connectTokenAPI(token);
       await API.getBuildingData().then((response) => {
         const dataPayload = response.data;
         setBuildingData(dataPayload);
@@ -1153,7 +1135,7 @@ const UserManagement = ({ t, login }) => {
     try {
       const body = {
         buildingId: row?.building_info_id,
-        userId: userId,
+        userId: isIdEdit,
       };
       // console.log("rowsPointEdit", row, body);
       API.connectTokenAPI(token);
@@ -1166,7 +1148,7 @@ const UserManagement = ({ t, login }) => {
             text: dataPayload,
           }).then((result) => {
             if (result.isConfirmed) {
-              getBuildingViewUser(userId);
+              getBuildingViewUser(isIdEdit);
               setOpenEditUser(true);
             } else if (result.isDismissed) {
               setIsLoading(false);
@@ -1214,7 +1196,7 @@ const UserManagement = ({ t, login }) => {
             text: dataPayload,
           }).then((result) => {
             if (result.isConfirmed) {
-              getBuildingViewUser(userId);
+              getBuildingViewUser(isIdEdit);
               setOpenEditUser(true);
             } else if (result.isDismissed) {
               setIsLoading(false);
@@ -1640,20 +1622,20 @@ const UserManagement = ({ t, login }) => {
                 <Select
                   // labelId="demo-select-small-label"
                   id="demo-select-small"
-                  value={role}
+                  value={roleList.length > 0 ? role : "none"}
                   placeholder={t("user:selectRole")}
                   onChange={(e) => handleRoleChange(e)}
                 >
-                  <MenuItem value="Admin">{t("user:selectRole")}</MenuItem>
+                  <MenuItem value="none">{t("user:selectRole")}</MenuItem>
                   {roleList.length > 0 &&
                     roleList.map((item) => {
                       return (
                         <MenuItem
                           id={"roleListSelect-" + item.id}
                           key={item.id}
-                          value={item.id}
+                          value={item.role}
                         >
-                          {item.name}
+                          {item.role}
                         </MenuItem>
                       );
                     })}
@@ -1940,20 +1922,20 @@ const UserManagement = ({ t, login }) => {
                     <Select
                       // labelId="demo-select-small-label"
                       id="demo-select-small"
-                      value={role}
+                      value={roleList.length > 0 ? role : "none"}
                       placeholder={t("user:selectInput")}
                       onChange={(e) => handleRoleChange(e)}
                     >
-                      <MenuItem value="Admin">{t("user:selectInput")}</MenuItem>
+                      <MenuItem value="none">{t("user:selectInput")}</MenuItem>
                       {roleList.length > 0 &&
                         roleList.map((item) => {
                           return (
                             <MenuItem
                               id={"roleListSelect-" + item.id}
                               key={item.id}
-                              value={item.id}
+                              value={item.role}
                             >
-                              {item.name}
+                              {item.role}
                             </MenuItem>
                           );
                         })}

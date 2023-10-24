@@ -74,7 +74,6 @@ import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import helper from "../js/helper";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -709,7 +708,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             deviceBand: deviceBrand,
             model: model,
             serialNumber: serialNumber,
-            installationDate: installation,
+            installationDate: installation.format("DD-MM-YYYY"),
             communicationType: communicationTypeSelect,
             billingType_id: billingTypeSelect,
             description: "",
@@ -746,7 +745,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           deviceBand: deviceBrand,
           model: model,
           serialNumber: serialNumber,
-          installationDate: installation,
+          installationDate: installation.format("DD-MM-YYYY"),
           communicationType: communicationTypeSelect,
           billingType_id: billingTypeSelect,
           description: "",
@@ -791,7 +790,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             deviceBand: deviceBrand,
             model: model,
             serialNumber: serialNumber,
-            installationDate: installation,
+            installationDate: installation.format("DD-MM-YYYY"),
             communicationType: communicationTypeSelect,
             billingType_id: billingTypeSelect,
             description: "",
@@ -828,7 +827,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           deviceBand: deviceBrand,
           model: model,
           serialNumber: serialNumber,
-          installationDate: installation,
+          installationDate: installation.format("DD-MM-YYYY"),
           communicationType: communicationTypeSelect,
           billingType_id: billingTypeSelect,
           description: "",
@@ -1581,7 +1580,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {helper.momentTime(row.installation_date)}
+                            {row.installation_date}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -2365,6 +2364,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                   className={classes.width}
                   value={installation}
                   onChange={(newValue) => handleInstallation(newValue)}
+                  format="DD-MM-YYYY"
                   slotProps={{
                     textField: {
                       error: _.isEmpty(installation) && !isValidate,

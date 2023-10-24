@@ -1055,7 +1055,7 @@ const GatewayManagement = ({ t, login }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {helper.momentTime(row.installation_date)}
+                            {row.installation_date}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1584,7 +1584,7 @@ const GatewayManagement = ({ t, login }) => {
                 )}
               >
                 <Grid item md={3} className={classes.borderImg}>
-                  <img src={file} alt="img-test" className={classes.imgWidth} />
+                  <img src={imagePreviewUrl} alt="img-test" className={classes.imgWidth} />
                 </Grid>
                 <Grid item md={9}>
                   <Grid
