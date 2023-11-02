@@ -232,13 +232,13 @@ const headCells = [
     id: "name",
     numeric: false,
     disablePadding: true,
-    label: "Unit ID",
+    label: "Unit Number",
   },
   {
     id: "calories",
     numeric: false,
     disablePadding: false,
-    label: "Unit Number",
+    label: "Unit Name",
   },
   {
     id: "fat",
@@ -762,7 +762,7 @@ const UnitManagement = ({
           dataPayload.map((item) => {
             console.log("==========View", item);
             setUnitName(item.unit);
-            // setUnitNumber(item.unit);
+            setUnitNumber(item.id);
             setDescription(item.description);
             setUnitTypeSelect(
               item.type_id ? unitType.find((f) => f.id === item.type_id).id : ""
@@ -1535,13 +1535,13 @@ const UnitManagement = ({
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            <img
+                            {/* <img
                               src={IconDocument}
                               alt="IconDocument"
-                              // onClick={(event) => {
-                              //   openPageFlooreUnitDetail(event, row.id);
-                              // }}
-                            />
+                              onClick={(event) => {
+                                openPageFlooreUnitDetail(event, row.id);
+                              }}
+                            /> */}
 
                             <img
                               src={IconShow}

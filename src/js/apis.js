@@ -377,7 +377,15 @@ const getAPI = () => {
   /* ============== Historicaldata API ================ */
 
   const historicaldata = (dateTimeFormat = '', startTime = '', endTime = '', body) => {
-    return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}&startTime=${startTime}&endTime=${endTime}`, body);
+    if (dateTimeFormat) {
+      return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}`, body);
+    } else if (startTime) {
+      return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}&startTime=${startTime}`, body);
+    } else if (endTime) {
+      return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}&endTime=${endTime}`, body);
+    } else {
+      return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}&startTime=${startTime}&endTime=${endTime}`, body);
+    }
   };
 
 

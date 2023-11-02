@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector, connect } from "react-redux";
 import PropTypes from "prop-types";
 import {
   makeStyles,
@@ -9,19 +10,35 @@ import {
   CardContent,
   Box,
   Button,
+  CircularProgress,
 } from "@material-ui/core";
 import Link from "@mui/material/Link";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import StackedLineChartOutlinedIcon from "@mui/icons-material/StackedLineChartOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import Charts from "../component/charts";
 import DataTable from "../component/table";
 import clsx from "clsx";
+import _, { stubFalse } from "lodash";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import { useTheme } from "@mui/material/styles";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+} from "../js/actions";
+
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   FlexIconHead: {
@@ -53,20 +70,38 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
   },
   flexWrap: {
-    flexWrap: 'wrap'
-  }
+    flexWrap: "wrap",
+  },
 }));
 
-const Calendar = ({ t }) => {
+const Calendar = ({ t, deviceId, deviceName, point }) => {
   const classes = useStyles();
   const [value, setValue] = useState(null);
   const [valueEnd, setValueEnd] = useState(null);
 
+  const dispatch = useDispatch();
+  const sideBar = useSelector((state) => state.sidebar);
+  const token = useSelector((state) => state.token);
+  const user = useSelector((state) => state.user);
+  const theme = useTheme();
+
   const [clickBtn, setClickBtn] = useState("graph");
-  const [clickDate, setClickDate] = useState("24hr");
-  const [table, setTable] = useState("");
-  const [graph, setGraph] = useState("");
-  const [search, setSearch] = useState("");
+  const [clickDate, setClickDate] = useState("past24");
+  // const [table, setTable] = useState("");
+  // const [graph, setGraph] = useState("");
+  // const [search, setSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [dataSearch, setDataSearch] = useState([]);
+  // const [dataSearch, setDataSearch] = useState();
+  // const [timestampSearch, setTimestamp] = useState();
+
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
+  };
 
   const handleClickTable = () => {
     setClickBtn("table");
@@ -76,8 +111,56 @@ const Calendar = ({ t }) => {
     setClickBtn("graph");
   };
 
-  const handleClickSearch = () => {
-    console.log("88888888");
+  const handleClickSearch = async () => {
+    setIsLoading(true);
+    try {
+      let body = [];
+      point && point.length > 0 && point.map((item) => {
+          const data = {
+            deviceID: deviceId,
+            deviceName: deviceName,
+            data: item,
+          }
+          body.push(data);
+      })
+      let startDate = value ? value.format("YYYY-MM-DD HH:mm") : ''
+      let endDate = valueEnd ? valueEnd.format("YYYY-MM-DD HH:mm"): ''
+      await API.connectTokenAPI(token);
+      await API.historicaldata(clickDate, startDate, endDate, body).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayloadmyDevice", dataPayload);
+        setDataSearch(dataPayload);
+        // dataPayload.map((item) => {
+        //   item.map((data) => {
+        //     setDataSearch(data);
+        //     // setTimestamp(data.timestamp);
+        //     console.log('99999999999', data);
+        //   })
+        // })
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
   };
 
   const handleClickNavbar = (text) => {
@@ -91,7 +174,11 @@ const Calendar = ({ t }) => {
           <CardContent>
             <Grid
               item
-              className={clsx(classes.FlexIconHead, classes.alignCenter, classes.flexWrap)}
+              className={clsx(
+                classes.FlexIconHead,
+                classes.alignCenter,
+                classes.flexWrap
+              )}
             >
               {/* <Grid item>
                 <Typography variant="body2">
@@ -110,6 +197,7 @@ const Calendar = ({ t }) => {
                         setValue(newValue);
                         setClickDate("");
                       }}
+                      format="DD-MM-YYYY HH:mm"
                     />
                   </DemoContainer>
                 </LocalizationProvider>
@@ -128,6 +216,7 @@ const Calendar = ({ t }) => {
                     <DateTimePicker
                       value={valueEnd}
                       onChange={(newValue) => setValueEnd(newValue)}
+                      format="DD-MM-YYYY HH:mm"
                     />
                   </DemoContainer>
                 </LocalizationProvider>
@@ -162,6 +251,7 @@ const Calendar = ({ t }) => {
                     variant="contained"
                     className={classes.activeBtn}
                     onClick={handleClickSearch}
+                    disabled={point && point.length > 0 && deviceName ? false : true}
                     endIcon={<SearchOutlinedIcon />}
                   >
                     <Typography className="frontSizeBtn">
@@ -185,12 +275,12 @@ const Calendar = ({ t }) => {
                 <Typography
                   variant="body2"
                   className={`${
-                    clickDate === "24hr"
+                    clickDate === "past24"
                       ? classes.activeBar
                       : classes.cursorPointer
                   }`}
                   onClick={() => {
-                    handleClickNavbar("24hr");
+                    handleClickNavbar("past24");
                     setValue(null);
                     setValueEnd(null);
                   }}
@@ -203,12 +293,12 @@ const Calendar = ({ t }) => {
                 <Typography
                   variant="body2"
                   className={`${
-                    clickDate === "7Date"
+                    clickDate === "past7"
                       ? classes.activeBar
                       : classes.cursorPointer
                   }`}
                   onClick={() => {
-                    handleClickNavbar("7Date");
+                    handleClickNavbar("past7");
                     setValue(null);
                     setValueEnd(null);
                   }}
@@ -220,12 +310,12 @@ const Calendar = ({ t }) => {
                 <Typography
                   variant="body2"
                   className={`${
-                    clickDate === "30Date"
+                    clickDate === "past30"
                       ? classes.activeBar
                       : classes.cursorPointer
                   }`}
                   onClick={() => {
-                    handleClickNavbar("30Date");
+                    handleClickNavbar("past30");
                     setValue(null);
                     setValueEnd(null);
                   }}
@@ -281,11 +371,11 @@ const Calendar = ({ t }) => {
         </Card>
         {clickBtn === "graph" ? (
           <Grid item className="mt-4">
-            <Charts />
+            <Charts isLoading={isLoading} dataSearch={dataSearch} />
           </Grid>
         ) : (
           <Grid item className="mt-4">
-            <DataTable />
+            <DataTable isLoading={isLoading} dataSearch={dataSearch} />
           </Grid>
         )}
       </Container>
@@ -295,6 +385,25 @@ const Calendar = ({ t }) => {
 
 Calendar.propTypes = {
   t: PropTypes.func,
+  deviceId: PropTypes.string,
+  deviceName: PropTypes.string,
+  point: PropTypes.array,
 };
 
-export default Calendar;
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
+
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Calendar);

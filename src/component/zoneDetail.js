@@ -506,6 +506,8 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     }
   }, [token, setZoneData]);
 
+  console.log('setZoneData', zoneData);
+
   const getZoneUnitData = async (id) => {
     setIsLoading(true);
     try {
@@ -899,8 +901,8 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
 
   const handleClickOpenAdd = () => {
     setOpenAddZonePoint(true);
-    if (billingId) {
-      zoneUnitBuilding(billingId);
+    if (zoneData.building_id) {
+      zoneUnitBuilding(zoneData.building_id);
     }
   };
 

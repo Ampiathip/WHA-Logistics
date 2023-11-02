@@ -4,26 +4,27 @@ import {} from "@mui/material";
 import {
   makeStyles,
   Grid,
-  Container,
+  // Container,
   Typography,
-  FormControl,
-  Select,
-  MenuItem,
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
+  // FormControl,
+  // Select,
+  // MenuItem,
+  // Drawer,
+  // List,
+  // ListItem,
+  // ListItemIcon,
+  // ListItemText,
   Card,
   CardContent,
   Box,
 } from "@material-ui/core";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import CustomizedAccordions from "./accondion";
 import clsx from "clsx";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import Calendar from "../component/calendar";
 
 const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
@@ -61,21 +62,38 @@ const SideBarPage = ({ children, t }) => {
   const sideBar = useSelector((state) => state.sidebar);
   const matches = useMediaQuery("(min-width:1024px)");
 
+  const [deviceId, setDeviceId] = useState('');
+  const [deviceName, setDeviceName] = useState('');
+  const [point, setPoint] = useState();
+
+  const setDataSelectDevice = (value) => {
+    if (value) {
+      setDeviceId(value.device_id);
+      setDeviceName(value.device_name);
+    } else {
+      setDeviceId(value);
+      setDeviceName(value);
+    }
+  };
+
+  const setDataSelectPoint = (value) => {
+    let data = [];
+    if (value) {
+        value.map((item) => {
+          data.push(item.name);
+        });
+        setPoint(data);
+    } else {
+      setPoint(value);
+    }
+  };
+
   return (
     <>
       {/* <Grid container> */}
       <Box className={clsx(classes.flexRow, classes.marginRow, classes.justify)}>
         {/* <Grid item md={1}></Grid> */}
         <Grid item md={matches ? 3 : 3}>
-          {/* <Drawer
-            className={classes.drawer}
-            variant="permanent"
-            classes={{
-              paper: classes.drawerPaper,
-              paperAnchorLeft: classes.sideBarLeft,
-              paperAnchorDockedLeft: classes.borderRight,
-            }}
-          > */}
             <Grid item className={classes.flexRow}>
               <HomeOutlinedIcon className={classes.alignSelf} />
               <Typography variant="h6"> / {sideBar}</Typography>
@@ -84,56 +102,16 @@ const SideBarPage = ({ children, t }) => {
             <Card className="mt-3">
               <CardContent>
                 {/* <Typography variant="h6">{t('historicalData:devicelist')}</Typography> */}
-                <CustomizedAccordions t={t} />
+                <CustomizedAccordions t={t} setDataSelectDevice={setDataSelectDevice} setDataSelectPoint={setDataSelectPoint}/>
               </CardContent>
             </Card>
           {/* </Drawer> */}
         </Grid>
         <Grid item md={11}>
-          {children}
+          <Calendar t={t} deviceId={deviceId} deviceName={deviceName} point={point} />
         </Grid>
         {/* <Grid item md={1}></Grid> */}
       </Box>
-
-      {/* {children} */}
-      {/* </Box> */}
-      {/* </Grid> */}
-
-      {/* Container Device List */}
-
-      {/* <Box> */}
-      {/* <Grid item md={12} className="disPlayFlexRow">
-          <Grid item md={3} className="MaxWidthSideBar"></Grid>
-          <Grid item md={2} className="MarginCard"> */}
-
-      {/* </Grid> */}
-      {/* <Box>{children}</Box> */}
-      {/* </Grid> */}
-
-      {/* <Grid item md={12} className="disPlayFlexRow">
-          <Grid item md={3} className="MaxWidthSideBar"></Grid>
-          <Grid item md={2} className="MarginCard">
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Selected Point</Typography>
-                <div className="MarginCard backGrourdCard">
-                  <Box className="padingText">
-                    <Typography variant="body1" className="ColorAccondion">
-                      Energy L1
-                    </Typography>
-                  </Box>
-                  <Box className="padingText">
-                    <Typography variant="body1" className="ColorAccondion">
-                      Energy L3
-                    </Typography>
-                  </Box>
-                </div>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item md={7}>{children}</Grid>
-        </Grid> */}
-      {/* </Box> */}
     </>
   );
 };

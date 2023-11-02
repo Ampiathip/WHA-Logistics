@@ -63,6 +63,8 @@ import IconDelete from "../images/icon/Delete.svg";
 import IconDocument from "../images/icon/Document.svg";
 import IconShow from "../images/icon/Show.svg";
 import IconSetting from "../images/icon/Setting.svg";
+import { hydrate } from "react-dom";
+// import io from "socket.io-client";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -108,7 +110,7 @@ const useStyles = makeStyles((theme) => ({
   modalWidth: {
     width: "90% !important",
     height: "90% !important",
-    maxWidth: 'none !important'
+    maxWidth: "none !important",
   },
   modalContent: {
     justifyContent: "space-around",
@@ -168,6 +170,16 @@ const useStyles = makeStyles((theme) => ({
       boxShadow: `none`,
     },
   },
+  widthRealtime: {
+    width: "400px",
+  },
+  borderRealtime: {
+    border: "1px solid #6c757d",
+    padding: 5,
+  },
+  marginRealtime: {
+    marginTop: 10,
+  },
 }));
 
 function descendingComparator(a, b, orderBy) {
@@ -208,42 +220,49 @@ const headCells = [
     numeric: false,
     disablePadding: true,
     label: "Device ID",
+    width: 150,
   },
   {
     id: "calories",
     numeric: true,
     disablePadding: false,
     label: "Devices Name",
+    width: 200,
   },
   {
     id: "fat",
     numeric: true,
     disablePadding: false,
-    label: "Current AVG (A)",
+    label: "Gateway",
+    width: 200,
   },
   {
     id: "carbs",
     numeric: true,
     disablePadding: false,
-    label: "Voltage AVG (V)",
+    label: "Builidng",
+    width: 200,
   },
   {
     id: "power",
     numeric: true,
     disablePadding: false,
-    label: "Power Total (kW)",
+    label: "Zone",
+    width: 200,
   },
   {
     id: "protein",
     numeric: true,
     disablePadding: false,
     label: "Energy Total (kWh)",
+    width: 220,
   },
   {
     id: "action",
     numeric: true,
     disablePadding: false,
     label: "Action",
+    width: 200,
   },
 ];
 
@@ -278,10 +297,11 @@ function EnhancedTableHead(props) {
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            align={headCell.numeric ? "right" : "center"}
+            align={"center"}
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
             className={classes.fontSixeHead}
+            width={headCell.width}
           >
             <TableSortLabel
               active={orderBy === headCell.id}
@@ -395,13 +415,15 @@ const DeviceManagement = ({ t, login }) => {
 
   const [openView, setOpenView] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [rows, setRows] = useState([]);
   const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
+  const [rows, setRows] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortedRows, setSortedRows] = useState(rows);
+  const [isIdDevice, setIsIdDevice] = useState("");
+  const [realtimeData, setRealtimeData] = useState();
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -411,23 +433,48 @@ const DeviceManagement = ({ t, login }) => {
     });
   };
 
-  // useEffect(() => {
-  //   dispatch(checkToken());
-  //   if (!_.isEmpty(token)) {
-  //     getDevice();
-  //   }
-  // }, [token]);
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token)) {
+      getDevice();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    const io = require("socket.io-client");
+    // Replace with the URL of your Socket.io server
+    const socket = io("http://119.59.105.226:3000/");
+    // socket.emit("join chat", "hypetex/test01");
+    socket.emit("join chat", isIdDevice);
+
+    socket.on("connect", () => {
+      console.log("Connected to Socket.io server");
+    });
+
+    socket.on("message recieved", (data) => {
+      console.log("Received a message:", data);
+      setRealtimeData(data.data);
+    });
+
+    // check close modal leave socket //
+    if (!openView) {
+      socket.emit("leaveRoom", isIdDevice);
+      setRealtimeData('');
+    }
+
+    // Clean up the socket connection when the component unmounts
+    return () => {
+      socket.disconnect();
+    };
+  }, [isIdDevice, openView]);
 
   const getDevice = async () => {
     setIsLoading(true);
     try {
-      const boby = {
-        listGatewayID: [1, 2, 3],
-      };
       await API.connectTokenAPI(token);
-      await API.getDeviceData(boby).then((response) => {
+      await API.myDevice().then((response) => {
         const dataPayload = response.data;
-        console.log("dataPayload", dataPayload);
+        console.log("dataPayloadmyDevice", dataPayload);
         setRows(dataPayload);
         setIsLoading(false);
       });
@@ -684,6 +731,29 @@ const DeviceManagement = ({ t, login }) => {
     setOpen(true);
   };
 
+  const handleClickOpenView = (e, id) => {
+    console.log("999999999", id);
+    setOpenView(true);
+    setIsIdDevice(id);
+  };
+
+  const realtimeDataView = async (id) => {
+    setIsLoading(true);
+    try {
+      API.connectTokenAPI(token);
+      await API.realtimeData(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", response, dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
   const handleClose = () => {
     setOpen(false);
   };
@@ -787,6 +857,10 @@ const DeviceManagement = ({ t, login }) => {
     setOpenAdd(false);
   };
 
+  const handleCloseView = () => {
+    setOpenView(false);
+  };
+
   const handleUploadFile = (e) => {
     // setFile(e.target.files[0]);
     e.preventDefault();
@@ -826,79 +900,95 @@ const DeviceManagement = ({ t, login }) => {
     updateVisibleRows(query);
   };
 
+  console.log("realtimeData", realtimeData);
+
   return (
     <Box className={classes.marginRow}>
-      <Grid item className={classes.flexRow}>
-        <HomeOutlinedIcon className={classes.alignSelf} />
-        <Typography variant="h6"> / {sideBar}</Typography>
-      </Grid>
-      <Grid item md={12} className={clsx(classes.flexRow, classes.justContent)}>
-        <Grid item md={5} className={classes.marginRow}>
-          <TextField
-            // id="input-with-icon-textfield"
-            size="small"
-            placeholder={t("diveices:search")}
-            fullWidth
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon />
-                </InputAdornment>
-              ),
-            }}
-            variant="outlined"
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-        </Grid>
-        <Grid item md={2} className={clsx(classes.marginRow)}>
-          <Button
-            onClick={handleClickOpenAdd}
-            autoFocus
-            // fullWidth
-            className={clsx(classes.backGroundConfrim, classes.width)}
-            variant="outlined"
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <>
+          <Grid item className={classes.flexRow}>
+            <HomeOutlinedIcon className={classes.alignSelf} />
+            <Typography variant="h6"> / {sideBar}</Typography>
+          </Grid>
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRow, classes.justContent)}
           >
-            {t("diveices:add")}
-          </Button>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ width: "100%" }} className={classes.marginRow}>
-        <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
-            >
-              <EnhancedTableHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                //   onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={rows.length}
-                classes={classes}
+            <Grid item md={5} className={classes.marginRow}>
+              <TextField
+                // id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:search")}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchOutlinedIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                variant="outlined"
+                value={searchQuery}
+                onChange={handleSearchChange}
               />
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+            </Grid>
+            <Grid item md={2} className={clsx(classes.marginRow)}>
+              <Button
+                // onClick={handleClickOpenAdd}
+                autoFocus
+                // fullWidth
+                className={clsx(classes.backGroundConfrim, classes.width)}
+                variant="outlined"
+              >
+                {t("diveices:add")}
+              </Button>
+            </Grid>
+          </Grid>
 
-                  return (
-                    <TableRow
-                      hover
-                      onClick={(event) => handleClick(event, row.name)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={row.name}
-                      selected={isItemSelected}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      {/* <TableCell padding="checkbox">
+          <Box sx={{ width: "100%" }} className={classes.marginRow}>
+            <Paper sx={{ width: "100%", mb: 2 }}>
+              {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
+              <TableContainer>
+                <Table
+                  sx={{ minWidth: 750 }}
+                  aria-labelledby="tableTitle"
+                  size={dense ? "small" : "medium"}
+                >
+                  <EnhancedTableHead
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    //   onSelectAllClick={handleSelectAllClick}
+                    onRequestSort={handleRequestSort}
+                    rowCount={rows.length}
+                    classes={classes}
+                  />
+                  <TableBody>
+                    {visibleRows.map((row, index) => {
+                      const isItemSelected = isSelected(row.name);
+                      const labelId = `enhanced-table-checkbox-${index}`;
+
+                      console.log("=======row", row);
+
+                      return (
+                        <TableRow
+                          hover
+                          onClick={(event) =>
+                            handleClick(event, row.device_name)
+                          }
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.device_name}
+                          selected={isItemSelected}
+                          sx={{ cursor: "pointer" }}
+                        >
+                          {/* <TableCell padding="checkbox">
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
@@ -907,112 +997,114 @@ const DeviceManagement = ({ t, login }) => {
                         }}
                       />
                     </TableCell> */}
-                      <TableCell
-                        component="th"
-                        id={labelId}
-                        scope="row"
-                        padding="none"
-                        className={classes.fontSixeCell}
-                        align="center"
-                      >
-                        {row.name}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.calories}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.fat}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.carbs}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.power}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        {row.protein}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        className={classes.fontSixeCell}
-                      >
-                        <img
-                          src={IconDocument}
-                          alt="IconDocument"
-                          // onClick={(event) => {
-                          //   openPageZoneDetail(event, row.id);
-                          //   handleDetailZone(event, row);
-                          // }}
-                        />
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            className={classes.fontSixeCell}
+                            align="center"
+                          >
+                            {row.device_id}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.device_name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.gateway_name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.building_name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.zone}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.data}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            <img
+                              src={IconDocument}
+                              alt="IconDocument"
+                              // onClick={(event) => {
+                              //   openPageZoneDetail(event, row.id);
+                              //   handleDetailZone(event, row);
+                              // }}
+                            />
 
-                        <img
-                          src={IconShow}
-                          alt="IconShow"
-                          // onClick={(event) => {
-                          //   handleClickOpenView(event, row.id);
-                          // }}
-                        />
+                            <img
+                              src={IconShow}
+                              alt="IconShow"
+                              onClick={(event) => {
+                                handleClickOpenView(event, row.device_id);
+                              }}
+                            />
 
-                        <img
-                          src={IconSetting}
-                          alt="IconSetting"
-                          onClick={(event) => {
-                            handleClickOpen(event, row.id);
-                          }}
-                        />
-                        <img
-                          src={IconDelete}
-                          alt="IconDelete"
-                          onClick={(event) => {
-                            handleClickDeleteData(event, row.id);
-                          }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    style={{
-                      height: (dense ? 33 : 53) * emptyRows,
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
-        {/* <FormControlLabel
+                            <img
+                              src={IconSetting}
+                              alt="IconSetting"
+                              // onClick={(event) => {
+                              //   handleClickOpen(event, row.id);
+                              // }}
+                            />
+                            <img
+                              src={IconDelete}
+                              alt="IconDelete"
+                              // onClick={(event) => {
+                              //   handleClickDeleteData(event, row.id);
+                              // }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {emptyRows > 0 && (
+                      <TableRow
+                        style={{
+                          height: (dense ? 33 : 53) * emptyRows,
+                        }}
+                      >
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+            {/* <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
       /> */}
-      </Box>
+          </Box>
+        </>
+      )}
 
       {/* Modal Edit*/}
       <Dialog
@@ -2480,6 +2572,256 @@ const DeviceManagement = ({ t, login }) => {
             Agree
           </Button>
         </DialogActions> */}
+      </Dialog>
+
+      {/* Modal View */}
+
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openView}
+        onClose={handleCloseView}
+        aria-labelledby="responsive-dialog-title"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle
+          id="responsive-dialog-title"
+          className={clsx(
+            classes.flexRow,
+            classes.justContent,
+            classes.borderBottom
+          )}
+        >
+          <Typography variant="h5">
+            <WestOutlinedIcon
+              className={clsx(classes.marginIcon, classes.cursor)}
+              onClick={handleCloseView}
+            />
+            {t("diveices:realtime")}
+          </Typography>
+          <CloseIcon
+            onClick={handleCloseView}
+            className={clsx(classes.cursor)}
+          />
+        </DialogTitle>
+        <DialogContent
+          className={clsx(
+            classes.flexRow,
+            classes.modalContent,
+            classes.paddingContent
+          )}
+        >
+          <Box className="mt-3">
+            <Grid
+              item
+              md={12}
+              className={clsx(
+                classes.flexRow,
+                classes.justContent,
+                classes.alignItem
+              )}
+            >
+              <Grid item md={6} className={classes.borderImg}>
+                <Grid item md={12}>
+                  <input
+                    className={classes.input}
+                    id={"contained-button-file"}
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf,image/tiff"
+                    // multiple={isMultiple}
+                    onChange={handleUploadFile}
+                    onClick={(e) => {
+                      console.log("aaaaa");
+                    }}
+                  />
+                  <label
+                    htmlFor={"contained-button-file"}
+                    className={clsx(
+                      classes.flexRow,
+                      classes.justContentCenter,
+                      classes.width
+                    )}
+                  >
+                    {imagePreviewUrl ? (
+                      <img
+                        src={imagePreviewUrl}
+                        alt="img-upload"
+                        className={classes.imgWidth}
+                      />
+                    ) : (
+                      <img
+                        src={process.env.PUBLIC_URL + "/img/Group.png"}
+                        alt="img-test"
+                        className={classes.imgWidth}
+                      />
+                    )}
+                  </label>
+                </Grid>
+              </Grid>
+              <Grid item md={6}>
+                <Grid item className={classes.boxMargin}>
+                  <Typography variant="subtitle2" className="pb-3">
+                    {t("diveices:meter")}
+                  </Typography>
+                  <TextField
+                    id="input-with-icon-textfield"
+                    size="small"
+                    placeholder={t("diveices:meter")}
+                    fullWidth
+                    variant="outlined"
+                    value={meterId}
+                    disabled
+                    // onChange={handleMeterIdChange}
+                  />
+                </Grid>
+                <Grid
+                  item
+                  className={clsx(classes.boxMargin, classes.marginRow)}
+                >
+                  <Typography variant="subtitle2" className="pb-3">
+                    {t("diveices:meterName")}
+                  </Typography>
+                  <TextField
+                    id="input-with-icon-textfield"
+                    size="small"
+                    placeholder={t("diveices:meterName")}
+                    fullWidth
+                    variant="outlined"
+                    value={meterName}
+                    onChange={handleMeterNameChange}
+                  />
+                </Grid>
+              </Grid>
+            </Grid>
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:installation")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:installation")}
+                fullWidth
+                variant="outlined"
+                value={installation}
+                onChange={handleInstallationChange}
+              />
+            </Grid>
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:sn")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:sn")}
+                fullWidth
+                variant="outlined"
+                value={numberSN}
+                onChange={handleNumberSNChange}
+              />
+            </Grid>
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:band")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:band")}
+                fullWidth
+                variant="outlined"
+                value={band}
+                onChange={handleBandChange}
+              />
+            </Grid>
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:series")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                size="small"
+                placeholder={t("diveices:series")}
+                fullWidth
+                variant="outlined"
+                value={series}
+                onChange={handleSeriesChange}
+              />
+            </Grid>
+            <Grid item md={12}>
+              <Typography variant="subtitle2" className="mt-3 pb-3">
+                {t("diveices:remark")}
+              </Typography>
+              <TextField
+                id="input-with-icon-textfield"
+                // size="small"
+                placeholder={t("diveices:remark")}
+                fullWidth
+                className={clsx("mb-4")}
+                variant="outlined"
+                value={remark}
+                onChange={handleRemarkChange}
+              />
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+            >
+              <Grid item md={3}>
+                <Button
+                  onClick={handleCloseAdd}
+                  className={clsx(classes.backGroundCancel)}
+                  variant="outlined"
+                >
+                  {t("building:btnCancel")}
+                </Button>
+              </Grid>
+              <Grid item md={3} className={clsx("mb-4", classes.boxMargin)}>
+                <Button
+                  className={clsx(classes.backGroundConfrim)}
+                  variant="outlined"
+                  // onClick={handleValidate}
+                >
+                  {t("building:btnAddModal")}
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+          <Box className={clsx(classes.backgroundBox, classes.widthRealtime)}>
+            <Grid item md={12} className={classes.paddingRowHead}>
+              <Typography variant="h5">{t("diveices:realtime")}</Typography>
+            </Grid>
+
+            <Grid item md={12} className={clsx(classes.paddingRow, classes.marginRow)}>
+              {realtimeData &&
+                realtimeData.length > 0 &&
+                realtimeData.map((item) => {
+                  return (
+                    <Grid
+                      item
+                      md={12}
+                      className={clsx(
+                        classes.flexRow,
+                        classes.marginRealtime,
+                        classes.alignItem
+                      )}
+                    >
+                      <Grid item md={6} className={clsx(classes.borderRealtime, classes.marginIcon)}>
+                        {item.point}
+                      </Grid>
+                      <Grid item md={6} className={clsx(classes.borderRealtime, classes.textCenter)}>
+                        {item.data}
+                      </Grid>
+                    </Grid>
+                  );
+                })}
+            </Grid>
+          </Box>
+        </DialogContent>
       </Dialog>
     </Box>
   );

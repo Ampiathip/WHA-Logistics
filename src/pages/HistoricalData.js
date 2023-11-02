@@ -16,7 +16,7 @@ const HistoricalData = () => {
     <>
       <Layout type={"HistoricalData"}>
         <SideBarPage t={t} >
-          <Calendar t={t} />
+          {/* <Calendar t={t} /> */}
         </SideBarPage>
         {/* <SideBarSelect>
           <Charts />

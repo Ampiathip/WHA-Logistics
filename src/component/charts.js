@@ -10,37 +10,126 @@ import {
   Button,
 } from "@mui/material";
 import { LineChart } from "@mui/x-charts/LineChart";
+import { CircularProgress } from "@material-ui/core";
+import { forEach } from "lodash";
 
-const Charts = () => {
-  const uData = [80, 60, 40, 100, 20, 0, 60];
-  const pData = [80, 20, 100, 40, 0, 60, 100];
-  const xLabels = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-  ];
+const Charts = ({ isLoading, dataSearch }) => {
+  // const [dataCheck, setDataCheck] = useState();
+  // const [timestampCheck, setTimestampCheck] = useState();
+
+  // const uData = [null, 3000, 2000, 2780, 1890, 2390, 3490];
+  // const pData = [2400, 1398, 9800, 3908, 4800, 3800, 4300];
+  // const xLabels = [
+  //   "Page A",
+  //   "Page B",
+  //   "Page C",
+  //   "Page D",
+  //   "Page E",
+  //   "Page F",
+  //   "Page G",
+  // ];
+
+  const handleDataSeries = (array) => {
+    // return array.map((item) => {
+    //   return {
+    //     data: item[0]?.data,
+    //     label: item[0]?.point,
+    //     yAxisKey: "leftAxisId",
+    //     valueFormatter: (value) => (Number.isInteger(value) ? value : (parseInt(value) ?? 0)),
+    //   };
+    // });
+    return array.map((item) => {
+      if (item[0]?.data instanceof Array) {
+        // Remove null values from the data array
+        const filteredData = item[0].data.filter((value) => value !== null);
+
+        return {
+          data: filteredData.length > 0 ? filteredData : [0] ,
+          label: item[0]?.point,
+          yAxisKey: "leftAxisId",
+          valueFormatter: (value) =>
+            Number.isInteger(value) ? value : parseInt(value) ?? 0,
+        };
+      } else {
+        return item;
+      }
+    });
+  };
+
+  const handleXLabels = (array) => {
+    let dataArray = [];
+    let timestampArray = [];
+    array.map((item) => {
+      dataArray.push(...item[0]?.timestamp);
+    });
+    // Use a Set to filter out duplicates
+    const uniqueTimestamps = new Set(dataArray);
+
+    // Convert the Set back to an array if needed
+    const uniqueTimestampArray = [...uniqueTimestamps];
+
+    // const timestamps = item[0]?.timestamp;
+    //   if (timestamps) {
+    uniqueTimestampArray.forEach((timestamp) => {
+      const [dd, mm, yyyy, HH, mins, ss] = timestamp.match(/\d+/g); // Extract date and time components
+      // Create a Date object
+      const dateObject = new Date(yyyy, mm - 1, dd, HH, mins, ss); // Note: Months are 0-based in JavaScript
+      timestampArray.push(new Date(dateObject));
+    });
+    // }
+    return timestampArray;
+  };
+
+  // const handleXLabelsTwo = (array) => {
+  //   // if (array) {
+  //   let dataArray = [];
+
+  //   const loopTime = 100;
+
+  //   for (let i = 0; i < loopTime; i++) {
+  //     dataArray.push(`0000000000 + ${i}`);
+  //   }
+  //   // await Promise.all (
+  //   //   array.map((item) => {
+  //   //     dataArray.push(...item[0]?.timestamp);
+  //   //  })
+  //   // )
+  //   return dataArray;
+  //   // }
+  // };
+
+  const dataSeries = handleDataSeries(dataSearch);
+  const dataXLabels = handleXLabels(dataSearch);
+  // const dataXLabelsTwo = handleXLabelsTwo();
+
+  console.log("dataSeries===", dataSeries, dataSearch, dataXLabels);
 
   return (
     <>
-      <div className="MarginCard marginCardCalendar">
-        <Card>
-          <CardContent>
-            <LineChart
-            //   width={500}
-              height={300}
-              series={[
-                { data: pData, label: "Dataset 1" },
-                { data: uData, label: "Dataset 2" },
-              ]}
-              xAxis={[{ scaleType: "point", data: xLabels }]}
-            />
-          </CardContent>
-        </Card>
-      </div>
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <div className="MarginCard marginCardCalendar">
+          {dataSearch.length > 0 && (
+            <Card>
+              <CardContent>
+                <div>
+                  <LineChart
+                    width={830}
+                    height={300}
+                    series={dataSeries}
+                    xAxis={[{ scaleType: "time", data: dataXLabels }]}
+                    yAxis={[{ id: "leftAxisId" }, { id: "rightAxisId" }]}
+                    rightAxis="rightAxisId"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </>
   );
 };

@@ -1660,6 +1660,7 @@ const UserManagement = ({ t, login }) => {
                 fullWidth
                 variant="outlined"
                 value={password}
+                type="password"
                 onChange={handlePasswordChange}
                 error={!isValidate && _.isEmpty(password)}
               />
@@ -1680,6 +1681,7 @@ const UserManagement = ({ t, login }) => {
                 variant="outlined"
                 value={rePassword}
                 onChange={handleRePasswordChange}
+                type="password"
                 error={
                   (!isValidate && _.isEmpty(rePassword)) ||
                   (!isValidate && password !== rePassword)

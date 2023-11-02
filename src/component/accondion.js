@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector, connect } from "react-redux";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
@@ -12,21 +13,25 @@ import {
   TableBody,
   TableCell,
   TableRow,
+  CircularProgress,
 } from "@material-ui/core";
 import HighlightOffOutlinedIcon from "@mui/icons-material/HighlightOffOutlined";
 import clsx from "clsx";
+import _, { stubFalse } from "lodash";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import apis from "../js/apis";
+import { useTheme } from "@mui/material/styles";
+import {
+  checkAuthen,
+  checkLogin,
+  loading,
+  checkToken,
+  logout,
+} from "../js/actions";
 
-const Device = [
-  { id: 1, title: "Device1", year: 1994 },
-  { id: 2, title: "Device2", year: 1972 },
-  { id: 3, title: "Device3", year: 1974 },
-];
-
-const Point = [
-  { id: 1, title: "Current", year: 1994 },
-  { id: 2, title: "Voltage", year: 1972 },
-  { id: 3, title: "Power", year: 1974 },
-];
+const API = apis.getAPI();
+const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -46,68 +51,155 @@ const useStyles = makeStyles((theme) => ({
   paddingCell: {
     padding: 8,
   },
-
 }));
 
-const Tags = ({ t }) => {
+const Tags = ({ t, setDataSelectDevice, setDataSelectPoint,}) => {
   const classes = useStyles();
   const [nameDevice, setIsnameDevice] = useState([]);
   const [pointDevice, setIspointDevice] = useState([]);
 
-  // useEffect (() => {
+  const dispatch = useDispatch();
+  const sideBar = useSelector((state) => state.sidebar);
+  const token = useSelector((state) => state.token);
+  const user = useSelector((state) => state.user);
+  const theme = useTheme();
 
-  // }, [nameDevice])
+  const [isLoading, setIsLoading] = useState(false);
+  const [deviceList, setDeviceList] = useState([]);
+  const [pointList, setPointList] = useState([]);
+
+  const swalFire = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      confirmButtonText: "ตกลง",
+      text: msg,
+    });
+  };
+
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token)) {
+      getDevice();
+    }
+  }, [token]);
+
+  const getDevice = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.myDevice().then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayloadmyDevice", dataPayload);
+        setDeviceList(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
 
   const handleDevice = (event, value) => {
+    // console.log("va=======", value);
     if (value) {
       setIsnameDevice(value);
+      getPointData(value.device_id);
+      setDataSelectDevice(value);
     }
   };
 
   const handlePoint = (event, value) => {
     if (value) {
       setIspointDevice(value);
+      setDataSelectPoint(value);
     }
   };
 
-  console.log("mmmmmm=====", nameDevice, pointDevice);
+  const handleCloseDevice = (event, value) => {
+    // console.log("va=======", value);
+    // if (value) {
+      setIsnameDevice(value);
+      setDataSelectDevice(value);
+      setIspointDevice([]);
+    // }
+  };
+
+  const handleClosePoint = (event, value) => {
+    // if (value) {
+      setIspointDevice([]);
+      setDataSelectPoint(value);
+    // }
+  };
+
+  // get Points //
+  const getPointData = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getPointData(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload====Point", dataPayload);
+        setPointList(dataPayload)
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  // console.log("mmmmmm=====", nameDevice, pointDevice);
 
   return (
     <>
       <Stack spacing={3}>
         <Typography variant="h6">{t("historicalData:devicelist")}</Typography>
-        {/* <Autocomplete
-          // multiple
-          id="tags-standard"
-          // options={Device.map((option) => option.title)}
-          options={Device}
-          getOptionLabel={(option) => option.title}
-          // defaultValue={[Device]}
-          // getOptionLabel={(option) => option.title}
-          value={nameDevice}
-          onChange={handleDevice}
-          className={classes.margin}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              size="small"
-              margin="normal"
-              variant="outlined"
-              // label={t('historicalData:devicelist')}
-              placeholder={t("historicalData:devicelist")}
-            />
-          )}
-        /> */}
         <Autocomplete
           // multiple
           id="tags-outlined"
-          options={top100Films}
-          getOptionLabel={(option) => option.title}
+          options={deviceList}
+          getOptionLabel={(option) => option.device_name}
           // defaultValue={nameDevice}
           // filterSelectedOptions
-          // value={}
           className={classes.margin}
           onChange={handleDevice}
+          onInputChange={handleCloseDevice}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -126,11 +218,12 @@ const Tags = ({ t }) => {
         <Autocomplete
           multiple
           id="tags-outlined"
-          options={top100FilmsPoint}
-          getOptionLabel={(option) => option.title}
+          options={pointList}
+          getOptionLabel={(option) => option.name}
           value={pointDevice}
           className={classes.margin}
           onChange={handlePoint}
+          onInputChange={handleClosePoint}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -141,27 +234,7 @@ const Tags = ({ t }) => {
             />
           )}
         />
-        {/* <Autocomplete
-          multiple
-          id="tags-standard"
-          // options={Point.map((option) => option.title)}
-          options={Point}
-          // getOptionLabel={(option) => option.title}
-          // value={pointDevice}
-          onChange={handlePoint}
-          className={classes.margin}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              size="small"
-              margin="normal"
-              variant="outlined"
-              // label={t('historicalData:devicelist')}
-              placeholder={t("historicalData:poin")}
-            />
-          )}
-        /> */}
-        {/* <Grid item className="mt-3"> */}
+      
         <Typography variant="h6">{t("historicalData:select")}</Typography>
         <Box>
           {/* <Grid item className={classes.flexRow}>
@@ -171,7 +244,9 @@ const Tags = ({ t }) => {
           <Table className={classes.Table}>
             <TableBody>
               <TableRow className={classes.border}>
-                <TableCell className={clsx(classes.border, classes.paddingCell)}>
+                <TableCell
+                  className={clsx(classes.border, classes.paddingCell)}
+                >
                   <Typography variant="body2">
                     {t("historicalData:poiniCheck")}
                   </Typography>
@@ -186,9 +261,11 @@ const Tags = ({ t }) => {
                 pointDevice.map((item, index) => {
                   return (
                     <TableRow className={classes.border}>
-                      <TableCell className={clsx(classes.border, classes.paddingCell)}>
+                      <TableCell
+                        className={clsx(classes.border, classes.paddingCell)}
+                      >
                         <Typography variant="body2">
-                          {nameDevice && nameDevice.title + ' / ' + item.title}
+                          {nameDevice && nameDevice.device_name + " / " + item.name}
                         </Typography>
                       </TableCell>
                       {/* <TableCell className={clsx(classes.border, classes.paddingCell)}>
@@ -198,33 +275,8 @@ const Tags = ({ t }) => {
                   );
                 })}
             </TableBody>
-            {/* <tr>
-              <td className={classes.border}>
-                <Typography variant="body2">test</Typography>
-              </td>
-              <td className={classes.border}>
-                <HighlightOffOutlinedIcon />
-              </td>
-            </tr> */}
           </Table>
         </Box>
-        {/* {nameDevice.length > 0 && pointDevice.length > 0 && (
-            <>
-              <div className="boxTextPoint">
-                {nameDevice.map((item) => {
-                  return pointDevice.map((point) => {
-                    return (
-                      <Typography variant="body1">
-                        {" "}
-                        {item + " / " + point}{" "}
-                      </Typography>
-                    );
-                  });
-                })}
-              </div>
-            </>
-          )} */}
-        {/* </Grid> */}
       </Stack>
     </>
   );
@@ -232,31 +284,24 @@ const Tags = ({ t }) => {
 
 Tags.propTypes = {
   t: PropTypes.func,
+  setDataSelectDevice: PropTypes.func,
+  setDataSelectPoint: PropTypes.func,
 };
 
-export default Tags;
+const mapStateToProps = (state) => {
+  return {
+    login: state.login,
+    token: state.token,
+  };
+};
 
-// Top 100 films as rated by IMDb users. http://www.imdb.com/chart/top
-const top100Films = [
-  { title: "Device1", year: 1994, id: 1 },
-  { title: "Device2", year: 1972, id: 2 },
-  { title: "Device3", year: 1974, id: 3 },
-  { title: "Device4", year: 2008, id: 4 },
-  { title: "Device5", year: 1957, id: 5 },
-  { title: "Device6", year: 1993, id: 6 },
-  // { title: "Pulp Fiction", year: 1994, id: 7 },
-  // { title: "One Flew Over the Cuckoo's Nest", year: 1975, id: 8 },
-  // { title: "Goodfellas", year: 1990, id: 9 },
-  // { title: "The Matrix", year: 1999, id: 10 },
-  // { title: "Seven Samurai", year: 1954, id: 11 },
-];
+function mapDispatchToProps(dispatch) {
+  return {
+    loading: (value) => dispatch(loading(value)),
+    checkAuthen: () => dispatch(checkAuthen()),
+    checkLogin: () => dispatch(checkLogin()),
+    // checkToken: () => dispatch(checkToken()),
+  };
+}
 
-const top100FilmsPoint = [
-  { title: "Current", year: 1994, id: 1 },
-  { title: "Voltage", year: 1972, id: 2 },
-  { title: "EnergyL1", year: 1974, id: 3 },
-  { title: "EnergyL2", year: 2008, id: 4 },
-  { title: "Current", year: 1957, id: 5 },
-  { title: "Energy", year: 1993, id: 6 },
-  { title: "Power", year: 1994, id: 7 },
-];
+export default connect(mapStateToProps, mapDispatchToProps)(Tags);

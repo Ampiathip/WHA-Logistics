@@ -265,13 +265,13 @@ function stableSort(array, comparator) {
 }
 
 const headCells = [
-  {
-    id: "name",
-    numeric: false,
-    disablePadding: true,
-    label: "Device ID",
-    width: 150,
-  },
+  // {
+  //   id: "name",
+  //   numeric: false,
+  //   disablePadding: true,
+  //   label: "Device ID",
+  //   width: 150,
+  // },
   {
     id: "calories",
     numeric: true,
@@ -1530,7 +1530,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                         }}
                       />
                     </TableCell> */}
-                          <TableCell
+                          {/* <TableCell
                             component="th"
                             id={labelId}
                             scope="row"
@@ -1539,7 +1539,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             align="center"
                           >
                             {row.id}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
