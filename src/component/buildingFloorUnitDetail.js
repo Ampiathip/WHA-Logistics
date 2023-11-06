@@ -1462,6 +1462,8 @@ const UnitManagement = ({
                       const isItemSelected = isSelected(rowItem.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
 
+                      // console.log('===========rowItem', rowItem);
+
                       return (
                         <TableRow
                           hover
@@ -1511,7 +1513,7 @@ const UnitManagement = ({
                             {/* {row.type_id
                               ? unitType.find((f) => f.id === row.type_id).type
                               : ""} */}
-                            {rowItem.type_id}
+                            {rowItem.type}
                           </TableCell>
                           <TableCell
                             align="center"
