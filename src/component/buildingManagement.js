@@ -871,7 +871,7 @@ const BuildingManagement = ({ t, login }) => {
 
   const openPageFlooreDetail = (event, id) => {
     // navigate("/buildingFloorDetail");
-    navigate("/buildingFloorDetail", { state: { id: id } });
+    navigate("/buildingFloorDetail", { state: { buildingId: id } });
   };
 
   // Update visibleRows based on the searchQuery

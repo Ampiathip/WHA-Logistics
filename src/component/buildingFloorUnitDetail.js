@@ -436,7 +436,7 @@ const UnitManagement = ({
   const theme = useTheme();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { id } = state;
+  const { buildingId, id } = state;
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -1344,7 +1344,7 @@ const UnitManagement = ({
 
   const openPageFloorDetail = (event, id) => {
     // navigate("/buildingFloorDetail");
-    navigate("/buildingFloorDetail", { state: { id: id } });
+    navigate("/buildingFloorDetail", { state: { buildingId: id } });
   };
 
   const handleCloseView = () => {
@@ -1394,7 +1394,7 @@ const UnitManagement = ({
                 pageName ? classes.activeColor : "",
                 classes.cursor
               )}
-              onClick={(event) => openPageFloorDetail(event, id)}
+              onClick={(event) => openPageFloorDetail(event, buildingId)}
             >
               {" "}
               / {sideBar} / {pageName}

@@ -122,6 +122,7 @@ export default function UserView({
   phoneNumber,
   role,
   loading,
+  imagePreviewUrl,
 }) {
   const classes = useStyles();
   //   const sideBar = useSelector((state) => state.sidebar);
@@ -171,7 +172,7 @@ export default function UserView({
               >
                 <Grid item md={3} className={classes.borderImg}>
                   <img
-                    src={process.env.PUBLIC_URL + "/img/Group.png"}
+                    src={imagePreviewUrl ? imagePreviewUrl : process.env.PUBLIC_URL + "/img/Group.png"}
                     alt="img-test"
                     className={classes.imgWidth}
                   />

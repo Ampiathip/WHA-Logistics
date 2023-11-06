@@ -398,7 +398,7 @@ const FloorManagement = ({ t, pageName, login }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { id } = state;
+  const { buildingId } = state;
   // modal //
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -423,8 +423,8 @@ const FloorManagement = ({ t, pageName, login }) => {
 
   useEffect(() => {
     dispatch(checkToken());
-    if (!_.isEmpty(token) && id !== null) {
-      getFloorList(id);
+    if (!_.isEmpty(token) && buildingId !== null) {
+      getFloorList(buildingId);
     }
     console.log("token", token, login);
   }, [token]);
@@ -493,7 +493,7 @@ const FloorManagement = ({ t, pageName, login }) => {
     try {
       const body = {
         floor: floorName,
-        building_id: id,
+        building_id: buildingId,
       };
       await API.connectTokenAPI(token);
       await API.FloorRegister(body).then((response) => {
@@ -505,7 +505,7 @@ const FloorManagement = ({ t, pageName, login }) => {
             confirmButtonText: "ตกลง",
             text: dataPayload,
           });
-          getFloorList(id);
+          getFloorList(buildingId);
           handleCloseAdd();
         }
         setIsLoading(false);
@@ -535,7 +535,7 @@ const FloorManagement = ({ t, pageName, login }) => {
             confirmButtonText: "ตกลง",
             text: dataPayload,
           });
-          getFloorList(id);
+          getFloorList(buildingId);
           handleClose();
         }
         setIsLoading(false);
@@ -556,7 +556,7 @@ const FloorManagement = ({ t, pageName, login }) => {
       await API.floorDelete(rowId).then((response) => {
         const dataPayload = response.data;
         if (response.status === 200) {
-          getFloorList(id);
+          getFloorList(buildingId);
           MySwal.fire({
             icon: "success",
             confirmButtonText: "ตกลง",
@@ -675,7 +675,7 @@ const FloorManagement = ({ t, pageName, login }) => {
 
   const openPageFlooreUnitDetail = (event, id) => {
     // navigate("/buildingFloorUnitDetail");
-    navigate("/buildingFloorUnitDetail", { state: { id: id } });
+    navigate("/buildingFloorUnitDetail", { state: { buildingId : buildingId, id: id } });
   };
 
   const openPageFloor = () => {
@@ -695,7 +695,7 @@ const FloorManagement = ({ t, pageName, login }) => {
       console.log("filteredRows", filteredRows);
       setRows(filteredRows);
     } else {
-      getFloorList(id);
+      getFloorList(buildingId);
     }
   };
 

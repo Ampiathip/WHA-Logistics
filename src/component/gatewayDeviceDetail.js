@@ -572,6 +572,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+  const [imagePreviewUrlGateway, setImagePreviewUrlGateway] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortedRows, setSortedRows] = useState(rows);
@@ -976,18 +977,43 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     }
   };
 
-  const handleClickOpen = (event, id) => {
-    setOpen(true);
-    setIsIdEdit(id);
-    deviceView(id);
-    setDisabledFild(true);
-    setEditPoint(null);
+  const getGatewayView = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getGatewayView(id).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            setGatewayName(item.name);
+            setImagePreviewUrlGateway(item.file);
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
   };
 
-  const handleClickOpenView = async (event, id) => {
+
+  const handleClickOpen = (event, rowId) => {
+    setOpen(true);
+    setIsIdEdit(rowId);
+    deviceView(rowId);
+    setDisabledFild(true);
+    setEditPoint(null);
+    getGatewayView(id);
+  };
+
+  const handleClickOpenView = async (event, rowId) => {
     setOpenView(true);
-    await deviceView(id);
-    await getPointData(id);
+    await deviceView(rowId);
+    await getPointData(rowId);
+    getGatewayView(id);
   };
 
   const handleClose = () => {
@@ -1586,13 +1612,13 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            <img
+                            {/* <img
                               src={IconDocument}
                               alt="IconDocument"
-                              // onClick={(event) => {
-                              //   openPageDeviceDetail(event, row.id);
-                              // }}
-                            />
+                              onClick={(event) => {
+                                openPageDeviceDetail(event, row.id);
+                              }}
+                            /> */}
 
                             <img
                               src={IconShow}
@@ -1693,9 +1719,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                       className={clsx(classes.flexRow, classes.alignItem)}
                     >
                       <Grid item md={6} className={classes.marginIcon}>
-                        {file ? (
+                        {imagePreviewUrlGateway ? (
                           <img
-                            src={file}
+                            src={imagePreviewUrlGateway}
                             alt="img-upload"
                             // className={classes.imgWidth}
                             width={150}
@@ -2271,7 +2297,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
               <Validate errorText={"กรุณาระบุข้อมูล"} />
             )}
           </Grid>
-          <Grid item md={12}>
+          {/* <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:gatewayName")}
             </Typography>
@@ -2283,13 +2309,13 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
               variant="outlined"
               value={gatewayName}
               disabled={true}
-              // onChange={handleGatewayName}
-              // error={_.isEmpty(gatewayName) && !isValidate}
+              onChange={handleGatewayName}
+              error={_.isEmpty(gatewayName) && !isValidate}
             />
-            {/* {_.isEmpty(gatewayName) && !isValidate && (
+            {_.isEmpty(gatewayName) && !isValidate && (
               <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )} */}
-          </Grid>
+            )}
+          </Grid> */}
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:deviceBrand")}
@@ -2576,9 +2602,9 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                       className={clsx(classes.flexRow, classes.alignItem)}
                     >
                       <Grid item md={6} className={classes.marginIcon}>
-                        {file ? (
+                        {imagePreviewUrlGateway ? (
                           <img
-                            src={file}
+                            src={imagePreviewUrlGateway}
                             alt="img-upload"
                             // className={classes.imgWidth}
                             width={150}

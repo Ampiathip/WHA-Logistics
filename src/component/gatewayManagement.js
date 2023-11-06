@@ -66,7 +66,11 @@ import IconDelete from "../images/icon/Delete.svg";
 import IconDocument from "../images/icon/Document.svg";
 import IconShow from "../images/icon/Show.svg";
 import IconSetting from "../images/icon/Setting.svg";
-import helper from "../js/helper"
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import moment from "moment";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -419,6 +423,7 @@ const GatewayManagement = ({ t, login }) => {
   const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+  const [installation, setInstallation] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortedRows, setSortedRows] = useState(rows);
@@ -504,7 +509,8 @@ const GatewayManagement = ({ t, login }) => {
         _.isEmpty(gatewayName) ||
         !buildingSelect ||
         _.isEmpty(deviceBrand) ||
-        !communicationTypeSelect
+        !communicationTypeSelect ||
+        _.isNull(installation)
       ) {
         isValidate = false;
       }
@@ -513,9 +519,10 @@ const GatewayManagement = ({ t, login }) => {
     } else {
       if (
         _.isEmpty(gatewayName) ||
-        buildingSelect == 'none' ||
+        buildingSelect == "none" ||
         _.isEmpty(deviceBrand) ||
-        communicationTypeSelect == 'none'
+        communicationTypeSelect == "none" ||
+        _.isNull(installation)
       ) {
         isValidate = false;
       }
@@ -544,7 +551,7 @@ const GatewayManagement = ({ t, login }) => {
             name: gatewayName,
             band: deviceBrand,
             communication_id: communicationTypeSelect,
-            installation_date: new Date(),
+            installation_date: installation.format("DD-MM-YYYY"),
             description: "",
             building_id: buildingSelect,
             file: base64File, // Include the Base64 encoded file
@@ -578,7 +585,7 @@ const GatewayManagement = ({ t, login }) => {
           name: gatewayName,
           band: deviceBrand,
           communication_id: communicationTypeSelect,
-          installation_date: new Date(),
+          installation_date: installation.format("DD-MM-YYYY"),
           description: "",
           building_id: buildingSelect,
           file: "", // Include the Base64 encoded file
@@ -620,7 +627,7 @@ const GatewayManagement = ({ t, login }) => {
             name: gatewayName,
             band: deviceBrand,
             communication_id: communicationTypeSelect,
-            installation_date: new Date(),
+            installation_date: installation.format("DD-MM-YYYY"),
             description: "",
             building_id: buildingSelect,
             file: base64File, // Include the Base64 encoded file
@@ -655,7 +662,7 @@ const GatewayManagement = ({ t, login }) => {
           name: gatewayName,
           band: deviceBrand,
           communication_id: communicationTypeSelect,
-          installation_date: new Date(),
+          installation_date: installation.format("DD-MM-YYYY"),
           description: "",
           building_id: buildingSelect,
           file: "", // Include the Base64 encoded file
@@ -696,7 +703,10 @@ const GatewayManagement = ({ t, login }) => {
         dataPayload.length > 0 &&
           dataPayload.map((item) => {
             console.log("9999=======item", item, building);
+            const dateMoment = moment(item.installation_date);
+            console.log('dateMoment', dateMoment);
             setGatewayName(item.name);
+            setInstallation(dateMoment);
             setBuildingSelect(
               item.building_name &&
                 building.find((f) => f.name === item.building_name).id
@@ -853,6 +863,7 @@ const GatewayManagement = ({ t, login }) => {
     setDeviceBrand("");
     setImagePreviewUrl("");
     setIsValidate(true);
+    setInstallation(null);
   };
 
   const handleCloseAdd = () => {
@@ -895,6 +906,10 @@ const GatewayManagement = ({ t, login }) => {
   const openPageDeviceDetail = (event, id) => {
     // navigate("/gatewayDeviceDetail");
     navigate("/gatewayDeviceDetail", { state: { id: id } });
+  };
+
+  const handleInstallation = (value) => {
+    setInstallation(value);
   };
 
   // Update visibleRows based on the searchQuery
@@ -991,6 +1006,8 @@ const GatewayManagement = ({ t, login }) => {
                       const isItemSelected = isSelected(row.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
 
+                      // console.log('========', row);
+
                       return (
                         <TableRow
                           hover
@@ -1049,7 +1066,7 @@ const GatewayManagement = ({ t, login }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.device_count}
+                            {row.no_of_device}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1211,6 +1228,29 @@ const GatewayManagement = ({ t, login }) => {
                   error={_.isEmpty(deviceBrand) && !isValidate}
                 />
                 {_.isEmpty(deviceBrand) && !isValidate && (
+                  <Validate errorText={"กรุณาระบุข้อมูล"} />
+                )}
+              </Grid>
+              <Grid item md={12}>
+                <Typography variant="subtitle2" className="mt-3 pb-3">
+                  {t("gateway:Installation")}
+                </Typography>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DemoContainer components={["DatePicker"]}>
+                    <DatePicker
+                      className={classes.width}
+                      value={installation}
+                      onChange={(newValue) => handleInstallation(newValue)}
+                      format="DD-MM-YYYY"
+                      slotProps={{
+                        textField: {
+                          error: _.isEmpty(installation) && !isValidate,
+                        },
+                      }}
+                    />
+                  </DemoContainer>
+                </LocalizationProvider>
+                {_.isNull(installation) && !isValidate && (
                   <Validate errorText={"กรุณาระบุข้อมูล"} />
                 )}
               </Grid>
@@ -1424,6 +1464,29 @@ const GatewayManagement = ({ t, login }) => {
           </Grid>
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("gateway:Installation")}
+            </Typography>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DemoContainer components={["DatePicker"]}>
+                <DatePicker
+                  className={classes.width}
+                  value={installation}
+                  onChange={(newValue) => handleInstallation(newValue)}
+                  format="DD-MM-YYYY"
+                  slotProps={{
+                    textField: {
+                      error: _.isEmpty(installation) && !isValidate,
+                    },
+                  }}
+                />
+              </DemoContainer>
+            </LocalizationProvider>
+            {_.isNull(installation) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
+          </Grid>
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:communicationType")}
             </Typography>
             <FormControl variant="outlined" size="small" fullWidth>
@@ -1584,7 +1647,11 @@ const GatewayManagement = ({ t, login }) => {
                 )}
               >
                 <Grid item md={3} className={classes.borderImg}>
-                  <img src={imagePreviewUrl} alt="img-test" className={classes.imgWidth} />
+                  <img
+                    src={imagePreviewUrl}
+                    alt="img-test"
+                    className={classes.imgWidth}
+                  />
                 </Grid>
                 <Grid item md={9}>
                   <Grid

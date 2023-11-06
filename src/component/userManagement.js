@@ -33,6 +33,8 @@ import {
   MenuItem,
   Select,
   CircularProgress,
+  Card,
+  CardContent,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -184,6 +186,12 @@ const useStyles = makeStyles((theme) => ({
   },
   activeColor: {
     color: "#3E6DC5",
+  },
+  input: {
+    display: "none",
+  },
+  marginTopBox: {
+    marginTop: 50,
   },
 }));
 
@@ -460,6 +468,7 @@ const UserManagement = ({ t, login }) => {
   const [rows, setRows] = useState([]);
   const [isValidateEdit, setIsValidateEdit] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
+  const [file, setFile] = useState("");
 
   // validate pass forget //
   const [isValidateForget, setIsValidateForget] = useState(false);
@@ -470,6 +479,7 @@ const UserManagement = ({ t, login }) => {
   const [rowsBuildingEdit, setRowsBuildingEdit] = useState([]);
   const [buildingData, setBuildingData] = useState([]);
   const [sortedRows, setSortedRows] = useState(rows);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   // user view //
   // const [userView, setUserView] = useState([]);
 
@@ -603,40 +613,83 @@ const UserManagement = ({ t, login }) => {
 
   const userRegister = async () => {
     setIsLoading(true);
-
-    try {
-      const body = {
-        username: emailUser,
-        password: password,
-        first_name: fristName,
-        last_name: lastName,
-        phone_number: phoneNumber,
-        enabled: active,
-        position: "",
-        department: "",
-        role: role,
-      };
-      await API.connectTokenAPI(token);
-      await API.userRegister(body).then((response) => {
-        const dataPayload = response.data;
-        // console.log("dataPayload", dataPayload, response);
-        if (response.status === 200) {
-          MySwal.fire({
-            icon: "success",
-            confirmButtonText: "ตกลง",
-            text: dataPayload,
+    let reader = new window.FileReader();
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            username: emailUser,
+            password: password,
+            first_name: fristName,
+            last_name: lastName,
+            phone_number: phoneNumber,
+            enabled: active,
+            position: "",
+            department: "",
+            role: role,
+            file: base64File, // Include the Base64 encoded file
+          };
+          await API.connectTokenAPI(token);
+          await API.userRegister(body).then((response) => {
+            const dataPayload = response.data;
+            // console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getUser();
+              handleCloseAddUser();
+            }
+            setIsLoading(false);
           });
-          getUser();
-          handleCloseAddUser();
-        }
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAddUser();
         setIsLoading(false);
-      });
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleCloseAddUser();
-      setIsLoading(false);
+      }
+    } else {
+      try {
+        const body = {
+          username: emailUser,
+          password: password,
+          first_name: fristName,
+          last_name: lastName,
+          phone_number: phoneNumber,
+          enabled: active,
+          position: "",
+          department: "",
+          role: role,
+          file: "",
+        };
+        await API.connectTokenAPI(token);
+        await API.userRegister(body).then((response) => {
+          const dataPayload = response.data;
+          // console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getUser();
+            handleCloseAddUser();
+          }
+          setIsLoading(false);
+        });
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseAddUser();
+        setIsLoading(false);
+      }
     }
   };
 
@@ -681,6 +734,7 @@ const UserManagement = ({ t, login }) => {
             setActive(item.remark);
             setPhoneNumber(item.phone_number);
             setRole(item.role);
+            setImagePreviewUrl(item.file);
           });
         // setUserView(dataPayload);
         setIsLoading(false);
@@ -711,8 +765,8 @@ const UserManagement = ({ t, login }) => {
       _.isEmpty(emailUser) ||
       _.isEmpty(fristName) ||
       _.isEmpty(lastName) ||
-      _.isEmpty(phoneNumber) ||
-      _.isNull(active)
+      _.isEmpty(phoneNumber) 
+      // ||_.isNull(active)
     ) {
       isValidate = false;
       setMessage("กรุณาระบุข้อมูล");
@@ -732,40 +786,85 @@ const UserManagement = ({ t, login }) => {
 
   const userUpdate = async (id) => {
     setIsLoading(true);
-    try {
-      const body = {
-        username: emailUser,
-        // password: password,
-        first_name: fristName,
-        last_name: lastName,
-        phone_number: phoneNumber,
-        enabled: active,
-        position: "",
-        department: "",
-        role: role,
-        remark: "",
-      };
-      await API.connectTokenAPI(token);
-      await API.userUpdate(id, body).then((response) => {
-        const dataPayload = response.data;
-        // console.log("dataPayload", dataPayload, response);
-        if (response.status === 200) {
-          MySwal.fire({
-            icon: "success",
-            confirmButtonText: "ตกลง",
-            text: dataPayload,
+    let reader = new window.FileReader();
+    if (file) {
+      reader.readAsDataURL(file);
+      try {
+        reader.onload = async () => {
+          const base64File = reader.result; // Extract the base64 data
+          const body = {
+            username: emailUser,
+            // password: password,
+            first_name: fristName,
+            last_name: lastName,
+            phone_number: phoneNumber,
+            enabled: active,
+            position: "",
+            department: "",
+            role: role,
+            remark: "",
+            file: base64File, // Include the Base64 encoded file
+          };
+          await API.connectTokenAPI(token);
+          await API.userUpdate(id, body).then((response) => {
+            const dataPayload = response.data;
+            // console.log("dataPayload", dataPayload, response);
+            if (response.status === 200) {
+              MySwal.fire({
+                icon: "success",
+                confirmButtonText: "ตกลง",
+                text: dataPayload,
+              });
+              getUser();
+              handleCloseEditUser();
+            }
+            setIsLoading(false);
           });
-          getUser();
-          handleCloseEditUser();
-        }
+        };
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseEditUser();
         setIsLoading(false);
-      });
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleCloseEditUser();
-      setIsLoading(false);
+      }
+    } else {
+      try {
+        const body = {
+          username: emailUser,
+          // password: password,
+          first_name: fristName,
+          last_name: lastName,
+          phone_number: phoneNumber,
+          enabled: active,
+          position: "",
+          department: "",
+          role: role,
+          remark: "",
+          file: "", // Include the Base64 encoded file
+        };
+        await API.connectTokenAPI(token);
+        await API.userUpdate(id, body).then((response) => {
+          const dataPayload = response.data;
+          // console.log("dataPayload", dataPayload, response);
+          if (response.status === 200) {
+            MySwal.fire({
+              icon: "success",
+              confirmButtonText: "ตกลง",
+              text: dataPayload,
+            });
+            getUser();
+            handleCloseEditUser();
+          }
+          setIsLoading(false);
+        });
+      } catch (error) {
+        console.log(error);
+        const response = error.response;
+        swalFire(response.data);
+        handleCloseEditUser();
+        setIsLoading(false);
+      }
     }
   };
 
@@ -784,6 +883,7 @@ const UserManagement = ({ t, login }) => {
     setPhoneNumber("");
     setRePassword("");
     setActive(null);
+    setImagePreviewUrl("");
   };
 
   const handleCloseAddUser = () => {
@@ -1214,6 +1314,22 @@ const UserManagement = ({ t, login }) => {
     }
   };
 
+  const handleUploadFile = (e) => {
+    // setFile(e.target.files[0]);
+    e.preventDefault();
+    const fileTypeArray = ["image/png", "image/jpg", "image/jpeg"];
+    let reader = new window.FileReader();
+    let file = e.target.files[0];
+
+    if (fileTypeArray.includes(file.type)) {
+      reader.onloadend = () => {
+        setFile(file);
+        setImagePreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <Box className={classes.marginRow}>
       {isLoading ? (
@@ -1392,9 +1508,9 @@ const UserManagement = ({ t, login }) => {
                               control={
                                 <Switch
                                   checked={row.enabled ? row.enabled : dense}
-                                  onChange={(event) =>
-                                    handleChangeDense(event, row, index)
-                                  }
+                                  // onChange={(event) =>
+                                  //   handleChangeDense(event, row, index)
+                                  // }
                                 />
                               }
                             />
@@ -1498,12 +1614,47 @@ const UserManagement = ({ t, login }) => {
               classes.marginRow
             )}
           >
-            <Grid item md={3} className={classes.borderImg}>
-              <img
-                src={process.env.PUBLIC_URL + "/img/Group.png"}
-                alt="img-test"
-                className={classes.imgWidth}
+            <Grid item md={3}>
+              <input
+                className={classes.input}
+                id={"contained-button-file"}
+                type="file"
+                accept="image/jpeg,image/png,application/pdf,image/tiff"
+                // multiple={isMultiple}
+                onChange={handleUploadFile}
+                onClick={(e) => {
+                  console.log("aaaaa");
+                }}
               />
+              <label
+                htmlFor={"contained-button-file"}
+                className={clsx(
+                  classes.flexRow,
+                  classes.justContentCenter,
+                  classes.width
+                )}
+              >
+                <Card
+                  variant="outlined"
+                  style={{ width: 200, height: 200 }}
+                  className={clsx(classes.boxUpload)}
+                >
+                  {imagePreviewUrl ? (
+                    <img
+                      src={imagePreviewUrl}
+                      alt="img-upload"
+                      className={classes.imgWidth}
+                    />
+                  ) : (
+                    <CardContent
+                      className={clsx(classes.textCenter, classes.marginTopBox)}
+                    >
+                      <Typography> +</Typography>
+                      <Typography> upload</Typography>
+                    </CardContent>
+                  )}
+                </Card>
+              </label>
             </Grid>
             <Grid item md={9}>
               <Grid item className={classes.boxMargin}>
@@ -1789,12 +1940,50 @@ const UserManagement = ({ t, login }) => {
                   classes.marginRow
                 )}
               >
-                <Grid item md={3} className={classes.borderImg}>
-                  <img
-                    src={process.env.PUBLIC_URL + "/img/Group.png"}
-                    alt="img-test"
-                    className={classes.imgWidth}
+                <Grid item md={3}>
+                  <input
+                    className={classes.input}
+                    id={"contained-button-file"}
+                    type="file"
+                    accept="image/jpeg,image/png,application/pdf,image/tiff"
+                    // multiple={isMultiple}
+                    onChange={handleUploadFile}
+                    onClick={(e) => {
+                      console.log("aaaaa");
+                    }}
                   />
+                  <label
+                    htmlFor={"contained-button-file"}
+                    className={clsx(
+                      classes.flexRow,
+                      classes.justContentCenter,
+                      classes.width
+                    )}
+                  >
+                    <Card
+                      variant="outlined"
+                      style={{ width: 200, height: 200 }}
+                      className={clsx(classes.boxUpload)}
+                    >
+                      {imagePreviewUrl ? (
+                        <img
+                          src={imagePreviewUrl}
+                          alt="img-upload"
+                          className={classes.imgWidth}
+                        />
+                      ) : (
+                        <CardContent
+                          className={clsx(
+                            classes.textCenter,
+                            classes.marginTopBox
+                          )}
+                        >
+                          <Typography> +</Typography>
+                          <Typography> upload</Typography>
+                        </CardContent>
+                      )}
+                    </Card>
+                  </label>
                 </Grid>
                 <Grid item md={9}>
                   <Grid item className={classes.boxMargin}>
@@ -2301,6 +2490,7 @@ const UserManagement = ({ t, login }) => {
         phoneNumber={phoneNumber}
         role={role}
         loading={isLoading}
+        imagePreviewUrl={imagePreviewUrl}
       />
     </Box>
   );
