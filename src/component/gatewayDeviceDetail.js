@@ -1883,7 +1883,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                   >
                     <Typography variant="h5">Point</Typography>
                     <Grid item className={classes.borderPoint}>
-                      <Typography variant="body2">20/100</Typography>
+                      <Typography variant="body2">{`${rowsPointEdit.length}` + ` / 100`}</Typography>
                     </Grid>
                   </Grid>
 
@@ -2579,7 +2579,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           >
             <Typography variant="h5">Point</Typography>
             <Grid item className={classes.borderPoint}>
-              <Typography variant="body2">20/100</Typography>
+              <Typography variant="body2">{`${rowsPointEdit.length}` + ` / 100`}</Typography>
             </Grid>
           </Grid>
         </DialogTitle>
