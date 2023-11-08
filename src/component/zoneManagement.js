@@ -1033,7 +1033,7 @@ const ZoneManagement = ({ t }) => {
                     onChange={handleZoneType}
                     error={zoneTypeSelect === "none" && !isValidate}
                   >
-                    <MenuItem value="none">{t("zone:selectZoneType")}</MenuItem>
+                    <MenuItem value="none" disabled>{t("zone:selectZoneType")}</MenuItem>
                     {zoneType.length > 0 &&
                       zoneType.map((item) => {
                         return (
@@ -1065,7 +1065,7 @@ const ZoneManagement = ({ t }) => {
                     onChange={handleBuildingName}
                     error={buildingName === "none" && !isValidate}
                   >
-                    <MenuItem value="none">
+                    <MenuItem value="none" disabled>
                       {t("building:buildingName")}
                     </MenuItem>
                     {building.length > 0 &&
@@ -1162,7 +1162,7 @@ const ZoneManagement = ({ t }) => {
                 onChange={handleZoneType}
                 error={zoneTypeSelect === "none" && !isValidate}
               >
-                <MenuItem value="none">{t("zone:selectZoneType")}</MenuItem>
+                <MenuItem value="none" disabled>{t("zone:selectZoneType")}</MenuItem>
                 {zoneType.length > 0 &&
                   zoneType.map((item) => {
                     return (
@@ -1194,7 +1194,7 @@ const ZoneManagement = ({ t }) => {
                 onChange={handleBuildingName}
                 error={buildingName === "none" && !isValidate}
               >
-                <MenuItem value="none">{t("building:buildingName")}</MenuItem>
+                <MenuItem value="none" disabled>{t("building:buildingName")}</MenuItem>
                 {building.length > 0 &&
                   building.map((item) => {
                     return (

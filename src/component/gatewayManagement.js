@@ -1194,7 +1194,7 @@ const GatewayManagement = ({ t, login }) => {
                     onChange={handleBuilding}
                     error={_.isEmpty(buildingSelect) && !isValidate}
                   >
-                    <MenuItem value="none">{t("gateway:select")}</MenuItem>
+                    <MenuItem value="none" disabled>{t("gateway:select")}</MenuItem>
                     {building.length > 0 &&
                       building.map((item) => {
                         return (
@@ -1271,7 +1271,7 @@ const GatewayManagement = ({ t, login }) => {
                     onChange={handleCommunicationType}
                     error={_.isEmpty(communicationTypeSelect) && !isValidate}
                   >
-                    <MenuItem value="none">
+                    <MenuItem value="none" disabled>
                       {t("gateway:selectCommunication")}
                     </MenuItem>
                     {communicationType.length > 0 &&
@@ -1425,7 +1425,7 @@ const GatewayManagement = ({ t, login }) => {
                 onChange={handleBuilding}
                 error={buildingSelect === "none" && !isValidate}
               >
-                <MenuItem value="none">{t("gateway:select")}</MenuItem>
+                <MenuItem value="none" disabled>{t("gateway:select")}</MenuItem>
                 {building.length > 0 &&
                   building.map((item) => {
                     return (
@@ -1502,7 +1502,7 @@ const GatewayManagement = ({ t, login }) => {
                 onChange={handleCommunicationType}
                 error={communicationTypeSelect === "none" && !isValidate}
               >
-                <MenuItem value="none">
+                <MenuItem value="none" disabled>
                   {t("gateway:selectCommunication")}
                 </MenuItem>
                 {communicationType.length > 0 &&

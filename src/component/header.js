@@ -170,7 +170,7 @@ function Header({ type, matches }) {
                       value={selectBuilding}
                       onChange={(e) => handleBuilding(e)}
                     >
-                      <MenuItem value={"none"}>
+                      <MenuItem value={"none"} disabled>
                         {"Select Building name"}
                       </MenuItem>
                       {building.length > 0 &&

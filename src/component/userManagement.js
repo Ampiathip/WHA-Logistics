@@ -1374,7 +1374,7 @@ const UserManagement = ({ t, login }) => {
                   placeholder={t("user:filter")}
                   onChange={handleFitterSelectChange}
                 >
-                  <MenuItem value="none">{t("user:filter")}</MenuItem>
+                  <MenuItem value="none" disabled>{t("user:filter")}</MenuItem>
                   {/* <MenuItem value={10}>Ten</MenuItem>
               <MenuItem value={20}>Twenty</MenuItem>
               <MenuItem value={30}>Thirty</MenuItem> */}
@@ -1777,7 +1777,7 @@ const UserManagement = ({ t, login }) => {
                   placeholder={t("user:selectRole")}
                   onChange={(e) => handleRoleChange(e)}
                 >
-                  <MenuItem value="none">{t("user:selectRole")}</MenuItem>
+                  <MenuItem value="none" disabled>{t("user:selectRole")}</MenuItem>
                   {roleList.length > 0 &&
                     roleList.map((item) => {
                       return (
@@ -2117,7 +2117,7 @@ const UserManagement = ({ t, login }) => {
                       placeholder={t("user:selectInput")}
                       onChange={(e) => handleRoleChange(e)}
                     >
-                      <MenuItem value="none">{t("user:selectInput")}</MenuItem>
+                      <MenuItem value="none" disabled>{t("user:selectInput")}</MenuItem>
                       {roleList.length > 0 &&
                         roleList.map((item) => {
                           return (
@@ -2205,7 +2205,7 @@ const UserManagement = ({ t, login }) => {
                                       handleBuildingName(e, row, index);
                                     }}
                                   >
-                                    <MenuItem value="none">
+                                    <MenuItem value="none" disabled>
                                       Building name
                                     </MenuItem>
                                     {buildingData.length > 0 &&
@@ -2230,7 +2230,7 @@ const UserManagement = ({ t, login }) => {
                                       row.building_info_id ? true : false
                                     }
                                   >
-                                    <MenuItem value="none">
+                                    <MenuItem value="none" disabled>
                                       Building name
                                     </MenuItem>
                                     {buildingData.length > 0 &&

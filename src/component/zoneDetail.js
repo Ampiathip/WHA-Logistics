@@ -1732,7 +1732,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                     onChange={handleUnitType}
                     error={unitTypeSelect === "none" && !isValidate}
                   >
-                    <MenuItem value="none">{t("floor:unitType")}</MenuItem>
+                    <MenuItem value="none" disabled>{t("floor:unitType")}</MenuItem>
                     {unitType.length > 0 &&
                       unitType.map((item) => {
                         return (

@@ -1761,7 +1761,7 @@ const UnitManagement = ({
                         onChange={handleUnitType}
                         error={unitTypeSelect === "none" && !isValidate}
                       >
-                        <MenuItem value="none">{t("floor:unitType")}</MenuItem>
+                        <MenuItem value="none" disabled>{t("floor:unitType")}</MenuItem>
                         {unitType.length > 0 &&
                           unitType.map((item) => {
                             return (
@@ -1945,7 +1945,7 @@ const UnitManagement = ({
                                         handleGatewayMeter(e, row, index);
                                       }}
                                     >
-                                      <MenuItem value="none">Gateway</MenuItem>
+                                      <MenuItem value="none" disabled>Gateway</MenuItem>
                                       {gatewayData.length > 0 &&
                                         gatewayData.map((item) => {
                                           return (
@@ -2001,7 +2001,7 @@ const UnitManagement = ({
                                         handleGatewayMeterTwo(e, row, index);
                                       }}
                                     >
-                                      <MenuItem value="none">Device</MenuItem>
+                                      <MenuItem value="none" disabled>Device</MenuItem>
                                       {row?.device_list.length > 0 &&
                                         row?.device_list.map((item) => {
                                           console.log("item", item);
@@ -2058,7 +2058,7 @@ const UnitManagement = ({
                                         handleGatewayMeterThree(e, row, index)
                                       }
                                     >
-                                      <MenuItem value="none">Point</MenuItem>
+                                      <MenuItem value="none" disabled>Point</MenuItem>
                                       {row?.point_list.length > 0 &&
                                         row?.point_list.map((item) => {
                                           return (
@@ -2348,7 +2348,7 @@ const UnitManagement = ({
                 onChange={handleUnitType}
                 error={unitTypeSelect === "none" && !isValidate}
               >
-                <MenuItem value="none">{t("floor:unitType")}</MenuItem>
+                <MenuItem value="none" disabled>{t("floor:unitType")}</MenuItem>
                 {unitType.length > 0 &&
                   unitType.map((item) => {
                     return (

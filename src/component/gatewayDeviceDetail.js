@@ -2420,7 +2420,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                 onChange={handleCommunicationType}
                 error={communicationTypeSelect === "none" && !isValidate}
               >
-                <MenuItem value="none">
+                <MenuItem value="none" disabled>
                   {t("gateway:selectCommunication")}
                 </MenuItem>
                 {communicationType.length > 0 &&
@@ -2454,7 +2454,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                 onChange={handleBillingType}
                 error={billingTypeSelect === "none" && !isValidate}
               >
-                <MenuItem value="none">
+                <MenuItem value="none" disabled>
                   {t("gateway:selectBillingType")}
                 </MenuItem>
                 {billingType.length > 0 &&
