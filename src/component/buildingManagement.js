@@ -106,7 +106,6 @@ const useStyles = makeStyles((theme) => ({
   modalWidth: {
     width: "90% !important",
     height: "90% !important",
-    
   },
   modalContent: {
     justifyContent: "space-around",
@@ -408,13 +407,13 @@ const BuildingManagement = ({ t, login }) => {
   const [openView, setOpenView] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [rows, setRows] = useState([]);
   const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
+  const [rows, setRows] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortedRows, setSortedRows] = useState(rows);
+  // const [sortedRows, setSortedRows] = useState(rows);
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -469,12 +468,7 @@ const BuildingManagement = ({ t, login }) => {
     let isValidate = true;
 
     if (type === "edit") {
-      if (
-        _.isEmpty(buildingName) ||
-        !lattitude ||
-        !longtitude ||
-        !area
-      ) {
+      if (_.isEmpty(buildingName) || !lattitude || !longtitude || !area) {
         isValidate = false;
       }
       console.log("isValidateEdit", isValidate);
@@ -779,14 +773,31 @@ const BuildingManagement = ({ t, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+  // const visibleRows = useMemo(
+  //   () =>
+  //     stableSort(rows, getComparator(order, orderBy)).slice(
+  //       page * rowsPerPage,
+  //       page * rowsPerPage + rowsPerPage
+  //     ),
+  //   [order, orderBy, page, rowsPerPage]
+  // );
+
+  const sortedRows = stableSort(rows, getComparator(order, orderBy));
   const visibleRows = useMemo(
     () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      ),
-    [order, orderBy, page, rowsPerPage, rows]
+      sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [order, orderBy, page, rowsPerPage, sortedRows]
   );
+
+  // const sortedRows = useMemo(
+  //   () => stableSort(rows, getComparator(order, orderBy)),
+  //   [order, orderBy, rows]
+  // );
+
+  // const visibleRows = useMemo(
+  //   () => sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+  //   [page, rowsPerPage, sortedRows]
+  // );
 
   const handleLongtitude = (event) => {
     setLongtitude(event.target.value);
@@ -901,7 +912,23 @@ const BuildingManagement = ({ t, login }) => {
   const handleSearchChange = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-    updateVisibleRows(query);
+    // updateVisibleRows(query);
+
+    if (query) {
+      // Use the filter method to find items based on the search condition
+      const filteredResults = rows.filter((item) =>
+        Object.values(item).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+
+      console.log("filteredRows", filteredResults);
+      setRows(filteredResults);
+    } else {
+      getBuilding();
+    }
   };
 
   return (

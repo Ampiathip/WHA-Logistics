@@ -1016,7 +1016,22 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const handleSearchChangeBuilding = (event) => {
     const query = event.target.value;
     setSearchQueryBuilding(query);
-    updateVisibleRowsBuilding(query);
+    // updateVisibleRowsBuilding(query);
+    if (query) {
+      // Use the filter method to find items based on the search condition
+      const filteredResults = rows.filter((item) =>
+        Object.values(item).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+
+      console.log("filteredRows", filteredResults);
+      setRows(filteredResults);
+    } else {
+      zoneUnitBuilding(billingId);
+    }
   };
 
   const handleToggle = (value) => () => {

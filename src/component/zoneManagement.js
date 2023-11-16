@@ -784,7 +784,22 @@ const ZoneManagement = ({ t }) => {
   const handleSearchChange = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-    updateVisibleRows(query);
+    // updateVisibleRows(query);
+    if (query) {
+      // Use the filter method to find items based on the search condition
+      const filteredResults = rows.filter((item) =>
+        Object.values(item).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+
+      console.log("filteredRows", filteredResults);
+      setRows(filteredResults);
+    } else {
+      getZoneData();
+    }
   };
 
   return (

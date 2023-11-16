@@ -114,7 +114,7 @@ const useStyles = makeStyles((theme) => ({
   modalEditWidth: {
     width: "90% !important",
     height: "90% !important",
-    maxWidth: 'none !important',
+    maxWidth: "none !important",
   },
   modalContent: {
     justifyContent: "space-around",
@@ -577,7 +577,7 @@ const UnitManagement = ({
     let isValidate = true;
     if (type === "edit") {
       if (
-        _.isEmpty(unitNumber) ||
+        // _.isEmpty(unitNumber) ||
         _.isEmpty(unitName) ||
         _.isEmpty(description) ||
         !unitTypeSelect
@@ -768,6 +768,9 @@ const UnitManagement = ({
               item.type_id ? unitType.find((f) => f.id === item.type_id).id : ""
             );
             setImagePreviewUrl(item.file);
+            setBuilding(item.name);
+            setZone(item.zone);
+            setFloorName(item.floor);
           });
         setIsLoading(false);
       });
@@ -1371,7 +1374,22 @@ const UnitManagement = ({
   const handleSearchChange = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-    updateVisibleRows(query);
+    // updateVisibleRows(query);
+    if (query) {
+      // Use the filter method to find items based on the search condition
+      const filteredResults = rows.filter((item) =>
+        Object.values(item).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+
+      console.log("filteredRows", filteredResults);
+      setRows(filteredResults);
+    } else {
+      getUnitList(id);
+    }
   };
 
   return (
@@ -1761,7 +1779,9 @@ const UnitManagement = ({
                         onChange={handleUnitType}
                         error={unitTypeSelect === "none" && !isValidate}
                       >
-                        <MenuItem value="none" disabled>{t("floor:unitType")}</MenuItem>
+                        <MenuItem value="none" disabled>
+                          {t("floor:unitType")}
+                        </MenuItem>
                         {unitType.length > 0 &&
                           unitType.map((item) => {
                             return (
@@ -1796,7 +1816,8 @@ const UnitManagement = ({
                       fullWidth
                       variant="outlined"
                       value={building}
-                      onChange={handleBuilding}
+                      // onChange={handleBuilding}
+                      disabled
                     />
                   </Grid>
                   <Grid item md={12}>
@@ -1810,7 +1831,8 @@ const UnitManagement = ({
                       fullWidth
                       variant="outlined"
                       value={floorName}
-                      onChange={handleFloorName}
+                      // onChange={handleFloorName}
+                      disabled
                     />
                   </Grid>
                   <Grid item md={12}>
@@ -1824,7 +1846,8 @@ const UnitManagement = ({
                       fullWidth
                       variant="outlined"
                       value={zone}
-                      onChange={handleZone}
+                      // onChange={handleZone}
+                      disabled
                     />
                   </Grid>
                   <Grid
@@ -1834,7 +1857,7 @@ const UnitManagement = ({
                   >
                     <Grid item md={3}>
                       <Button
-                        onClick={handleClose}
+                        onClick={() => getUnitView(isIdEdit)}
                         className={clsx(classes.backGroundCancel)}
                         variant="outlined"
                       >
@@ -1945,7 +1968,9 @@ const UnitManagement = ({
                                         handleGatewayMeter(e, row, index);
                                       }}
                                     >
-                                      <MenuItem value="none" disabled>Gateway</MenuItem>
+                                      <MenuItem value="none" disabled>
+                                        Gateway
+                                      </MenuItem>
                                       {gatewayData.length > 0 &&
                                         gatewayData.map((item) => {
                                           return (
@@ -2001,7 +2026,9 @@ const UnitManagement = ({
                                         handleGatewayMeterTwo(e, row, index);
                                       }}
                                     >
-                                      <MenuItem value="none" disabled>Device</MenuItem>
+                                      <MenuItem value="none" disabled>
+                                        Device
+                                      </MenuItem>
                                       {row?.device_list.length > 0 &&
                                         row?.device_list.map((item) => {
                                           console.log("item", item);
@@ -2058,7 +2085,9 @@ const UnitManagement = ({
                                         handleGatewayMeterThree(e, row, index)
                                       }
                                     >
-                                      <MenuItem value="none" disabled>Point</MenuItem>
+                                      <MenuItem value="none" disabled>
+                                        Point
+                                      </MenuItem>
                                       {row?.point_list.length > 0 &&
                                         row?.point_list.map((item) => {
                                           return (
@@ -2348,7 +2377,9 @@ const UnitManagement = ({
                 onChange={handleUnitType}
                 error={unitTypeSelect === "none" && !isValidate}
               >
-                <MenuItem value="none" disabled>{t("floor:unitType")}</MenuItem>
+                <MenuItem value="none" disabled>
+                  {t("floor:unitType")}
+                </MenuItem>
                 {unitType.length > 0 &&
                   unitType.map((item) => {
                     return (

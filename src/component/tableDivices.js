@@ -459,7 +459,7 @@ const DeviceManagement = ({ t, login }) => {
     // check close modal leave socket //
     if (!openView) {
       socket.emit("leaveRoom", isIdDevice);
-      setRealtimeData('');
+      setRealtimeData("");
     }
 
     // Clean up the socket connection when the component unmounts
@@ -897,7 +897,22 @@ const DeviceManagement = ({ t, login }) => {
   const handleSearchChange = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-    updateVisibleRows(query);
+    // updateVisibleRows(query);
+    if (query) {
+      // Use the filter method to find items based on the search condition
+      const filteredResults = rows.filter((item) =>
+        Object.values(item).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+
+      console.log("filteredRows", filteredResults);
+      setRows(filteredResults);
+    } else {
+      getDevice();
+    }
   };
 
   console.log("realtimeData", realtimeData);
@@ -2796,7 +2811,11 @@ const DeviceManagement = ({ t, login }) => {
               <Typography variant="h5">{t("diveices:realtime")}</Typography>
             </Grid>
 
-            <Grid item md={12} className={clsx(classes.paddingRow, classes.marginRow)}>
+            <Grid
+              item
+              md={12}
+              className={clsx(classes.paddingRow, classes.marginRow)}
+            >
               {realtimeData &&
                 realtimeData.length > 0 &&
                 realtimeData.map((item) => {
@@ -2810,10 +2829,24 @@ const DeviceManagement = ({ t, login }) => {
                         classes.alignItem
                       )}
                     >
-                      <Grid item md={6} className={clsx(classes.borderRealtime, classes.marginIcon)}>
+                      <Grid
+                        item
+                        md={6}
+                        className={clsx(
+                          classes.borderRealtime,
+                          classes.marginIcon
+                        )}
+                      >
                         {item.point}
                       </Grid>
-                      <Grid item md={6} className={clsx(classes.borderRealtime, classes.textCenter)}>
+                      <Grid
+                        item
+                        md={6}
+                        className={clsx(
+                          classes.borderRealtime,
+                          classes.textCenter
+                        )}
+                      >
                         {item.data}
                       </Grid>
                     </Grid>

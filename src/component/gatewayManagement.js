@@ -420,6 +420,7 @@ const GatewayManagement = ({ t, login }) => {
   const [openView, setOpenView] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rows, setRows] = useState([]);
+  const [originalRows, setOriginalRows] = useState([]);
   const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
@@ -704,7 +705,7 @@ const GatewayManagement = ({ t, login }) => {
           dataPayload.map((item) => {
             console.log("9999=======item", item, building);
             const dateMoment = moment(item.installation_date);
-            console.log('dateMoment', dateMoment);
+            console.log("dateMoment", dateMoment);
             setGatewayName(item.name);
             setInstallation(dateMoment);
             setBuildingSelect(
@@ -929,11 +930,38 @@ const GatewayManagement = ({ t, login }) => {
     }
   };
 
+  // Simulating an initial fetch or setting of rows
+  // const getSearch = () => {
+  //   setRows(rows);
+  //   setOriginalRows(rows);
+  // };
+
   const handleSearchChange = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-    updateVisibleRows(query);
+    // updateVisibleRows(query);
+    if (query) {
+      // Use the filter method to find items based on the search condition
+      const filteredResults = rows.filter((item) =>
+        Object.values(item).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+
+      console.log("filteredRows", filteredResults);
+      setRows(filteredResults);
+    } else {
+      getGateway();
+    }
   };
+
+  // // Initial fetch of data
+  // useEffect(() => {
+  //   getSearch();
+  // }, [rows, originalRows]);
+
 
   return (
     <Box className={clsx(classes.marginRow)}>
@@ -1194,7 +1222,9 @@ const GatewayManagement = ({ t, login }) => {
                     onChange={handleBuilding}
                     error={_.isEmpty(buildingSelect) && !isValidate}
                   >
-                    <MenuItem value="none" disabled>{t("gateway:select")}</MenuItem>
+                    <MenuItem value="none" disabled>
+                      {t("gateway:select")}
+                    </MenuItem>
                     {building.length > 0 &&
                       building.map((item) => {
                         return (
@@ -1425,7 +1455,9 @@ const GatewayManagement = ({ t, login }) => {
                 onChange={handleBuilding}
                 error={buildingSelect === "none" && !isValidate}
               >
-                <MenuItem value="none" disabled>{t("gateway:select")}</MenuItem>
+                <MenuItem value="none" disabled>
+                  {t("gateway:select")}
+                </MenuItem>
                 {building.length > 0 &&
                   building.map((item) => {
                     return (
