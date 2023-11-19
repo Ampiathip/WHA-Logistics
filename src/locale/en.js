@@ -183,6 +183,7 @@ let en = {
       "btnRefresh": "Refresh",
       "btnAddPoint": "Add Point",
       "selectBillingType": "Choose Billing Type",
+      "EditDevice": "Edit new Device",
     },
     zone: {
       "search": "Search by Zone name",
