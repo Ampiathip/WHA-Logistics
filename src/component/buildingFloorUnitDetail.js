@@ -196,10 +196,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
+  if (b.id < a.id) {
     return -1;
   }
-  if (b[orderBy] > a[orderBy]) {
+  if (b.id > a.id) {
     return 1;
   }
   return 0;
@@ -248,19 +248,19 @@ const headCells = [
   },
   {
     id: "carbs",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Unit Type",
   },
   {
     id: "power",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Building",
   },
   {
     id: "protein",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "No of Point",
   },
@@ -457,7 +457,7 @@ const UnitManagement = ({
   const [pointData, setPointData] = useState([]);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortedRows, setSortedRows] = useState(rows);
+  // const [sortedRows, setSortedRows] = useState(rows);
   const [gatewayDataSelect, setGatewayDataSelect] = useState("");
   const [deviceDataSelect, setDeviceDataSelect] = useState("");
   const [pointDataSelect, setPointDataSelect] = useState("");
@@ -970,13 +970,15 @@ const UnitManagement = ({
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+  const sortedRows = useMemo(
+    () => stableSort(rows, getComparator(order, orderBy)),
+    [order, orderBy, rows]
+  );
+
   const visibleRows = useMemo(
     () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      ),
-    [order, orderBy, page, rowsPerPage, rows]
+      sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [page, rowsPerPage, sortedRows]
   );
 
   const handleFloorName = (event) => {

@@ -180,10 +180,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
+  if (b.id < a.id) {
     return -1;
   }
-  if (b[orderBy] > a[orderBy]) {
+  if (b.id > a.id) {
     return 1;
   }
   return 0;
@@ -220,37 +220,37 @@ const headCells = [
   },
   {
     id: "calories",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Building  Name",
   },
   {
     id: "fat",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Latitude",
   },
   {
     id: "carbs",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Longitude",
   },
   {
     id: "power",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "No of Floor",
   },
   {
     id: "protein",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "No of Floor",
   },
   {
     id: "unit",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "No of Unit",
   },
@@ -773,31 +773,17 @@ const BuildingManagement = ({ t, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  // const visibleRows = useMemo(
-  //   () =>
-  //     stableSort(rows, getComparator(order, orderBy)).slice(
-  //       page * rowsPerPage,
-  //       page * rowsPerPage + rowsPerPage
-  //     ),
-  //   [order, orderBy, page, rowsPerPage]
-  // );
-
-  const sortedRows = stableSort(rows, getComparator(order, orderBy));
-  const visibleRows = useMemo(
-    () =>
-      sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [order, orderBy, page, rowsPerPage, sortedRows]
+  const sortedRows = useMemo(
+    () => stableSort(rows, getComparator(order, orderBy)),
+    [order, orderBy, rows]
   );
 
-  // const sortedRows = useMemo(
-  //   () => stableSort(rows, getComparator(order, orderBy)),
-  //   [order, orderBy, rows]
-  // );
+  const visibleRows = useMemo(
+    () => sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [page, rowsPerPage, sortedRows]
+  );
 
-  // const visibleRows = useMemo(
-  //   () => sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-  //   [page, rowsPerPage, sortedRows]
-  // );
+  console.log('#Nan sortedRows', sortedRows, visibleRows);
 
   const handleLongtitude = (event) => {
     setLongtitude(event.target.value);

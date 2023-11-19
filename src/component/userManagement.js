@@ -196,10 +196,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
+  if (b.id < a.id) {
     return -1;
   }
-  if (b[orderBy] > a[orderBy]) {
+  if (b.id > a.id) {
     return 1;
   }
   return 0;
@@ -236,21 +236,21 @@ const headCells = [
   },
   {
     id: "calories",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "First Name",
     // width: 150,
   },
   {
     id: "fat",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Last Name",
     // width: 150,
   },
   {
     id: "carbs",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Role",
   },
@@ -262,7 +262,7 @@ const headCells = [
   // },
   {
     id: "protein",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Department",
   },
@@ -275,7 +275,7 @@ const headCells = [
   // },
   {
     id: "last",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Last Login",
   },
@@ -287,13 +287,13 @@ const headCells = [
   // },
   {
     id: "enabel",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Enable",
   },
   {
     id: "action",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Action",
   },
@@ -478,7 +478,7 @@ const UserManagement = ({ t, login }) => {
   // edit Building //
   const [rowsBuildingEdit, setRowsBuildingEdit] = useState([]);
   const [buildingData, setBuildingData] = useState([]);
-  const [sortedRows, setSortedRows] = useState(rows);
+  // const [sortedRows, setSortedRows] = useState(rows);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   // user view //
   // const [userView, setUserView] = useState([]);
@@ -765,7 +765,7 @@ const UserManagement = ({ t, login }) => {
       _.isEmpty(emailUser) ||
       _.isEmpty(fristName) ||
       _.isEmpty(lastName) ||
-      _.isEmpty(phoneNumber) 
+      _.isEmpty(phoneNumber)
       // ||_.isNull(active)
     ) {
       isValidate = false;
@@ -1019,13 +1019,15 @@ const UserManagement = ({ t, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+  const sortedRows = useMemo(
+    () => stableSort(rows, getComparator(order, orderBy)),
+    [order, orderBy, rows]
+  );
+
   const visibleRows = useMemo(
     () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      ),
-    [order, orderBy, page, rowsPerPage, rows]
+      sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [page, rowsPerPage, sortedRows]
   );
 
   // modal add //
@@ -1389,7 +1391,9 @@ const UserManagement = ({ t, login }) => {
                   placeholder={t("user:filter")}
                   onChange={handleFitterSelectChange}
                 >
-                  <MenuItem value="none" disabled>{t("user:filter")}</MenuItem>
+                  <MenuItem value="none" disabled>
+                    {t("user:filter")}
+                  </MenuItem>
                   {/* <MenuItem value={10}>Ten</MenuItem>
               <MenuItem value={20}>Twenty</MenuItem>
               <MenuItem value={30}>Thirty</MenuItem> */}
@@ -1792,7 +1796,9 @@ const UserManagement = ({ t, login }) => {
                   placeholder={t("user:selectRole")}
                   onChange={(e) => handleRoleChange(e)}
                 >
-                  <MenuItem value="none" disabled>{t("user:selectRole")}</MenuItem>
+                  <MenuItem value="none" disabled>
+                    {t("user:selectRole")}
+                  </MenuItem>
                   {roleList.length > 0 &&
                     roleList.map((item) => {
                       return (
@@ -2132,7 +2138,9 @@ const UserManagement = ({ t, login }) => {
                       placeholder={t("user:selectInput")}
                       onChange={(e) => handleRoleChange(e)}
                     >
-                      <MenuItem value="none" disabled>{t("user:selectInput")}</MenuItem>
+                      <MenuItem value="none" disabled>
+                        {t("user:selectInput")}
+                      </MenuItem>
                       {roleList.length > 0 &&
                         roleList.map((item) => {
                           return (

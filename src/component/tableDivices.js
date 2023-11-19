@@ -183,10 +183,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
+  if (b.id < a.id) {
     return -1;
   }
-  if (b[orderBy] > a[orderBy]) {
+  if (b.id > a.id) {
     return 1;
   }
   return 0;
@@ -224,42 +224,42 @@ const headCells = [
   },
   {
     id: "calories",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Devices Name",
     width: 200,
   },
   {
     id: "fat",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Gateway",
     width: 200,
   },
   {
     id: "carbs",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Builidng",
     width: 200,
   },
   {
     id: "power",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Zone",
     width: 200,
   },
   {
     id: "protein",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Energy Total (kWh)",
     width: 220,
   },
   {
     id: "action",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Action",
     width: 200,
@@ -421,7 +421,7 @@ const DeviceManagement = ({ t, login }) => {
 
   const [rows, setRows] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortedRows, setSortedRows] = useState(rows);
+  // const [sortedRows, setSortedRows] = useState(rows);
   const [isIdDevice, setIsIdDevice] = useState("");
   const [realtimeData, setRealtimeData] = useState();
 
@@ -812,13 +812,15 @@ const DeviceManagement = ({ t, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+  const sortedRows = useMemo(
+    () => stableSort(rows, getComparator(order, orderBy)),
+    [order, orderBy, rows]
+  );
+
   const visibleRows = useMemo(
     () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      ),
-    [order, orderBy, page, rowsPerPage, rows]
+      sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [page, rowsPerPage, sortedRows]
   );
 
   const handleMeterIdChange = (event) => {
@@ -914,8 +916,6 @@ const DeviceManagement = ({ t, login }) => {
       getDevice();
     }
   };
-
-  console.log("realtimeData", realtimeData);
 
   return (
     <Box className={classes.marginRow}>

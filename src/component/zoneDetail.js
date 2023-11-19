@@ -198,10 +198,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
+  if (b.unit_info_id < a.unit_info_id) {
     return -1;
   }
-  if (b[orderBy] > a[orderBy]) {
+  if (b.unit_info_id > a.unit_info_id) {
     return 1;
   }
   return 0;
@@ -262,13 +262,13 @@ const headCells = [
   },
   {
     id: "protein",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "No of Point",
   },
   {
     id: "unit",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "No of Point",
   },
@@ -465,7 +465,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortedRows, setSortedRows] = useState(rows);
+  // const [sortedRows, setSortedRows] = useState(rows);
   const [searchQueryBuilding, setSearchQueryBuilding] = useState("");
 
   const [rowsPointEdit, setRowsPointEdit] = useState([
@@ -506,7 +506,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
     }
   }, [token, setZoneData]);
 
-  console.log('setZoneData', zoneData);
+  console.log("setZoneData", zoneData);
 
   const getZoneUnitData = async (id) => {
     setIsLoading(true);
@@ -830,15 +830,16 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const visibleRows = useMemo(
-    () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      ),
-    [order, orderBy, page, rowsPerPage, rows]
+  const sortedRows = useMemo(
+    () => stableSort(rows, getComparator(order, orderBy)),
+    [order, orderBy, rows]
   );
 
+  const visibleRows = useMemo(
+    () =>
+      sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [page, rowsPerPage, sortedRows]
+  );
   const handleDeviceBrand = (event) => {
     setDeviceBrand(event.target.value);
   };
@@ -991,7 +992,22 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const handleSearchChange = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-    updateVisibleRows(query);
+    // updateVisibleRows(query);
+    if (query) {
+      // Use the filter method to find items based on the search condition
+      const filteredResults = rows.filter((item) =>
+        Object.values(item).some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+
+      console.log("filteredRows", filteredResults);
+      setRows(filteredResults);
+    } else {
+      getZoneUnitData(id);
+    }
   };
 
   // Update visibleRows based on the searchQuery
@@ -1016,6 +1032,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
   const handleSearchChangeBuilding = (event) => {
     const query = event.target.value;
     setSearchQueryBuilding(query);
+    setIsLoading(true);
     // updateVisibleRowsBuilding(query);
     if (query) {
       // Use the filter method to find items based on the search condition
@@ -1028,7 +1045,8 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
       );
 
       console.log("filteredRows", filteredResults);
-      setRows(filteredResults);
+      setLeft(filteredResults);
+      setIsLoading(false);
     } else {
       zoneUnitBuilding(billingId);
     }
@@ -1466,7 +1484,7 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                     classes={classes}
                   />
                   <TableBody>
-                    {rows.map((rowItem, index) => {
+                    {visibleRows.map((rowItem, index) => {
                       const isItemSelected = isSelected(rowItem.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
 
@@ -1747,7 +1765,9 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                     onChange={handleUnitType}
                     error={unitTypeSelect === "none" && !isValidate}
                   >
-                    <MenuItem value="none" disabled>{t("floor:unitType")}</MenuItem>
+                    <MenuItem value="none" disabled>
+                      {t("floor:unitType")}
+                    </MenuItem>
                     {unitType.length > 0 &&
                       unitType.map((item) => {
                         return (

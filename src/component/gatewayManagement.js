@@ -188,10 +188,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
+  if (b.id < a.id) {
     return -1;
   }
-  if (b[orderBy] > a[orderBy]) {
+  if (b.id > a.id) {
     return 1;
   }
   return 0;
@@ -228,37 +228,37 @@ const headCells = [
   },
   {
     id: "calories",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Gateway Name",
   },
   {
     id: "fat",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Gateway Brand",
   },
   {
     id: "carbs",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Building Name",
   },
   {
     id: "power",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Type",
   },
   {
     id: "protein",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "No. Of Device",
   },
   {
     id: "unit",
-    numeric: true,
+    numeric: false,
     disablePadding: false,
     label: "Installation Date",
   },
@@ -427,7 +427,7 @@ const GatewayManagement = ({ t, login }) => {
   const [installation, setInstallation] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortedRows, setSortedRows] = useState(rows);
+  // const [sortedRows, setSortedRows] = useState(rows);
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -839,13 +839,15 @@ const GatewayManagement = ({ t, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+  const sortedRows = useMemo(
+    () => stableSort(rows, getComparator(order, orderBy)),
+    [order, orderBy, rows]
+  );
+
   const visibleRows = useMemo(
     () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      ),
-    [order, orderBy, page, rowsPerPage, rows]
+      sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [page, rowsPerPage, sortedRows]
   );
 
   const handleDeviceBrand = (event) => {
@@ -961,7 +963,6 @@ const GatewayManagement = ({ t, login }) => {
   // useEffect(() => {
   //   getSearch();
   // }, [rows, originalRows]);
-
 
   return (
     <Box className={clsx(classes.marginRow)}>

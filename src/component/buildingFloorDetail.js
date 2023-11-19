@@ -181,10 +181,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function descendingComparator(a, b, orderBy) {
-  if (b[orderBy] < a[orderBy]) {
+  if (b.id < a.id) {
     return -1;
   }
-  if (b[orderBy] > a[orderBy]) {
+  if (b.id > a.id) {
     return 1;
   }
   return 0;
@@ -411,7 +411,7 @@ const FloorManagement = ({ t, pageName, login }) => {
   const [isIdEdit, setIsIdEdit] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortedRows, setSortedRows] = useState(rows);
+  // const [sortedRows, setSortedRows] = useState(rows);
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -650,13 +650,15 @@ const FloorManagement = ({ t, pageName, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+  const sortedRows = useMemo(
+    () => stableSort(rows, getComparator(order, orderBy)),
+    [order, orderBy, rows]
+  );
+
   const visibleRows = useMemo(
     () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      ),
-    [order, orderBy, page, rowsPerPage, rows]
+      sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [page, rowsPerPage, sortedRows]
   );
 
   const handleFloorName = (event) => {
@@ -675,7 +677,9 @@ const FloorManagement = ({ t, pageName, login }) => {
 
   const openPageFlooreUnitDetail = (event, id) => {
     // navigate("/buildingFloorUnitDetail");
-    navigate("/buildingFloorUnitDetail", { state: { buildingId : buildingId, id: id } });
+    navigate("/buildingFloorUnitDetail", {
+      state: { buildingId: buildingId, id: id },
+    });
   };
 
   const openPageFloor = () => {
@@ -910,7 +914,7 @@ const FloorManagement = ({ t, pageName, login }) => {
                         </TableRow>
                       );
                     })}
-                    {emptyRows > 0 && (
+                    {/* {emptyRows > 0 && (
                       <TableRow
                         style={{
                           height: (dense ? 33 : 53) * emptyRows,
@@ -918,7 +922,7 @@ const FloorManagement = ({ t, pageName, login }) => {
                       >
                         <TableCell colSpan={6} />
                       </TableRow>
-                    )}
+                    )} */}
                   </TableBody>
                 </Table>
               </TableContainer>
