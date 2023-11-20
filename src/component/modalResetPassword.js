@@ -62,10 +62,10 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: 15,
   },
   backGroundReset: {
-    backgroundColor: "#03257D",
+    backgroundColor: "#27963C",
     color: "#fff",
     "&:hover": {
-      backgroundColor: "#03257D",
+      backgroundColor: "#27963C",
       boxShadow: `none`,
     },
   },

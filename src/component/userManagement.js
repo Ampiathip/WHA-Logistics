@@ -133,10 +133,10 @@ const useStyles = makeStyles((theme) => ({
     borderBottom: "solid #F9F9FA",
   },
   backGroundConfrim: {
-    backgroundColor: "#03257D !important",
+    backgroundColor: "#27963C !important",
     color: "#fff !important",
     "&:hover": {
-      backgroundColor: "#03257D !important",
+      backgroundColor: "#27963C !important",
       boxShadow: `none`,
     },
   },
@@ -1878,7 +1878,7 @@ const UserManagement = ({ t, login }) => {
               <FormControlLabel
                 control={
                   <Checkbox
-                    color="warning"
+                    color="success"
                     checked={active}
                     onChange={onSelectClickActive}
                     inputProps={{
@@ -2351,7 +2351,7 @@ const UserManagement = ({ t, login }) => {
                   <FormControlLabel
                     control={
                       <Checkbox
-                        color="warning"
+                        color="success"
                         checked={active}
                         onChange={onSelectClickActive}
                         inputProps={{

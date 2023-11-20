@@ -26,7 +26,7 @@ import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import CalendarViewWeekOutlinedIcon from "@mui/icons-material/CalendarViewWeekOutlined";
 import CookieOutlinedIcon from "@mui/icons-material/CookieOutlined";
 import DatasetOutlinedIcon from "@mui/icons-material/DatasetOutlined";
-import BookmarkOutlinedIcon from "@mui/icons-material/BookmarkOutlined";
+import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
 import PageviewOutlinedIcon from "@mui/icons-material/PageviewOutlined";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -53,14 +53,19 @@ const useStyles = makeStyles((theme) => ({
     textDecoration: "blink",
   },
   activeIcon: {
-    color: "#ae84d3",
+    color: "#27963C",
     textDecoration: "blink",
     "&:hover": {
-      color: "#ae84d3",
+      color: "#27963C",
     },
   },
   margigLeft: {
     marginLeft: 20,
+  },
+  hoverColor: {
+    "&:hover": {
+      color: "#27963C",
+    },
   },
 }));
 
@@ -96,13 +101,13 @@ const SideBar = () => {
       }}
     >
       <Grid item className={classes.disPlayFlexRow}>
-        <Typography variant="h5" className={classes.imageCenter}>
+        {/* <Typography variant="h5" className={classes.imageCenter}>
           {t("sidebar:header")}
-        </Typography>
+        </Typography> */}
         <img
           src={process.env.PUBLIC_URL + "/img/Group.png"}
           alt="img-logo"
-          width={60}
+          width={150}
         />
       </Grid>
       <List>
@@ -112,7 +117,7 @@ const SideBar = () => {
             sideBar == "Dashboard" ? classes.activeIcon : classes.LinkColor
           }`}
         >
-          <ListItem button>
+          <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
                 sideBar == "Dashboard" ? classes.activeIcon : classes.LinkColor
@@ -129,7 +134,7 @@ const SideBar = () => {
             sideBar == "FloorDiagram" ? classes.activeIcon : classes.LinkColor
           }`}
         >
-          <ListItem button>
+          <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
                 sideBar == "FloorDiagram"
@@ -148,7 +153,7 @@ const SideBar = () => {
             sideBar == "Divices" ? classes.activeIcon : classes.LinkColor
           }`}
         >
-          <ListItem button>
+          <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
                 sideBar == "Divices" ? classes.activeIcon : classes.LinkColor
@@ -165,7 +170,7 @@ const SideBar = () => {
             sideBar == "HistoricalData" ? classes.activeIcon : classes.LinkColor
           }`}
         >
-          <ListItem button>
+          <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
                 sideBar == "HistoricalData"
@@ -178,47 +183,12 @@ const SideBar = () => {
             <ListItemText primary={t("sidebar:historicalData")} />
           </ListItem>
         </Link>
-        <Link
-          to={"/systemOverview"}
-          className={`${
-            sideBar == "SystemOverview" ? classes.activeIcon : classes.LinkColor
-          }`}
-        >
-          <ListItem button>
-            <ListItemIcon
-              className={`${
-                sideBar == "SystemOverview"
-                  ? classes.activeIcon
-                  : classes.LinkColor
-              }`}
-            >
-              <PageviewOutlinedIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("sidebar:systemOverview")} />
-          </ListItem>
-        </Link>
         <Grid item className={classes.margigLeft}>
           <Typography variant="h6" className={classes.imageCenter}>
             {t("sidebar:Settings")}
           </Typography>
         </Grid>
-        <Link
-          to={"/parameter"}
-          className={`${
-            sideBar == "Parameter" ? classes.activeIcon : classes.LinkColor
-          }`}
-        >
-          <ListItem button>
-            <ListItemIcon
-              className={`${
-                sideBar == "Parameter" ? classes.activeIcon : classes.LinkColor
-              }`}
-            >
-              <UploadFileOutlinedIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("sidebar:parameter")} />
-          </ListItem>
-        </Link>
+
         {/* <Link
           to={"/group"}
           className={`${
@@ -236,13 +206,32 @@ const SideBar = () => {
             <ListItemText primary={t("sidebar:group")} />
           </ListItem>
         </Link> */}
+
+        <Link
+          // to={"/parameter"}
+          className={`${
+            sideBar == "department" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button className={classes.hoverColor}>
+            <ListItemIcon
+              className={`${
+                sideBar == "department" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <PlayCircleOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:department")} />
+          </ListItem>
+        </Link>
+
         <Link
           to={"/user"}
           className={`${
             sideBar == "User" ? classes.activeIcon : classes.LinkColor
           }`}
         >
-          <ListItem button>
+          <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
                 sideBar == "User" ? classes.activeIcon : classes.LinkColor
@@ -259,7 +248,7 @@ const SideBar = () => {
             sideBar == "" ? classes.activeIcon : classes.LinkColor
           }`}
         > */}
-        <ListItem button onClick={handleLogout}>
+        <ListItem button className={classes.hoverColor} onClick={handleLogout}>
           <ListItemIcon
             className={`${
               sideBar == "" ? classes.activeIcon : classes.LinkColor
@@ -281,7 +270,7 @@ const SideBar = () => {
             sideBar == "Building" ? classes.activeIcon : classes.LinkColor
           }`}
         >
-          <ListItem button>
+          <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
                 sideBar == "Building" ? classes.activeIcon : classes.LinkColor
@@ -292,23 +281,6 @@ const SideBar = () => {
             <ListItemText primary={t("sidebar:Building")} />
           </ListItem>
         </Link>
-        <Link
-          to={"/gateway"}
-          className={`${
-            sideBar == "Gateway" ? classes.activeIcon : classes.LinkColor
-          }`}
-        >
-          <ListItem button>
-            <ListItemIcon
-              className={`${
-                sideBar == "Gateway" ? classes.activeIcon : classes.LinkColor
-              }`}
-            >
-              <BookmarkOutlinedIcon />
-            </ListItemIcon>
-            <ListItemText primary={t("sidebar:Gateway")} />
-          </ListItem>
-        </Link>
 
         <Link
           to={"/zone"}
@@ -316,7 +288,7 @@ const SideBar = () => {
             sideBar == "Zone" ? classes.activeIcon : classes.LinkColor
           }`}
         >
-          <ListItem button>
+          <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
                 sideBar == "Zone" ? classes.activeIcon : classes.LinkColor
@@ -327,6 +299,122 @@ const SideBar = () => {
             <ListItemText primary={t("sidebar:zone")} />
           </ListItem>
         </Link>
+
+        <Link
+          // to={"/unit"}
+          className={`${
+            sideBar == "unit" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button className={classes.hoverColor}>
+            <ListItemIcon
+              className={`${
+                sideBar == "unit" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <HomeOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:unit")} />
+          </ListItem>
+        </Link>
+
+        <Link
+          // to={"/invoice"}
+          className={`${
+            sideBar == "invoice" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button className={classes.hoverColor}>
+            <ListItemIcon
+              className={`${
+                sideBar == "invoice" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <HomeOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:invoice")} />
+          </ListItem>
+        </Link>
+
+        <Grid item className={classes.margigLeft}>
+          <Typography variant="h6" className={classes.imageCenter}>
+            {t("sidebar:GatewaySettings")}
+          </Typography>
+        </Grid>
+
+        <Link
+          to={"/parameter"}
+          className={`${
+            sideBar == "Parameter" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button className={classes.hoverColor}>
+            <ListItemIcon
+              className={`${
+                sideBar == "Parameter" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <UploadFileOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:parameter")} />
+          </ListItem>
+        </Link>
+
+        <Link
+          to={"/gateway"}
+          className={`${
+            sideBar == "Gateway" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button className={classes.hoverColor}>
+            <ListItemIcon
+              className={`${
+                sideBar == "Gateway" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <BookmarkBorderOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:Gateway")} />
+          </ListItem>
+        </Link>
+
+        <Link
+          // to={"/Devices"}
+          className={`${
+            sideBar == "Devices" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button className={classes.hoverColor}>
+            <ListItemIcon
+              className={`${
+                sideBar == "Devices" ? classes.activeIcon : classes.LinkColor
+              }`}
+            >
+              <BookmarkBorderOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:Devices")} />
+          </ListItem>
+        </Link>
+
+        {/* <Link
+          to={"/systemOverview"}
+          className={`${
+            sideBar == "SystemOverview" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button className={classes.hoverColor}>
+            <ListItemIcon
+              className={`${
+                sideBar == "SystemOverview"
+                  ? classes.activeIcon
+                  : classes.LinkColor
+              }`}
+            >
+              <PageviewOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:systemOverview")} />
+          </ListItem>
+        </Link> */}
       </List>
     </Drawer>
   );

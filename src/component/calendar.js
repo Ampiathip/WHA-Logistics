@@ -55,7 +55,7 @@ const useStyles = makeStyles((theme) => ({
     marginTop: 15,
   },
   activeBtn: {
-    backgroundColor: "#EB2F96",
+    backgroundColor: "#27963C",
     color: "#fff",
   },
   btnIconWidth: {
@@ -64,7 +64,7 @@ const useStyles = makeStyles((theme) => ({
     color: "#fff",
   },
   activeBar: {
-    borderBottom: "3px solid #03257D",
+    borderBottom: "3px solid #27963C",
   },
   cursorPointer: {
     cursor: "pointer",

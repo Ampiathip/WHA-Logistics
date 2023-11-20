@@ -140,10 +140,10 @@ const useStyles = makeStyles((theme) => ({
   },
   backGroundConfrim: {
     width: "100%",
-    backgroundColor: "#03257D !important",
+    backgroundColor: "#27963C !important",
     color: "#fff !important",
     "&:hover": {
-      backgroundColor: "#03257D !important",
+      backgroundColor: "#27963C !important",
       boxShadow: `none`,
     },
   },
@@ -574,6 +574,28 @@ const FloorManagement = ({ t, pageName, login }) => {
     }
   };
 
+  const floorView = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.floorView(id).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("==========View", item);
+            setFloorName(item.floor);
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
   // delete Data //
   const handleClickDeleteData = (event, id) => {
     MySwal.fire({
@@ -594,6 +616,12 @@ const FloorManagement = ({ t, pageName, login }) => {
   const handleClickOpen = (event, id) => {
     setOpen(true);
     setIsIdEdit(id);
+    floorView(id);
+  };
+
+  const handleOpenView = (event, id) => {
+    setOpenView(true);
+    floorView(id);
   };
 
   const handleClose = () => {
@@ -673,6 +701,10 @@ const FloorManagement = ({ t, pageName, login }) => {
 
   const handleCloseAdd = () => {
     setOpenAdd(false);
+  };
+
+  const handleCloseView = () => {
+    setOpenView(false);
   };
 
   const openPageFlooreUnitDetail = (event, id) => {
@@ -891,9 +923,9 @@ const FloorManagement = ({ t, pageName, login }) => {
                             <img
                               src={IconShow}
                               alt="IconShow"
-                              // onClick={(event) => {
-                              //   handleOpenView(event, row.id);
-                              // }}
+                              onClick={(event) => {
+                                handleOpenView(event, row.id);
+                              }}
                             />
 
                             <img
@@ -1070,6 +1102,48 @@ const FloorManagement = ({ t, pageName, login }) => {
               </Button>
             </Grid>
           </Grid>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal View */}
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openView}
+        onClose={handleCloseView}
+        aria-labelledby="responsive-dialog-title-view"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle
+          id="responsive-dialog-title-view"
+          className={clsx(
+            classes.flexRow,
+            classes.justContent,
+            classes.borderBottom
+          )}
+        >
+          <Typography variant="h3">{floorName}</Typography>
+          <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
+        </DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:floorName")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {floorName ? floorName : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </Box>

@@ -147,10 +147,10 @@ const useStyles = makeStyles((theme) => ({
   },
   backGroundConfrim: {
     width: "100%",
-    backgroundColor: "#03257D !important",
+    backgroundColor: "#27963C !important",
     color: "#fff !important",
     "&:hover": {
-      backgroundColor: "#03257D !important",
+      backgroundColor: "#27963C !important",
       boxShadow: `none`,
     },
   },
@@ -1561,14 +1561,14 @@ const ZoneDetailManagement = ({ t, pageName, subPageName, zoneData }) => {
                               classes.paddingIcon
                             )}
                           >
-                            <img
+                            {/* <img
                               src={IconDocument}
                               alt="IconDocument"
-                              // onClick={(event) => {
-                              //   openPageZoneDetail(event, row.id);
-                              //   handleDetailZone(event, row);
-                              // }}
-                            />
+                              onClick={(event) => {
+                                openPageZoneDetail(event, row.id);
+                                handleDetailZone(event, row);
+                              }}
+                            /> */}
 
                             <img
                               src={IconShow}

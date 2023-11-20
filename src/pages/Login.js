@@ -66,10 +66,10 @@ const useStyles = makeStyles((theme) => ({
     padding: 20,
   },
   btnLogColor: {
-    backgroundColor: "#000",
+    backgroundColor: "#27963C",
     color: "#fff",
     "&:hover": {
-      backgroundColor: "#000",
+      backgroundColor: "#27963C",
       boxShadow: `none`,
     },
   },
@@ -78,10 +78,10 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: 15,
   },
   backGroundReset: {
-    backgroundColor: "#03257D",
+    backgroundColor: "#27963C",
     color: "#fff",
     "&:hover": {
-      backgroundColor: "#03257D",
+      backgroundColor: "#27963C",
       boxShadow: `none`,
     },
   },
@@ -256,7 +256,7 @@ function Login(props) {
                 />
               </Grid>
               <Grid item md={12} className={classes.textCenter}>
-                <Typography variant="h6">{t("login:header")}</Typography>
+                {/* <Typography variant="h6">{t("login:header")}</Typography> */}
                 <Typography variant="h5" className="pt-3">
                   {t("login:subHead")}
                 </Typography>

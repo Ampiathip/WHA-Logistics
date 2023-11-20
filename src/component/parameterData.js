@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
   },
   btnColor: {
-    backgroundColor: "#E6F7FF",
+    backgroundColor: "#FFF",
     color: "#000",
     width: "100%",
   },
@@ -46,9 +46,13 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
   },
   activeIcon: {
-    backgroundColor: "#03257D",
+    backgroundColor: "#27963C",
     color: "#fff",
     width: "100%",
+    "&:hover": {
+      backgroundColor: "#27963C !important",
+      boxShadow: `none`,
+    },
   },
   FlexIcon: {
     display: "flex",
@@ -238,7 +242,7 @@ const ParameterData = ({ t }) => {
                 </Grid>
                 <Grid item md={3} className="mt-3">
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     className={clsx(classes.btnColor, classes.btnWidthAction)}
                   >
                     {t("parameter:refresh")}
@@ -246,7 +250,7 @@ const ParameterData = ({ t }) => {
                 </Grid>
                 <Grid item md={3} className="mt-3">
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     className={clsx(classes.activeIcon, classes.btnWidthAction)}
                     // onClick={() => handleBtnParameter("alarm")}
                   >

@@ -116,6 +116,10 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/floor/remove/${id}`);
   };
 
+  const floorView = (id = 0) => {
+    return tokenAPI.get(`/api/floor/read/${id}`);
+  };
+
   /* ============== Unit API ================ */
 
   const UnitRegister = (body) => {
@@ -414,6 +418,7 @@ const getAPI = () => {
     getFloorList,
     floorUpdate,
     floorDelete,
+    floorView,
 
     UnitRegister,
     getUnitList,

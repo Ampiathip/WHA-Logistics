@@ -210,8 +210,8 @@ h6 {
 }
 
 .activeBar {
-    /* text-decoration: underline #03257D; */
-    border-bottom: 3px solid #03257D;
+    /* text-decoration: underline #27963C; */
+    border-bottom: 3px solid #27963C;
 }
 
 .cursorPointer {
@@ -340,7 +340,7 @@ h6 {
 }
 
 .boxTextPoint {
-    background-color: #E6F7FF;
+    background-color: #FFF;
     padding: 5px;
     margin-top: 10px;
 }

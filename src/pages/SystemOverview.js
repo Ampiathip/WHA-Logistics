@@ -38,18 +38,18 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
   },
   btnColor: {
-    backgroundColor: "#E6F7FF",
+    backgroundColor: "#FFF",
     color: "#000",
     width: "100%",
   },
   btnColorActive: {
-    color: "#03257D",
+    color: "#27963C",
   },
   btnWidth: {
     width: "100%",
   },
   activeIcon: {
-    backgroundColor: "#03257D",
+    backgroundColor: "#27963C",
     color: "#fff",
     width: "100%",
   },

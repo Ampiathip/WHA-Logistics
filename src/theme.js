@@ -20,12 +20,12 @@ const theme = createTheme({
           fontSize: 20,
         }
       }
-    }
+    },
   },
 
   palette: {
     primary: {
-      main: "#007bff",
+      main: "#27963C",
     },
     secondary: {
       main: "#ff6f00",

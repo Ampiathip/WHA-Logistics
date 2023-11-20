@@ -30,7 +30,7 @@ const MySwal = withReactContent(Swal);
 
 const useStyles = makeStyles((theme) => ({
   backGrourdHead: {
-    backgroundColor: "#283fea",
+    backgroundColor: "#fff",
   },
   FlexIconHead: {
     display: "flex",
@@ -50,15 +50,23 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
   },
   activeIcon: {
-    color: "#000",
+    color: "#27963C",
     textDecoration: "blink",
     "&:hover": {
-      color: "#000",
+      color: "#27963C",
     },
   },
   LinkColor: {
     color: "#000",
     textDecoration: "blink",
+  },
+  colorHead: {
+    color: "#000",
+  },
+  hoverColor: {
+    "&:hover": {
+      color: "#27963C",
+    },
   },
 }));
 
@@ -152,8 +160,8 @@ function Header({ type, matches }) {
                   md={2}
                   className={clsx(classes.FlexIconHead, classes.alignCenter)}
                 >
-                  <CheckBoxOutlineBlankIcon sx={{ mr: 3, ml: 3 }} />
-                  <Typography variant="h6" component="div">
+                  <CheckBoxOutlineBlankIcon sx={{ mr: 3, ml: 3 }} className={classes.colorHead}/>
+                  <Typography variant="h6" component="div" className={classes.colorHead}>
                     {sideBar ? sideBar : "Dashboard"}
                   </Typography>
                 </Grid>
@@ -196,10 +204,10 @@ function Header({ type, matches }) {
               className={clsx(classes.FlexIconHead, classes.alignCenter)}
             >
               <AccountCircleOutlinedIcon
-                className={classes.marginHead}
+                className={clsx(classes.marginHead, classes.colorHead)}
                 onClick={handleClickOpenView}
               />
-              <Typography variant="h5">{user?.user?.username}</Typography>
+              <Typography variant="h5" className={classes.colorHead}>{user?.user?.username}</Typography>
               <IconButton
                 size="large"
                 edge="start"
@@ -208,7 +216,7 @@ function Header({ type, matches }) {
                 sx={{ ml: 2 }}
                 onClick={handleClick}
               >
-                <MenuIcon />
+                <MenuIcon className={classes.colorHead}/>
               </IconButton>
               <Menu
                 id="basic-menu"
@@ -231,7 +239,7 @@ function Header({ type, matches }) {
                           : classes.LinkColor
                       }`}
                     >
-                      <MenuItem>{t("sidebar:dashboard")}</MenuItem>
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:dashboard")}</MenuItem>
                     </Link>
 
                     <Link
@@ -242,7 +250,7 @@ function Header({ type, matches }) {
                           : classes.LinkColor
                       }`}
                     >
-                      <MenuItem>{t("sidebar:FloorDiagram")}</MenuItem>
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:FloorDiagram")}</MenuItem>
                     </Link>
 
                     <Link
@@ -253,7 +261,7 @@ function Header({ type, matches }) {
                           : classes.LinkColor
                       }`}
                     >
-                      <MenuItem>{t("sidebar:myDevices")}</MenuItem>
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:myDevices")}</MenuItem>
                     </Link>
 
                     <Link
@@ -264,10 +272,10 @@ function Header({ type, matches }) {
                           : classes.LinkColor
                       }`}
                     >
-                      <MenuItem>{t("sidebar:historicalData")}</MenuItem>
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:historicalData")}</MenuItem>
                     </Link>
 
-                    <Link
+                    {/* <Link
                       to={"/systemOverview"}
                       className={`${
                         sideBar == "Dashboard"
@@ -276,17 +284,17 @@ function Header({ type, matches }) {
                       }`}
                     >
                       <MenuItem>{t("sidebar:systemOverview")}</MenuItem>
-                    </Link>
+                    </Link> */}
 
                     <Link
-                      to={"/parameter"}
+                      // to={"/department"}
                       className={`${
-                        sideBar == "Dashboard"
+                        sideBar == "department"
                           ? classes.activeIcon
                           : classes.LinkColor
                       }`}
                     >
-                      <MenuItem>{t("sidebar:parameter")}</MenuItem>
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:department")}</MenuItem>
                     </Link>
 
                     <Link
@@ -297,7 +305,7 @@ function Header({ type, matches }) {
                           : classes.LinkColor
                       }`}
                     >
-                      <MenuItem>{t("sidebar:user")}</MenuItem>
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:user")}</MenuItem>
                     </Link>
 
                     <Link
@@ -308,18 +316,7 @@ function Header({ type, matches }) {
                           : classes.LinkColor
                       }`}
                     >
-                      <MenuItem>{t("sidebar:Building")}</MenuItem>
-                    </Link>
-
-                    <Link
-                      to={"/gateway"}
-                      className={`${
-                        sideBar == "Dashboard"
-                          ? classes.activeIcon
-                          : classes.LinkColor
-                      }`}
-                    >
-                      <MenuItem>{t("sidebar:Gateway")}</MenuItem>
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:Building")}</MenuItem>
                     </Link>
 
                     <Link
@@ -330,7 +327,62 @@ function Header({ type, matches }) {
                           : classes.LinkColor
                       }`}
                     >
-                      <MenuItem>{t("sidebar:zone")}</MenuItem>
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:zone")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      // to={"/unit"}
+                      className={`${
+                        sideBar == "unit"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:unit")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      // to={"/invoice"}
+                      className={`${
+                        sideBar == "invoice"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:invoice")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/parameter"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:parameter")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      to={"/gateway"}
+                      className={`${
+                        sideBar == "Dashboard"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:Gateway")}</MenuItem>
+                    </Link>
+
+                    <Link
+                      // to={"/Devices"}
+                      className={`${
+                        sideBar == "Devices"
+                          ? classes.activeIcon
+                          : classes.LinkColor
+                      }`}
+                    >
+                      <MenuItem className={classes.hoverColor}>{t("sidebar:Devices")}</MenuItem>
                     </Link>
 
                     <MenuItem onClick={handleLogout}>Logout</MenuItem>

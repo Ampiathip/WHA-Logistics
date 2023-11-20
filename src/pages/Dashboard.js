@@ -35,7 +35,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
   },
   btnColor: {
-    backgroundColor: "#E6F7FF",
+    backgroundColor: "#FFF",
     color: "#000",
     width: "100%",
   },
@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
   },
   activeIcon: {
-    backgroundColor: "#03257D",
+    backgroundColor: "#27963C",
     color: "#fff",
     width: "100%",
   },
@@ -101,6 +101,12 @@ const useStyles = makeStyles((theme) => ({
   marginRow: {
     marginTop: 15,
   },
+  btnColorCard: {
+    backgroundColor: "#80CC28",
+    color: "#FFF",
+    width: "100%",
+  },
+  
 }));
 
 const Dashboard = () => {
@@ -442,7 +448,7 @@ const Dashboard = () => {
         >
           <Card
             className={
-              popoverAnchor.x > 830 ? classes.btnColorActive : classes.btnColor
+              popoverAnchor.x > 830 ? classes.btnColorActive : classes.btnColorCard
             }
           >
             <CardContent className={classes.paddindCardContent}>
@@ -473,7 +479,7 @@ const Dashboard = () => {
           >
             <Card
               className={
-                item.x.max > 830 ? classes.btnColorActive : classes.btnColor
+                item.x.max > 830 ? classes.btnColorActive : classes.btnColorCard
               }
             >
               <CardContent
@@ -505,7 +511,7 @@ const Dashboard = () => {
         <Grid item md={12} className={classes.marginBox}>
           <Card
             className={
-              card.x.max > 830 ? classes.btnColorActive : classes.btnColor
+              card.x.max > 830 ? classes.btnColorActive : classes.btnColorCard
             }
           >
             <CardContent
