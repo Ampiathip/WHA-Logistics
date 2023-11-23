@@ -17,6 +17,7 @@ import BuildingFloorUnit from "../pages/BulidingFloorUnit";
 import Zone from "../pages/Zone";
 import ZoneDetail from "../pages/zoneDetail";
 import SystemOverview from "../pages/SystemOverview";
+import Invoice from "../pages/Invoice";
 
 const Routers = (props) => {
   return (
@@ -40,6 +41,7 @@ const Routers = (props) => {
         <Route path="/gatewayDeviceDetail" element={<GatewayDeviceDetail />} />
         <Route path="/zone" element={<Zone />} />
         <Route path="/zoneDetail" element={<ZoneDetail />} />
+        <Route path="/invoice" element={<Invoice />} />
         <Route element={PageNotFound} />
       </Routes>
     </>

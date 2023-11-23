@@ -319,15 +319,15 @@ const SideBar = () => {
         </Link>
 
         <Link
-          // to={"/invoice"}
+          to={"/invoice"}
           className={`${
-            sideBar == "invoice" ? classes.activeIcon : classes.LinkColor
+            sideBar == "Invoice" ? classes.activeIcon : classes.LinkColor
           }`}
         >
           <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
-                sideBar == "invoice" ? classes.activeIcon : classes.LinkColor
+                sideBar == "Invoice" ? classes.activeIcon : classes.LinkColor
               }`}
             >
               <HomeOutlinedIcon />

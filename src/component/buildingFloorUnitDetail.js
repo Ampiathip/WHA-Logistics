@@ -193,6 +193,15 @@ const useStyles = makeStyles((theme) => ({
     borderRight: "1px solid #8f8a8a",
     padding: 10,
   },
+  borderboxIcon: {
+    border: "1px solid #000",
+    // padding: 8,
+    borderRadius: 10,
+  },
+  marginBoxIcon: {
+    marginRight: 15,
+  },
+
 }));
 
 function descendingComparator(a, b, orderBy) {
@@ -463,6 +472,8 @@ const UnitManagement = ({
   const [pointDataSelect, setPointDataSelect] = useState("");
   // const [editMeasurement, setEditMeasurement] = useState(null);
   // const [disabledFild, setDisabledFild] = useState(null);
+
+  const [nameBox, setNameBox] = useState("");
 
   // console.log("ididid====", state, id);
   const swalFire = (msg) => {
@@ -1394,6 +1405,10 @@ const UnitManagement = ({
     }
   };
 
+  const handleBoxIcon = (name) => {
+    setNameBox(name);
+  };
+
   return (
     <Box className={classes.marginRow}>
       {isLoading ? (
@@ -1639,6 +1654,21 @@ const UnitManagement = ({
             </Grid>
             <Grid item md={6}>
               <Typography variant="h3">{t("floor:measurement")}</Typography>
+              <Grid item className={clsx(classes.flexRow, classes.justContentCenter)}>
+              <Grid item className={clsx(nameBox == 'normal' ? classes.borderboxIcon : '', classes.marginBoxIcon)} onClick={() => handleBoxIcon('normal')}>
+                <img src={process.env.PUBLIC_URL + "/img/Vector.png"} alt="Icon" />
+              </Grid>
+              <Grid item className={clsx(nameBox == 'rain' ? classes.borderboxIcon : '', classes.marginBoxIcon)} onClick={() => handleBoxIcon('rain')}>
+                <img src={process.env.PUBLIC_URL + "/img/VectorNum.png"} alt="Icon" />
+              </Grid>
+              <Grid item className={clsx(nameBox == 'hot' ? classes.borderboxIcon : '', classes.marginBoxIcon)} onClick={() => handleBoxIcon('hot')}>
+                <img src={process.env.PUBLIC_URL + "/img/VectorIcon.png"} alt="Icon" />
+              </Grid>
+              <Grid item className={clsx(nameBox == 'cool' ? classes.borderboxIcon : '', classes.marginBoxIcon)} onClick={() => handleBoxIcon('cool')}>
+                <img src={process.env.PUBLIC_URL + "/img/VectorCool.png"} alt="Icon" />
+              </Grid>
+              </Grid>
+              
             </Grid>
           </Grid>
         </DialogTitle>

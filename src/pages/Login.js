@@ -238,7 +238,7 @@ function Login(props) {
         </Box>
       ) : (
         <>
-          <Grid item md={6}>
+          {/* <Grid item md={6}>
             <Box>
               <img
                 src={process.env.PUBLIC_URL + "/img/imageLogin.png"}
@@ -246,7 +246,7 @@ function Login(props) {
                 className={classes.boxImage}
               />
             </Box>
-          </Grid>
+          </Grid> */}
           <Grid item md={5} className={classes.backGroundLogin}>
             <Box>
               <Grid item md={12} className={classes.flexRow}>

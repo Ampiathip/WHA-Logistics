@@ -201,6 +201,16 @@ let th = {
       "select": "Select input",
       "selectZoneType": "Select Type",
       "type": "Type",
+    },
+    invoice: {
+      "search": "Search by Invoice name",
+      "select": "Select Building",
+      "period": "Period Selection",
+      "start": "Start",
+      "end": "End",
+      "selectDate": "Select date",
+      "print": "พิมพ์ใบสรุปบิลหลายห้อง",
+      "excel": "ดาวน์โหลด Excel",
     }
   };
   
