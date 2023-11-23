@@ -158,6 +158,11 @@ let th = {
       "device": "*Device",
       "point": "*Point",
       "btnAddUnitZone": "Add Zone Unit",
+      "unitPrice": "ราคาต่อหน่วย",
+      "baht": "Baht",
+      "kWh": "/kWh",
+      "descriptionUnit": "Description",
+      "addRecord": "+ Add Record",
     },
     gateway: {
       "search": "Search by Gateway name",

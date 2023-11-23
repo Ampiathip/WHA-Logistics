@@ -525,7 +525,7 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-const BuildingManagement = ({ t, login }) => {
+const InvoiceManagement = ({ t, login }) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
@@ -1896,4 +1896,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(BuildingManagement);
+export default connect(mapStateToProps, mapDispatchToProps)(InvoiceManagement);

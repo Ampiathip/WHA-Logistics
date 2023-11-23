@@ -201,7 +201,17 @@ const useStyles = makeStyles((theme) => ({
   marginBoxIcon: {
     marginRight: 15,
   },
-
+  backgroundMeasurement: {
+    backgroundColor: "#D9D9D9",
+  },
+  borderBottomMeasurement: {
+    borderBottom: "1px solid #000",
+  },
+  borderMeasurement: {
+    border: "1px solid #000",
+    padding: 10,
+    borderRadius: 10,
+  },
 }));
 
 function descendingComparator(a, b, orderBy) {
@@ -420,16 +430,13 @@ const UnitManagement = ({
   const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [floorName, setFloorName] = useState("");
-  const [gatewayName, setGatewayName] = useState("");
-  const [deviceBrand, setDeviceBrand] = useState("");
-  const [deviceName, setDeviceName] = useState("");
-  const [model, setModel] = useState("");
-  const [serialNumber, setSerialNumber] = useState("");
-  const [installation, setInstallation] = useState("");
+  const [descriptionUnit, setDescriptionUnit] = useState("");
+  const [price, setPrice] = useState("");
   const [gatewayMeter, setGatewayMeter] = useState("none");
   const [gatewayMeterTwo, setGatewayMeterTwo] = useState("none");
   const [gatewayMeterThree, setGatewayMeterThree] = useState("none");
-  const [billingType, setBillingType] = useState("none");
+  const [billingType, setBillingType] = useState([]);
+  const [billingTypeSelect, setBillingTypeSelect] = useState("none");
   const [unitNumber, setUnitNumber] = useState("");
   const [unitName, setUnitName] = useState("");
   const [unitTypeSelect, setUnitTypeSelect] = useState("none");
@@ -437,6 +444,19 @@ const UnitManagement = ({
   const [building, setBuilding] = useState("");
   const [zone, setZone] = useState("");
   const [unitType, setUnitType] = useState([]);
+  const [unitPrice, setUnitPrice] = useState("");
+  const [bahtType, setBahtType] = useState([
+    {
+      id: 1,
+      name: "Baht",
+    },
+    {
+      id: 2,
+      name: "Dollar",
+    },
+  ]);
+  const [bahtTypeSelect, setBahtTypeSelect] = useState("none");
+  const [generalSelect, setGeneralSelect] = useState("none");
 
   const dispatch = useDispatch();
   const classes = useStyles();
@@ -474,6 +494,7 @@ const UnitManagement = ({
   // const [disabledFild, setDisabledFild] = useState(null);
 
   const [nameBox, setNameBox] = useState("");
+  const [rowsUnitPriceEdit, setRowsUnitPriceEdit] = useState([]);
 
   // console.log("ididid====", state, id);
   const swalFire = (msg) => {
@@ -497,6 +518,7 @@ const UnitManagement = ({
     dispatch(checkToken());
     if (!_.isEmpty(token)) {
       getGateway();
+      getBillingTypeData();
     }
   }, [token]);
 
@@ -529,6 +551,24 @@ const UnitManagement = ({
           }
         });
       }
+      setIsLoading(false);
+    }
+  };
+
+  // get getBillingTypeData //
+  const getBillingTypeData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getBillingTypeData().then((response) => {
+        const dataPayload = response.data;
+        setBillingType(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
       setIsLoading(false);
     }
   };
@@ -992,8 +1032,12 @@ const UnitManagement = ({
     [page, rowsPerPage, sortedRows]
   );
 
-  const handleFloorName = (event) => {
-    setFloorName(event.target.value);
+  const handleDescriptionUnit = (event) => {
+    setDescriptionUnit(event.target.value);
+  };
+
+  const handlePrice = (event) => {
+    setPrice(event.target.value);
   };
 
   const handleUnitNumber = (event) => {
@@ -1012,12 +1056,12 @@ const UnitManagement = ({
     setUnitTypeSelect(event.target.value);
   };
 
-  const handleZone = (event) => {
-    setZone(event.target.value);
+  const handleBathGeneral = (event) => {
+    setGeneralSelect(event.target.value);
   };
 
-  const handleBuilding = (event) => {
-    setBuilding(event.target.value);
+  const handleBath = (event) => {
+    setBahtTypeSelect(event.target.value);
   };
 
   const handleClickOpenAdd = () => {
@@ -1077,6 +1121,21 @@ const UnitManagement = ({
     setRowsPointEdit(updatedRows);
     // setDisabledFild(false);
     // setEditMeasurement();
+  };
+
+  // addNewRowUnitPrice //
+  const addNewRowUnitPrice = () => {
+    const newRow = {
+      id: null,
+      descriptionUnit: "",
+      price: "",
+      generalSelect: null,
+      isEdit: true,
+    };
+
+    const updatedRows = [...rowsUnitPriceEdit];
+    updatedRows.push(newRow);
+    setRowsUnitPriceEdit(updatedRows);
   };
 
   const handleGatewayMeterThree = (e, row, index) => {
@@ -1409,6 +1468,14 @@ const UnitManagement = ({
     setNameBox(name);
   };
 
+  const handleBillingType = (event) => {
+    setBillingTypeSelect(event.target.value);
+  };
+
+  const handleUnitPrice = (event) => {
+    setUnitPrice(event.target.value);
+  };
+
   return (
     <Box className={classes.marginRow}>
       {isLoading ? (
@@ -1654,21 +1721,63 @@ const UnitManagement = ({
             </Grid>
             <Grid item md={6}>
               <Typography variant="h3">{t("floor:measurement")}</Typography>
-              <Grid item className={clsx(classes.flexRow, classes.justContentCenter)}>
-              <Grid item className={clsx(nameBox == 'normal' ? classes.borderboxIcon : '', classes.marginBoxIcon)} onClick={() => handleBoxIcon('normal')}>
-                <img src={process.env.PUBLIC_URL + "/img/Vector.png"} alt="Icon" />
+              <Grid
+                item
+                className={clsx(classes.flexRow, classes.justContentCenter)}
+              >
+                <Grid
+                  item
+                  className={clsx(
+                    nameBox == "normal" ? classes.borderboxIcon : "",
+                    classes.marginBoxIcon
+                  )}
+                  onClick={() => handleBoxIcon("normal")}
+                >
+                  <img
+                    src={process.env.PUBLIC_URL + "/img/Vector.png"}
+                    alt="Icon"
+                  />
+                </Grid>
+                <Grid
+                  item
+                  className={clsx(
+                    nameBox == "rain" ? classes.borderboxIcon : "",
+                    classes.marginBoxIcon
+                  )}
+                  onClick={() => handleBoxIcon("rain")}
+                >
+                  <img
+                    src={process.env.PUBLIC_URL + "/img/VectorNum.png"}
+                    alt="Icon"
+                  />
+                </Grid>
+                <Grid
+                  item
+                  className={clsx(
+                    nameBox == "hot" ? classes.borderboxIcon : "",
+                    classes.marginBoxIcon
+                  )}
+                  onClick={() => handleBoxIcon("hot")}
+                >
+                  <img
+                    src={process.env.PUBLIC_URL + "/img/VectorIcon.png"}
+                    alt="Icon"
+                  />
+                </Grid>
+                <Grid
+                  item
+                  className={clsx(
+                    nameBox == "cool" ? classes.borderboxIcon : "",
+                    classes.marginBoxIcon
+                  )}
+                  onClick={() => handleBoxIcon("cool")}
+                >
+                  <img
+                    src={process.env.PUBLIC_URL + "/img/VectorCool.png"}
+                    alt="Icon"
+                  />
+                </Grid>
               </Grid>
-              <Grid item className={clsx(nameBox == 'rain' ? classes.borderboxIcon : '', classes.marginBoxIcon)} onClick={() => handleBoxIcon('rain')}>
-                <img src={process.env.PUBLIC_URL + "/img/VectorNum.png"} alt="Icon" />
-              </Grid>
-              <Grid item className={clsx(nameBox == 'hot' ? classes.borderboxIcon : '', classes.marginBoxIcon)} onClick={() => handleBoxIcon('hot')}>
-                <img src={process.env.PUBLIC_URL + "/img/VectorIcon.png"} alt="Icon" />
-              </Grid>
-              <Grid item className={clsx(nameBox == 'cool' ? classes.borderboxIcon : '', classes.marginBoxIcon)} onClick={() => handleBoxIcon('cool')}>
-                <img src={process.env.PUBLIC_URL + "/img/VectorCool.png"} alt="Icon" />
-              </Grid>
-              </Grid>
-              
             </Grid>
           </Grid>
         </DialogTitle>
@@ -1908,10 +2017,20 @@ const UnitManagement = ({
                   </Grid>
                 </Grid>
                 <Grid item className={classes.borderBox}></Grid>
-                <Grid item md={6} className={classes.boxMargin}>
-                  <TableContainer component={Paper}>
+                <Grid
+                  item
+                  md={6}
+                  className={clsx(classes.boxMargin, classes.borderMeasurement)}
+                >
+                  <Grid item md={12}>
+                    <Typography variant="h4">Electrical Measurement</Typography>
+                  </Grid>
+                  <TableContainer
+                    component={Paper}
+                    className={classes.marginRow}
+                  >
                     <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                      <TableHead>
+                      <TableHead className={classes.backgroundMeasurement}>
                         <TableRow>
                           <TableCell
                             align="center"
@@ -1922,7 +2041,7 @@ const UnitManagement = ({
                           <TableCell
                             align="center"
                             className={clsx(
-                              classes.colorText,
+                              // classes.colorText,
                               classes.fontSixeHead
                             )}
                           >
@@ -1931,7 +2050,7 @@ const UnitManagement = ({
                           <TableCell
                             align="center"
                             className={clsx(
-                              classes.colorText,
+                              // classes.colorText,
                               classes.fontSixeHead
                             )}
                           >
@@ -1940,7 +2059,7 @@ const UnitManagement = ({
                           <TableCell
                             align="center"
                             className={clsx(
-                              classes.colorText,
+                              // classes.colorText,
                               classes.fontSixeHead
                             )}
                           >
@@ -2260,6 +2379,277 @@ const UnitManagement = ({
                         className={clsx(classes.backGroundConfrim)}
                         variant="outlined"
                         onClick={addUnitPoint}
+                      >
+                        {t("gateway:btnSave")}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.borderBottomMeasurement,
+                      classes.marginRow
+                    )}
+                  ></Grid>
+
+                  {/* Billing type */}
+                  <Grid item md={12} className={classes.marginRow}>
+                    <Typography variant="h4">Billing type</Typography>
+                  </Grid>
+                  <Grid item md={12} className={classes.marginRow}>
+                    <FormControl variant="outlined" size="small" fullWidth>
+                      <Select
+                        labelId="demo-select-small-label"
+                        // id="demo-select-small"
+                        value={
+                          billingType.length > 0 ? billingTypeSelect : "none"
+                        }
+                        placeholder={t("gateway:billingType")}
+                        onChange={handleBillingType}
+                        // error={billingTypeSelect === "none" && !isValidate}
+                      >
+                        <MenuItem value="none" disabled>
+                          {t("gateway:selectBillingType")}
+                        </MenuItem>
+                        {billingType.length > 0 &&
+                          billingType.map((item) => {
+                            return (
+                              <MenuItem
+                                id={"selectbillingType-" + item.id}
+                                key={item.id}
+                                value={item.id}
+                              >
+                                {item.type}
+                              </MenuItem>
+                            );
+                          })}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.marginRow,
+                      classes.flexRow,
+                      classes.modalContent
+                    )}
+                  >
+                    <Grid item>
+                      <Typography variant="h5">
+                        {t("floor:unitPrice")}
+                      </Typography>
+                    </Grid>
+
+                    <Grid item md={5}>
+                      <TextField
+                        // id="input-with-icon-textfield"
+                        size="small"
+                        fullWidth
+                        variant="outlined"
+                        value={unitPrice}
+                        onChange={handleUnitPrice}
+                      />
+                    </Grid>
+                    <Grid item md={3}>
+                      <FormControl variant="outlined" size="small" fullWidth>
+                        <Select
+                          labelId="demo-select-small-label"
+                          // id="demo-select-small"
+                          value={bahtType.length > 0 ? bahtTypeSelect : "none"}
+                          placeholder={t("gateway:billingType")}
+                          onChange={handleBath}
+                          // error={billingTypeSelect === "none" && !isValidate}
+                        >
+                          <MenuItem value="none" disabled>
+                            {t("floor:baht")}
+                          </MenuItem>
+                          {bahtType.length > 0 &&
+                            bahtType.map((item) => {
+                              return (
+                                <MenuItem
+                                  id={"selectbathType-" + item.id}
+                                  key={item.id}
+                                  value={item.id}
+                                >
+                                  {item.name}
+                                </MenuItem>
+                              );
+                            })}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant="h5">{t("floor:kWh")}</Typography>
+                    </Grid>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+                  >
+                    <Grid item md={3}>
+                      <Button
+                        // onClick={(event) => {
+                        //   handleClickOpen(event, isIdEdit);
+                        // }}
+                        className={clsx(classes.backGroundCancel)}
+                        variant="outlined"
+                      >
+                        {t("gateway:btnRefresh")}
+                      </Button>
+                    </Grid>
+                    <Grid item md={3} className={classes.boxMargin}>
+                      <Button
+                        className={clsx(classes.backGroundConfrim)}
+                        variant="outlined"
+                        // onClick={addUnitPoint}
+                      >
+                        {t("gateway:btnSave")}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.borderBottomMeasurement,
+                      classes.marginRow
+                    )}
+                  ></Grid>
+
+                  {/* ค่าใช้จ่ายทั่วไป */}
+                  <Grid item md={12} className={classes.marginRow}>
+                    <Typography variant="h4">ค่าใช้จ่ายทั่วไป</Typography>
+                  </Grid>
+                  {rowsUnitPriceEdit.length > 0 &&
+                    rowsUnitPriceEdit.map((item, index) => (
+                      <Grid
+                        item
+                        md={12}
+                        className={clsx(
+                          classes.marginRow,
+                          classes.flexRow,
+                          classes.modalContent
+                        )}
+                      >
+                         {console.log('#Nan 9999999999===', item, index)}
+                        <Grid item md={5}>
+                          <TextField
+                            // id="input-with-icon-textfield"
+                            size="small"
+                            fullWidth
+                            variant="outlined"
+                            value={descriptionUnit}
+                            onChange={handleDescriptionUnit}
+                          />
+                        </Grid>
+
+                        <Grid item md={3}>
+                          <TextField
+                            // id="input-with-icon-textfield"
+                            size="small"
+                            fullWidth
+                            variant="outlined"
+                            value={price}
+                            onChange={handlePrice}
+                          />
+                        </Grid>
+                        <Grid item md={2}>
+                          <FormControl
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                          >
+                            <Select
+                              labelId="demo-select-small-label"
+                              // id="demo-select-small"
+                              value={
+                                bahtType.length > 0 ? generalSelect : "none"
+                              }
+                              placeholder={t("gateway:billingType")}
+                              onChange={handleBathGeneral}
+                              // error={billingTypeSelect === "none" && !isValidate}
+                            >
+                              <MenuItem value="none" disabled>
+                                {t("floor:baht")}
+                              </MenuItem>
+                              {bahtType.length > 0 &&
+                                bahtType.map((item) => {
+                                  return (
+                                    <MenuItem
+                                      id={"selectbathType-" + item.id}
+                                      key={item.id}
+                                      value={item.id}
+                                    >
+                                      {item.name}
+                                    </MenuItem>
+                                  );
+                                })}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid item>
+                          <img
+                            src={IconEdit}
+                            alt="IconEdit"
+                            // onClick={(event) => {
+                            //   handleClickDeleteData(event, rowItem.id);
+                            // }}
+                          />
+                          <img
+                            src={IconDelete}
+                            alt="IconDelete"
+                            // onClick={(event) => {
+                            //   handleClickDeleteData(event, rowItem.id);
+                            // }}
+                          />
+                        </Grid>
+                      </Grid>
+                    ))}
+
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.marginRow,
+                      classes.flexRow,
+                      classes.justContentCenter
+                    )}
+                  >
+                    <Grid item md={6}>
+                      <Button
+                        variant="outlined"
+                        onClick={addNewRowUnitPrice}
+                        className={clsx(classes.backGroundCancel)}
+                      >
+                        {t("floor:addRecord")}
+                      </Button>
+                    </Grid>
+                  </Grid>
+
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+                  >
+                    <Grid item md={3}>
+                      <Button
+                        // onClick={(event) => {
+                        //   handleClickOpen(event, isIdEdit);
+                        // }}
+                        className={clsx(classes.backGroundCancel)}
+                        variant="outlined"
+                      >
+                        {t("gateway:btnRefresh")}
+                      </Button>
+                    </Grid>
+                    <Grid item md={3} className={classes.boxMargin}>
+                      <Button
+                        className={clsx(classes.backGroundConfrim)}
+                        variant="outlined"
+                        // onClick={addUnitPoint}
                       >
                         {t("gateway:btnSave")}
                       </Button>
