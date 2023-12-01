@@ -418,6 +418,12 @@ const FloorManagement = ({ t, pageName, login }) => {
       icon: "error",
       confirmButtonText: "ตกลง",
       text: msg,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(logout(false));
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
     });
   };
 

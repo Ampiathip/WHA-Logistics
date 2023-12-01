@@ -248,7 +248,7 @@ const SideBar = () => {
             sideBar == "" ? classes.activeIcon : classes.LinkColor
           }`}
         > */}
-        <ListItem button className={classes.hoverColor} onClick={handleLogout}>
+        {/* <ListItem button className={classes.hoverColor} onClick={handleLogout}>
           <ListItemIcon
             className={`${
               sideBar == "" ? classes.activeIcon : classes.LinkColor
@@ -257,7 +257,7 @@ const SideBar = () => {
             <LogoutOutlinedIcon />
           </ListItemIcon>
           <ListItemText primary={t("sidebar:Logout")} />
-        </ListItem>
+        </ListItem> */}
         {/* </Link> */}
         <Grid item className={classes.margigLeft}>
           <Typography variant="h6" className={classes.imageCenter}>

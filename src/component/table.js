@@ -82,11 +82,23 @@ function stableSort(array, comparator) {
 }
 
 const headCells = [
+  // {
+  //   id: "fat",
+  //   numeric: true,
+  //   disablePadding: false,
+  //   label: "Device",
+  // },
+  // {
+  //   id: "carbs",
+  //   numeric: true,
+  //   disablePadding: false,
+  //   label: "Point",
+  // },
   {
     id: "name",
     numeric: false,
     disablePadding: true,
-    label: "device Name",
+    label: "Timestamp",
   },
   {
     id: "calories",
@@ -322,95 +334,137 @@ export default function EnhancedTable({ isLoading, dataSearch }) {
 
   console.log("dataSearch====", dataSearch);
 
-  return (
-    <Box className="MarginCard marginCardCalendar">
-      {dataSearch.length > 0 && (
-        <Paper sx={{ width: "100%", mb: 2 }}>
-          {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
-          <TableContainer>
-            <Table
-              sx={{ minWidth: 750 }}
-              aria-labelledby="tableTitle"
-              size={dense ? "small" : "medium"}
-            >
-              <EnhancedTableHead
-                numSelected={selected.length}
-                order={order}
-                orderBy={orderBy}
-                onSelectAllClick={handleSelectAllClick}
-                onRequestSort={handleRequestSort}
-                rowCount={dataSearch.length}
-              />
-              <TableBody>
-                {visibleRows.map((row, index) => {
-                  const isItemSelected = isSelected(row.name);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+  const renderTimestamp = (time) => {
+    if (time.length > 0) {
+      return time.map((item) => {
+        return <Typography>{item}</Typography>;
+      });
+    }
+  };
 
-                  return (
-                    row.length > 0 &&
-                    row.map((item) => {
-                      console.log("item===", item);
-                      return (
-                        <TableRow
-                          hover
-                          onClick={(event) => handleClick(event, row.name)}
-                          role="checkbox"
-                          aria-checked={isItemSelected}
-                          tabIndex={-1}
-                          key={row.name}
-                          selected={isItemSelected}
-                          sx={{ cursor: "pointer" }}
-                        >
-                          {/* <TableCell padding="checkbox">
-                          <Checkbox
-                            color="primary"
-                            checked={isItemSelected}
-                            inputProps={{
-                              "aria-labelledby": labelId,
-                            }}
-                          />
-                        </TableCell> */}
-                          <TableCell
-                            component="th"
-                            id={labelId}
-                            scope="row"
-                            padding="none"
-                            align="center"
-                          >
-                            {item.device}
-                          </TableCell>
-                          <TableCell align="center">{item.point}</TableCell>
-                          {/* <TableCell align="right">{row.fat}</TableCell>
-                        <TableCell align="right">{row.carbs}</TableCell>
-                        <TableCell align="right">{row.protein}</TableCell> */}
-                        </TableRow>
-                      );
-                    })
-                  );
-                })}
-                {/* {emptyRows > 0 && (
-                <TableRow
-                  style={{
-                    height: (dense ? 33 : 53) * emptyRows,
-                  }}
+  const renderData = (data) => {
+    if (data.length > 0) {
+      return data.map((item) => {
+        return <Typography>{item}</Typography>;
+      });
+    }
+  };
+
+  return (
+    <>
+      {isLoading ? (
+        <Box mt={4} width={1} display="flex" justifyContent="center">
+          <CircularProgress color="primary" />
+        </Box>
+      ) : (
+        <Box className="MarginCard marginCardCalendar">
+          {dataSearch.length > 0 && (
+            <Paper sx={{ width: "100%", mb: 2 }}>
+              {/* <EnhancedTableToolbar numSelected={selected.length} /> */}
+              <TableContainer>
+                <Table
+                  sx={{ minWidth: 750 }}
+                  aria-labelledby="tableTitle"
+                  size={dense ? "small" : "medium"}
                 >
-                  <TableCell colSpan={6} />
-                </TableRow>
-              )} */}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={dataSearch.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Paper>
+                  <EnhancedTableHead
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    onSelectAllClick={handleSelectAllClick}
+                    onRequestSort={handleRequestSort}
+                    rowCount={dataSearch.length}
+                  />
+                  <TableBody>
+                    {visibleRows.map((row, index) => {
+                      const isItemSelected = isSelected(row.name);
+                      const labelId = `enhanced-table-checkbox-${index}`;
+                      let timestamp = [];
+                      let dataSearch = [];
+
+                      return (
+                        row.length > 0 &&
+                        row.map((item) => {
+                          console.log("item===", item);
+                          item.timestamp.length > 0 &&
+                            item.timestamp.map((data) => {
+                              timestamp.push(data);
+                            });
+                          item.data.length > 0 &&
+                            item.data.map((dataItem) => {
+                              dataSearch.push(dataItem);
+                            });
+
+                          return (
+                            <TableRow
+                              hover
+                              onClick={(event) => handleClick(event, row.name)}
+                              role="checkbox"
+                              aria-checked={isItemSelected}
+                              tabIndex={-1}
+                              key={row.name}
+                              selected={isItemSelected}
+                              sx={{ cursor: "pointer" }}
+                            >
+                              {/* <TableCell padding="checkbox">
+                            <Checkbox
+                              color="primary"
+                              checked={isItemSelected}
+                              inputProps={{
+                                "aria-labelledby": labelId,
+                              }}
+                            />
+                          </TableCell> */}
+                              {/* <TableCell align="center">
+                                {item.device}
+                              </TableCell>
+                              <TableCell align="center">{item.point}</TableCell> */}
+                              <TableCell
+                                component="th"
+                                id={labelId}
+                                scope="row"
+                                padding="none"
+                                align="center"
+                              >
+                                {renderTimestamp(timestamp)}
+                              </TableCell>
+                              <TableCell align="center">
+                                {renderData(dataSearch)}
+                              </TableCell>
+
+                              {/* <TableCell align="right">{row.fat}</TableCell>
+                          <TableCell align="right">{row.carbs}</TableCell>
+                          <TableCell align="right">{row.protein}</TableCell> */}
+                            </TableRow>
+                          );
+                        })
+                      );
+                    })}
+                    {/* {emptyRows > 0 && (
+                  <TableRow
+                    style={{
+                      height: (dense ? 33 : 53) * emptyRows,
+                    }}
+                  >
+                    <TableCell colSpan={6} />
+                  </TableRow>
+                )} */}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={dataSearch.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </Paper>
+          )}
+        </Box>
       )}
-    </Box>
+    </>
   );
 }

@@ -584,6 +584,12 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
       icon: "error",
       confirmButtonText: "ตกลง",
       text: msg,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(logout(false));
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
     });
   };
 
@@ -592,7 +598,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
     if (!_.isEmpty(token) && id !== null) {
       getDevice(id);
       getCommunicationData();
-      getBillingTypeData();
+      // getBillingTypeData();
     }
   }, [token]);
 
@@ -676,7 +682,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
       // _.isEmpty(gatewayName) ||
       _.isEmpty(deviceBrand) ||
       !communicationTypeSelect ||
-      !billingTypeSelect ||
+      // !billingTypeSelect ||
       _.isEmpty(model) ||
       _.isEmpty(serialNumber) ||
       _.isNull(installation)
@@ -711,7 +717,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             serialNumber: serialNumber,
             installationDate: installation.format("DD-MM-YYYY"),
             communicationType: communicationTypeSelect,
-            billingType_id: billingTypeSelect,
+            // billingType_id: billingTypeSelect,
             description: "",
             file: base64File, // Include the Base64 encoded file
           };
@@ -748,7 +754,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           serialNumber: serialNumber,
           installationDate: installation.format("DD-MM-YYYY"),
           communicationType: communicationTypeSelect,
-          billingType_id: billingTypeSelect,
+          // billingType_id: billingTypeSelect,
           description: "",
           file: "", // Include the Base64 encoded file
         };
@@ -793,7 +799,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             serialNumber: serialNumber,
             installationDate: installation.format("DD-MM-YYYY"),
             communicationType: communicationTypeSelect,
-            billingType_id: billingTypeSelect,
+            // billingType_id: billingTypeSelect,
             description: "",
             file: base64File, // Include the Base64 encoded file
           };
@@ -830,7 +836,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           serialNumber: serialNumber,
           installationDate: installation.format("DD-MM-YYYY"),
           communicationType: communicationTypeSelect,
-          billingType_id: billingTypeSelect,
+          // billingType_id: billingTypeSelect,
           description: "",
           file: "", // Include the Base64 encoded file
         };
@@ -1104,7 +1110,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
     setIsValidate(true);
-    setBillingTypeSelect("none");
+    // setBillingTypeSelect("none");
     setCommunicationTypeSelect("none");
     setDeviceBrand("");
     setDeviceName("");
@@ -2459,14 +2465,14 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
               <Validate errorText={"กรุณาระบุข้อมูล"} />
             )}
           </Grid>
-          <Grid item md={12}>
+          {/* <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:billingType")}
             </Typography>
             <FormControl variant="outlined" size="small" fullWidth>
               <Select
                 labelId="demo-select-small-label"
-                // id="demo-select-small"
+                id="demo-select-small"
                 value={billingType.length > 0 ? billingTypeSelect : "none"}
                 placeholder={t("gateway:billingType")}
                 onChange={handleBillingType}
@@ -2492,7 +2498,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             {billingTypeSelect === "none" && !isValidate && (
               <Validate errorText={"กรุณาระบุข้อมูล"} />
             )}
-          </Grid>
+          </Grid> */}
           <Grid item md={12}>
             <Typography variant="subtitle2" className="mt-3 pb-3">
               {t("gateway:uploadDevice")}

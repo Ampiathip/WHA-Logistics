@@ -32,6 +32,9 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  FormControl,
+  Select,
+  MenuItem,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -63,6 +66,12 @@ import IconDelete from "../images/icon/Delete.svg";
 import IconDocument from "../images/icon/Document.svg";
 import IconShow from "../images/icon/Show.svg";
 import IconSetting from "../images/icon/Setting.svg";
+import IconEdit from "../images/icon/Edit.svg";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import moment from "moment";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -106,6 +115,11 @@ const useStyles = makeStyles((theme) => ({
   modalWidth: {
     width: "90% !important",
     height: "90% !important",
+  },
+  modalEditWidth: {
+    width: "80% !important",
+    height: "90% !important",
+    maxWidth: "none !important",
   },
   modalContent: {
     justifyContent: "space-around",
@@ -176,6 +190,29 @@ const useStyles = makeStyles((theme) => ({
   },
   displayContents: {
     display: "contents",
+  },
+  borderBox: {
+    borderRight: "1px solid #8f8a8a",
+    padding: 10,
+  },
+  borderboxIcon: {
+    border: "1px solid #000",
+    // padding: 8,
+    borderRadius: 10,
+  },
+  marginBoxIcon: {
+    marginRight: 15,
+  },
+  backgroundMeasurement: {
+    backgroundColor: "#D9D9D9",
+  },
+  borderBottomMeasurement: {
+    borderBottom: "1px solid #000",
+  },
+  borderMeasurement: {
+    border: "1px solid #000",
+    padding: 10,
+    borderRadius: 10,
   },
 }));
 
@@ -401,7 +438,9 @@ const BuildingManagement = ({ t, login }) => {
   const navigate = useNavigate();
   // modal //
   const [open, setOpen] = useState(false);
+  const [openModalEdit, setOpenModalEdit] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const fullScreenEdit = useMediaQuery(theme.breakpoints.down("xl"));
   const [openAdd, setOpenAdd] = useState(false);
   const [file, setFile] = useState("");
   const [openView, setOpenView] = useState(false);
@@ -415,11 +454,151 @@ const BuildingManagement = ({ t, login }) => {
   const [searchQuery, setSearchQuery] = useState("");
   // const [sortedRows, setSortedRows] = useState(rows);
 
+  const [rowsBuildingPriceEdit, setRowsBuildingPriceEdit] = useState([]);
+  const [measurementList, setMeasurementList] = useState([]);
+  const [measurementSelect, setMeasurementSelect] = useState("");
+  const [currencyTypeList, setCurrencyTypeList] = useState([]);
+  const [currencyTypeSelect, setCurrencyTypeSelect] = useState("none");
+  const billDateList = [
+    {
+      id: 1,
+      name: 1,
+    },
+    {
+      id: 2,
+      name: 2,
+    },
+    {
+      id: 3,
+      name: 3,
+    },
+    {
+      id: 4,
+      name: 4,
+    },
+    {
+      id: 5,
+      name: 5,
+    },
+    {
+      id: 6,
+      name: 6,
+    },
+    {
+      id: 7,
+      name: 7,
+    },
+    {
+      id: 8,
+      name: 8,
+    },
+    {
+      id: 9,
+      name: 9,
+    },
+    {
+      id: 10,
+      name: 10,
+    },
+    {
+      id: 11,
+      name: 11,
+    },
+    {
+      id: 12,
+      name: 12,
+    },
+    {
+      id: 13,
+      name: 13,
+    },
+    {
+      id: 14,
+      name: 14,
+    },
+    {
+      id: 15,
+      name: 15,
+    },
+    {
+      id: 16,
+      name: 16,
+    },
+    {
+      id: 17,
+      name: 17,
+    },
+    {
+      id: 18,
+      name: 18,
+    },
+    {
+      id: 19,
+      name: 19,
+    },
+    {
+      id: 20,
+      name: 20,
+    },
+    {
+      id: 21,
+      name: 21,
+    },
+    {
+      id: 22,
+      name: 22,
+    },
+    {
+      id: 23,
+      name: 23,
+    },
+    {
+      id: 24,
+      name: 24,
+    },
+    {
+      id: 25,
+      name: 25,
+    },
+    {
+      id: 26,
+      name: 26,
+    },
+    {
+      id: 27,
+      name: 27,
+    },
+    {
+      id: 28,
+      name: 28,
+    },
+    {
+      id: 29,
+      name: 29,
+    },
+    {
+      id: 30,
+      name: 30,
+    },
+    {
+      id: 31,
+      name: 31,
+    },
+  ];
+  const [billDate, setBillDate] = useState("none");
+  const [billId, setBillId] = useState();
+
   const swalFire = (msg) => {
     MySwal.fire({
       icon: "error",
       confirmButtonText: "ตกลง",
       text: msg,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(logout(false));
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
     });
   };
 
@@ -427,6 +606,8 @@ const BuildingManagement = ({ t, login }) => {
     dispatch(checkToken());
     if (!_.isEmpty(token)) {
       getBuilding();
+      getMeasurementTypeData();
+      getCurrencyTypeData();
     }
     console.log("token", token, login);
   }, [token]);
@@ -460,6 +641,49 @@ const BuildingManagement = ({ t, login }) => {
           }
         });
       }
+      setIsLoading(false);
+    }
+  };
+
+  // get getMeasurementTypeData //
+  const getMeasurementTypeData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getMeasurementTypeData().then((response) => {
+        const dataPayload = response.data;
+        // console.log("#Nan vvvvvv", dataPayload);
+        setMeasurementList(dataPayload);
+        dataPayload.map((item, index) => {
+          if (index === 0) {
+            setMeasurementSelect(item.id);
+          }
+        });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // get getCurrencyTypeData //
+  const getCurrencyTypeData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getCurrencyTypeData().then((response) => {
+        const dataPayload = response.data;
+        // console.log("#Nan vvvvvv", dataPayload);
+        setCurrencyTypeList(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
       setIsLoading(false);
     }
   };
@@ -594,7 +818,7 @@ const BuildingManagement = ({ t, login }) => {
                 text: dataPayload,
               });
               getBuilding();
-              handleClose();
+              handleCloseModalEdit();
             }
             setIsLoading(false);
           });
@@ -603,7 +827,7 @@ const BuildingManagement = ({ t, login }) => {
         console.log(error);
         const response = error.response;
         swalFire(response.data);
-        handleClose();
+        handleCloseModalEdit();
         setIsLoading(false);
       }
     } else {
@@ -627,7 +851,7 @@ const BuildingManagement = ({ t, login }) => {
               text: dataPayload,
             });
             getBuilding();
-            handleClose();
+            handleCloseModalEdit();
           }
           setIsLoading(false);
         });
@@ -635,7 +859,7 @@ const BuildingManagement = ({ t, login }) => {
         console.log(error);
         const response = error.response;
         swalFire(response.data);
-        handleClose();
+        handleCloseModalEdit();
         setIsLoading(false);
       }
     }
@@ -709,10 +933,118 @@ const BuildingManagement = ({ t, login }) => {
     });
   };
 
-  const handleClickOpen = (event, id) => {
+  const getBuildingParamList = async (buildingId) => {
+    setIsLoading(true);
+    try {
+      API.connectTokenAPI(token);
+      await API.getBuildingParamList(buildingId).then((response) => {
+        const dataPayload = response.data;
+        console.log("#Nan dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("#Nan 9999=======item", item);
+            setBillId(item.id);
+            setBillDate(
+              item.billing_date &&
+                billDateList.find((f) => f.name === item.billing_date).id
+            );
+            setCurrencyTypeSelect(
+              item.currency_type &&
+                currencyTypeList.find(
+                  (f) => f.currency_type === item.currency_type
+                ).id
+            );
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const addbBildingParamUpdate = async (buillId) => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      const data = {
+        billing_date: billDate,
+        currency_type_id: currencyTypeSelect,
+      };
+      API.connectTokenAPI(token);
+      await API.buildingParamUpdate(buillId, data).then((response) => {
+        const dataPayload = response.data;
+        console.log("#Nan dataPayload", response, dataPayload);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getBuildingParamList(isIdEdit);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const handleClickOpen = async (event, id) => {
     setOpen(true);
     getBuildingView(id);
     setIsIdEdit(id);
+    getBuildingParamList(id);
+
+    const dataGeneralBuiling = await getGeneralExpensesBuildingData(
+      id,
+      measurementSelect
+    );
+
+    console.log("#Nan dataGeneralBuilding", dataGeneralBuiling, isIdEdit);
+    setRowsBuildingPriceEdit(dataGeneralBuiling);
+  };
+
+  const getUpdateDataGeneralExpensesBuilding = async (id) => {
+    const data = await getGeneralExpensesBuildingData(id, measurementSelect);
+    setRowsBuildingPriceEdit(data);
+  };
+
+  const getUpdateRowGeneralExpensesBuilding = async (id, index, rowId) => {
+    const data = await getGeneralExpensesBuildingData(id, measurementSelect);
+    const foundData = data.find((f) => f.id === rowId);
+    const updatedRows = [...rowsBuildingPriceEdit];
+    updatedRows[index] = foundData;
+    console.log("#Nan ==foundData", foundData, data, id);
+    // Update the state with the new array
+    setRowsBuildingPriceEdit(updatedRows);
   };
 
   const handleClose = () => {
@@ -779,11 +1111,217 @@ const BuildingManagement = ({ t, login }) => {
   );
 
   const visibleRows = useMemo(
-    () => sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    () =>
+      sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     [page, rowsPerPage, sortedRows]
   );
 
-  console.log('#Nan sortedRows', sortedRows, visibleRows);
+  // addGeneralExpensesBuilding //
+  const addGeneralExpensesBuilding = async () => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      let body = [];
+      rowsBuildingPriceEdit.length > 0 &&
+        rowsBuildingPriceEdit.forEach((row) => {
+          // ตรวจสอบว่า row.new_point_id ไม่ซ้ำกับค่าใน body
+          // const isUnique = !body.some(
+          //   (data) => row.id === null
+          // );
+
+          if (!row.id) {
+            const data = {
+              building_id: isIdEdit,
+              measurement_type_id: measurementSelect,
+              description: row.description,
+              cost: row.cost,
+            };
+            body.push(data);
+          }
+        });
+      console.log("body====", body);
+      API.connectTokenAPI(token);
+      await API.generalExpensesBuildingRegister(body).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload====Point", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getUpdateDataGeneralExpensesBuilding(isIdEdit);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  // addNewRowUnitPrice //
+  const addNewRowBuildingPrice = () => {
+    const newRow = {
+      id: null,
+      description: "",
+      cost: "",
+      generalSelect: null,
+      isEdit: true,
+    };
+
+    const updatedRows = [...rowsBuildingPriceEdit];
+    updatedRows.push(newRow);
+    setRowsBuildingPriceEdit(updatedRows);
+  };
+
+  const getGeneralExpensesBuildingData = async (buildingId, measurementId) => {
+    // setIsLoading(true);
+    let list = [];
+    try {
+      API.connectTokenAPI(token);
+      await API.getGeneralExpensesBuildingData(buildingId, measurementId).then(
+        async (response) => {
+          let dataPayload = response?.data;
+          console.log("#Nan dataPayload", response, dataPayload);
+          // setRowsPointEdit(dataPayload);
+          // setIsLoading(false);
+          list = dataPayload;
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      return error.response;
+      // const response = error.response;
+      // swalFire(response?.data);
+      // setIsLoading(false);
+    }
+    return list;
+  };
+
+  const handleGeneralExpensesBuildingUpdate = async (event, row, index) => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      // let body = [];
+      // const idToMatch = row.id; // Replace with the actual ID you want to match
+      // const updatedRow = rowsPointEdit.find((item) => item.id === idToMatch);
+      const data = {
+        description: row.description,
+        cost: row.cost,
+      };
+      // body.push(data);
+      console.log("rowsPointEdit", row);
+      // console.log("body", body);
+      await API.connectTokenAPI(token);
+      await API.generalExpensesBuildingUpdate(row.id, data).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getUpdateRowGeneralExpensesBuilding(isIdEdit, index, row.id);
+              setOpen(true);
+              handleEditMeasurementBuilding(row, index, false);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditMeasurementBuilding = async (row, index, isEdit = true) => {
+    const updatedRows = [...rowsBuildingPriceEdit];
+    // Update the device_id of the specific row at the given index
+    updatedRows[index].isEdit = isEdit;
+    // Update the state with the new array
+    setRowsBuildingPriceEdit(updatedRows);
+  };
+
+  // delete row generalExpensesBuildingDelete //
+  const generalExpensesBuildingDelete = async (rowId) => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      await API.connectTokenAPI(token);
+      await API.generalExpensesBuildingDelete(rowId).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getUpdateDataGeneralExpensesBuilding(isIdEdit);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteGeneralExpensesBuilding = (event, id) => {
+    setOpen(false);
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        generalExpensesBuildingDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
 
   const handleLongtitude = (event) => {
     setLongtitude(event.target.value);
@@ -821,6 +1359,24 @@ const BuildingManagement = ({ t, login }) => {
     }
   };
 
+  const handleDescriptionUnit = (event, item, index) => {
+    const newValue = event.target.value;
+    // Create a copy of the existing rowsPointEdit array
+    const updatedRows = [...rowsBuildingPriceEdit];
+    // Update the device_id of the specific row at the given index
+    updatedRows[index].description = newValue;
+    // Update the state with the new array
+    setRowsBuildingPriceEdit(updatedRows);
+  };
+
+  const handlePrice = (event, item, index) => {
+    const newValue = event.target.value;
+    const updatedRows = [...rowsBuildingPriceEdit];
+    updatedRows[index].cost = newValue;
+    // Update the state with the new array
+    setRowsBuildingPriceEdit(updatedRows);
+  };
+
   const handleClickOpenAdd = () => {
     setOpenAdd(true);
     setIsValidate(true);
@@ -839,6 +1395,7 @@ const BuildingManagement = ({ t, login }) => {
   const handleOpenView = (event, id) => {
     setOpenView(true);
     getBuildingView(id);
+    setIsIdEdit(id);
   };
 
   const handleCloseView = () => {
@@ -915,6 +1472,77 @@ const BuildingManagement = ({ t, login }) => {
     } else {
       getBuilding();
     }
+  };
+
+  const handleOpenModalEdit = () => {
+    setOpenModalEdit(true);
+    setOpenView(false);
+  };
+
+  const handleCloseModalEdit = () => {
+    setOpenModalEdit(false);
+  };
+
+  const handleBillDate = (event) => {
+    setBillDate(event.target.value);
+  };
+
+  const handleCurrencyType = (event) => {
+    setCurrencyTypeSelect(event.target.value);
+  };
+
+  const handleBoxIcon = async (event, name, index) => {
+    console.log("#Nan 888888888", name, index);
+    setMeasurementSelect(name.id);
+    const dataGeneralBuilding = await getGeneralExpensesBuildingData(
+      isIdEdit,
+      name.id
+    );
+
+    console.log("#Nan dataGeneralBuilding", dataGeneralBuilding, isIdEdit);
+    setRowsBuildingPriceEdit(dataGeneralBuilding);
+  };
+
+  const renderViewBox = (item, index) => {
+    const listImg = [
+      {
+        id: 0,
+        name: "Vector.png",
+      },
+      {
+        id: 1,
+        name: "VectorNum.png",
+      },
+      {
+        id: 2,
+        name: "VectorIcon.png",
+      },
+      {
+        id: 3,
+        name: "VectorCool.png",
+      },
+    ];
+    return (
+      <Grid
+        item
+        className={clsx(
+          item.id == measurementSelect ? classes.borderboxIcon : "",
+          classes.marginBoxIcon
+        )}
+        onClick={(e) => handleBoxIcon(e, item, index)}
+      >
+        {listImg.map((img) => {
+          if (index === img.id) {
+            return (
+              <img
+                src={process.env.PUBLIC_URL + `img/${img.name}`}
+                alt="Icon"
+              />
+            );
+          }
+        })}
+      </Grid>
+    );
   };
 
   return (
@@ -1126,8 +1754,8 @@ const BuildingManagement = ({ t, login }) => {
       <Dialog
         fullScreen={fullScreen}
         // className={classes.modalWidth}
-        open={open}
-        onClose={handleClose}
+        open={openModalEdit}
+        onClose={handleCloseModalEdit}
         aria-labelledby="responsive-dialog-title"
         classes={{
           paper: classes.modalWidth,
@@ -1289,7 +1917,7 @@ const BuildingManagement = ({ t, login }) => {
               >
                 <Grid item md={3}>
                   <Button
-                    onClick={handleClose}
+                    onClick={handleCloseModalEdit}
                     className={clsx(classes.backGroundCancel)}
                     variant="outlined"
                   >
@@ -1535,7 +2163,7 @@ const BuildingManagement = ({ t, login }) => {
                     className={classes.imgWidth}
                   />
                 </Grid>
-                <Grid item md={9}>
+                <Grid item md={7}>
                   <Grid
                     item
                     className={clsx(classes.boxMargin, classes.marginRow)}
@@ -1544,6 +2172,14 @@ const BuildingManagement = ({ t, login }) => {
                       {buildingName ? buildingName : "-"}
                     </Typography>
                   </Grid>
+                </Grid>
+                <Grid item md={2}>
+                  <img
+                    src={IconEdit}
+                    alt="IconEdit"
+                    className={clsx(classes.cursor)}
+                    onClick={() => handleOpenModalEdit()}
+                  />
                 </Grid>
               </Grid>
 
@@ -1572,6 +2208,462 @@ const BuildingManagement = ({ t, login }) => {
                 <Typography variant="h5"> {t("building:area")}</Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">{area ? area : "-"}</Typography>
+                </Grid>
+              </Grid>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Edit Measurement*/}
+      <Dialog
+        fullScreen={fullScreenEdit}
+        // className={classes.modalWidth}
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="responsive-dialog-title"
+        classes={{
+          paper: classes.modalEditWidth,
+        }}
+      >
+        <DialogTitle id="responsive-dialog-title" className="mt-3">
+          <Grid item md={12} className={clsx(classes.flexRow)}>
+            <Grid item md={6}>
+              <Typography variant="h3">{t("floor:measurement")}</Typography>
+              <Grid
+                item
+                className={clsx(classes.flexRow, classes.justContentCenter)}
+              >
+                {measurementList.length > 0 &&
+                  measurementList.map((item, index) => {
+                    return renderViewBox(item, index);
+                  })}
+              </Grid>
+            </Grid>
+          </Grid>
+        </DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRow, classes.modalContent)}
+              >
+                <Grid
+                  item
+                  md={12}
+                  className={clsx(classes.boxMargin, classes.borderMeasurement)}
+                >
+                  {/* Billing Date */}
+                  <Grid item md={12} className={classes.marginRow}>
+                    <Typography variant="h4">Billing Date</Typography>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.marginRow,
+                      classes.flexRow,
+                      classes.alignItem
+                    )}
+                  >
+                    <Grid item md={3} className={classes.textCenter}>
+                      <Typography variant="h5">
+                        {" "}
+                        {t("building:billingDate")}
+                      </Typography>
+                    </Grid>
+                    <Grid item md={9} className={classes.textCenter}>
+                      <FormControl variant="outlined" size="small" fullWidth>
+                        <Select
+                          labelId="demo-select-small-label"
+                          // id="demo-select-small"
+                          value={billDateList.length > 0 ? billDate : "none"}
+                          placeholder={t("gateway:billingType")}
+                          onChange={handleBillDate}
+                          // error={billingTypeSelect === "none" && !isValidate}
+                        >
+                          <MenuItem value="none" disabled>
+                            billDate
+                          </MenuItem>
+                          {billDateList.length > 0 &&
+                            billDateList.map((item) => {
+                              return (
+                                <MenuItem
+                                  id={"selectBillDateList-" + item.id}
+                                  key={item.id}
+                                  value={item.id}
+                                >
+                                  {item.name}
+                                </MenuItem>
+                              );
+                            })}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
+
+                  {/* Currency type */}
+                  <Grid item md={12} className={classes.marginRow}>
+                    <Typography variant="h4">Currency type</Typography>
+                  </Grid>
+                  <Grid item md={12} className={clsx(classes.marginRow)}>
+                    <FormControl variant="outlined" size="small" fullWidth>
+                      <Select
+                        labelId="demo-select-small-label"
+                        // id="demo-select-small"
+                        value={
+                          currencyTypeList.length > 0
+                            ? currencyTypeSelect
+                            : "none"
+                        }
+                        placeholder={t("gateway:billingType")}
+                        onChange={handleCurrencyType}
+                        // error={billingTypeSelect === "none" && !isValidate}
+                      >
+                        <MenuItem value="none" disabled>
+                          {t("building:selectCurrency")}
+                        </MenuItem>
+                        {currencyTypeList.length > 0 &&
+                          currencyTypeList.map((item) => {
+                            return (
+                              <MenuItem
+                                id={"selectCurrencyTypeList-" + item.id}
+                                key={item.id}
+                                value={item.id}
+                              >
+                                {item.currency_type}
+                              </MenuItem>
+                            );
+                          })}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+                  >
+                    <Grid item md={3}>
+                      <Button
+                        onClick={(event) => {
+                          handleClickOpen(event, isIdEdit);
+                        }}
+                        className={clsx(classes.backGroundCancel)}
+                        variant="outlined"
+                      >
+                        {t("gateway:btnRefresh")}
+                      </Button>
+                    </Grid>
+                    <Grid item md={3} className={classes.boxMargin}>
+                      <Button
+                        className={clsx(classes.backGroundConfrim)}
+                        variant="outlined"
+                        onClick={() => addbBildingParamUpdate(billId)}
+                      >
+                        {t("gateway:btnSave")}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.borderBottomMeasurement,
+                      classes.marginRow
+                    )}
+                  ></Grid>
+
+                  {/* Billing type */}
+                  <Grid item md={12} className={classes.marginRow}>
+                    <Typography variant="h4">Billing type</Typography>
+                  </Grid>
+                  <Grid item md={12} className={classes.marginRow}>
+                    <FormControl variant="outlined" size="small" fullWidth>
+                      <Select
+                        labelId="demo-select-small-label"
+                        // id="demo-select-small"
+                        // value={
+                        //   billingType.length > 0 ? billingTypeSelect : "none"
+                        // }
+                        // placeholder={t("gateway:billingType")}
+                        // onChange={handleBillingType}
+                        // error={billingTypeSelect === "none" && !isValidate}
+                      >
+                        <MenuItem value="none" disabled>
+                          {t("gateway:selectBillingType")}
+                        </MenuItem>
+                        {/* {billingType.length > 0 &&
+                          billingType.map((item) => {
+                            return (
+                              <MenuItem
+                                id={"selectbillingType-" + item.id}
+                                key={item.id}
+                                value={item.id}
+                              >
+                                {item.type}
+                              </MenuItem>
+                            );
+                          })} */}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.marginRow,
+                      classes.flexRow,
+                      classes.modalContent
+                    )}
+                  >
+                    <Grid item>
+                      <Typography variant="h5">
+                        {t("floor:unitPrice")}
+                      </Typography>
+                    </Grid>
+
+                    <Grid item md={5}>
+                      <TextField
+                        // id="input-with-icon-textfield"
+                        size="small"
+                        fullWidth
+                        variant="outlined"
+                        // value={unitPrice}
+                        // onChange={handleUnitPrice}
+                      />
+                    </Grid>
+                    <Grid item md={3}>
+                      <FormControl variant="outlined" size="small" fullWidth>
+                        <Select
+                          labelId="demo-select-small-label"
+                          // id="demo-select-small"
+                          // value={bahtType.length > 0 ? bahtTypeSelect : "none"}
+                          // placeholder={t("gateway:billingType")}
+                          // onChange={handleBath}
+                          // error={billingTypeSelect === "none" && !isValidate}
+                        >
+                          <MenuItem value="none" disabled>
+                            {t("floor:baht")}
+                          </MenuItem>
+                          {/* {bahtType.length > 0 &&
+                            bahtType.map((item) => {
+                              return (
+                                <MenuItem
+                                  id={"selectbathType-" + item.id}
+                                  key={item.id}
+                                  value={item.id}
+                                >
+                                  {item.name}
+                                </MenuItem>
+                              );
+                            })} */}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant="h5">{t("floor:kWh")}</Typography>
+                    </Grid>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+                  >
+                    <Grid item md={3}>
+                      <Button
+                        // onClick={(event) => {
+                        //   handleClickOpen(event, isIdEdit);
+                        // }}
+                        className={clsx(classes.backGroundCancel)}
+                        variant="outlined"
+                      >
+                        {t("gateway:btnRefresh")}
+                      </Button>
+                    </Grid>
+                    <Grid item md={3} className={classes.boxMargin}>
+                      <Button
+                        className={clsx(classes.backGroundConfrim)}
+                        variant="outlined"
+                        // onClick={addUnitPoint}
+                      >
+                        {t("gateway:btnSave")}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.borderBottomMeasurement,
+                      classes.marginRow
+                    )}
+                  ></Grid>
+
+                  {/* ค่าใช้จ่ายทั่วไป */}
+                  <Grid item md={12} className={classes.marginRow}>
+                    <Typography variant="h4">ค่าใช้จ่ายทั่วไป</Typography>
+                  </Grid>
+                  {rowsBuildingPriceEdit.length > 0 &&
+                    rowsBuildingPriceEdit.map((item, index) => (
+                      <Grid
+                        item
+                        md={12}
+                        className={clsx(
+                          classes.marginRow,
+                          classes.flexRow,
+                          classes.modalContent
+                        )}
+                      >
+                        {console.log("#Nan 9999999999===", item, index)}
+                        <Grid item md={5}>
+                          <TextField
+                            // id="input-with-icon-textfield"
+                            size="small"
+                            fullWidth
+                            variant="outlined"
+                            value={item.description}
+                            onChange={(e) =>
+                              handleDescriptionUnit(e, item, index)
+                            }
+                            disabled={item.isEdit ? false : true}
+                          />
+                        </Grid>
+
+                        <Grid item md={3}>
+                          <TextField
+                            // id="input-with-icon-textfield"
+                            size="small"
+                            fullWidth
+                            variant="outlined"
+                            value={item.cost}
+                            onChange={(e) => handlePrice(e, item, index)}
+                            disabled={item.isEdit ? false : true}
+                          />
+                        </Grid>
+                        {/* <Grid item md={2}>
+                          <TextField
+                            id="input-with-icon-textfield"
+                            size="small"
+                            fullWidth
+                            variant="outlined"
+                            value={generalSelect}
+                          />
+                        </Grid> */}
+                        <Grid item>
+                          {item.id ? (
+                            <Grid item>
+                              {item.isEdit && item.id ? (
+                                <>
+                                  <Typography
+                                    className={clsx(
+                                      // classes.fontSixeCell,
+                                      classes.paddingCol,
+                                      classes.cursor
+                                    )}
+                                    onClick={(event) =>
+                                      handleGeneralExpensesBuildingUpdate(
+                                        event,
+                                        item,
+                                        index
+                                      )
+                                    }
+                                  >
+                                    {"save"}
+                                  </Typography>
+                                </>
+                              ) : (
+                                <>
+                                  <img
+                                    src={IconEdit}
+                                    alt="IconEdit"
+                                    className={clsx(classes.cursor)}
+                                    onClick={() =>
+                                      handleEditMeasurementBuilding(item, index)
+                                    }
+                                  />
+                                  <img
+                                    src={IconDelete}
+                                    alt="IconDelete"
+                                    className={clsx(classes.cursor)}
+                                    onClick={(event) =>
+                                      handleDeleteGeneralExpensesBuilding(
+                                        event,
+                                        item.id
+                                      )
+                                    }
+                                  />
+                                </>
+                              )}
+                            </Grid>
+                          ) : (
+                            <img
+                              src={IconDelete}
+                              alt="IconDelete"
+                              className={clsx(classes.cursor)}
+                              onClick={(event) =>
+                                handleDeleteGeneralExpensesBuilding(
+                                  event,
+                                  item.id
+                                )
+                              }
+                            />
+                          )}
+                        </Grid>
+                      </Grid>
+                    ))}
+
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(
+                      classes.marginRow,
+                      classes.flexRow,
+                      classes.justContentCenter
+                    )}
+                  >
+                    <Grid item md={6}>
+                      <Button
+                        variant="outlined"
+                        onClick={addNewRowBuildingPrice}
+                        className={clsx(classes.backGroundCancel)}
+                      >
+                        {t("floor:addRecord")}
+                      </Button>
+                    </Grid>
+                  </Grid>
+
+                  <Grid
+                    item
+                    md={12}
+                    className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+                  >
+                    <Grid item md={3}>
+                      <Button
+                        onClick={(event) => {
+                          handleClickOpen(event, isIdEdit);
+                        }}
+                        className={clsx(classes.backGroundCancel)}
+                        variant="outlined"
+                      >
+                        {t("gateway:btnRefresh")}
+                      </Button>
+                    </Grid>
+                    <Grid item md={3} className={classes.boxMargin}>
+                      <Button
+                        className={clsx(classes.backGroundConfrim)}
+                        variant="outlined"
+                        onClick={addGeneralExpensesBuilding}
+                      >
+                        {t("gateway:btnSave")}
+                      </Button>
+                    </Grid>
+                  </Grid>
                 </Grid>
               </Grid>
             </>

@@ -112,7 +112,7 @@ const useStyles = makeStyles((theme) => ({
     height: "90% !important",
   },
   modalEditWidth: {
-    width: "90% !important",
+    width: "80% !important",
     height: "90% !important",
     maxWidth: "none !important",
   },
@@ -468,6 +468,7 @@ const UnitManagement = ({
   const { buildingId, id } = state;
   // modal //
   const [open, setOpen] = useState(false);
+  const [openModalEdit, setOpenModalEdit] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const fullScreenEdit = useMediaQuery(theme.breakpoints.down("xl"));
   const [openAdd, setOpenAdd] = useState(false);
@@ -495,6 +496,8 @@ const UnitManagement = ({
 
   const [nameBox, setNameBox] = useState("");
   const [rowsUnitPriceEdit, setRowsUnitPriceEdit] = useState([]);
+  const [measurementList, setMeasurementList] = useState([]);
+  const [measurementSelect, setMeasurementSelect] = useState("");
 
   // console.log("ididid====", state, id);
   const swalFire = (msg) => {
@@ -502,6 +505,12 @@ const UnitManagement = ({
       icon: "error",
       confirmButtonText: "ตกลง",
       text: msg,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(logout(false));
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
     });
   };
 
@@ -519,6 +528,7 @@ const UnitManagement = ({
     if (!_.isEmpty(token)) {
       getGateway();
       getBillingTypeData();
+      getMeasurementTypeData();
     }
   }, [token]);
 
@@ -563,6 +573,30 @@ const UnitManagement = ({
       await API.getBillingTypeData().then((response) => {
         const dataPayload = response.data;
         setBillingType(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // get getMeasurementTypeData //
+  const getMeasurementTypeData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getMeasurementTypeData().then((response) => {
+        const dataPayload = response.data;
+        // console.log("#Nan vvvvvv", dataPayload);
+        setMeasurementList(dataPayload);
+        dataPayload.map((item, index) => {
+          if (index === 0) {
+            setMeasurementSelect(item.id);
+          }
+        });
         setIsLoading(false);
       });
     } catch (error) {
@@ -756,7 +790,7 @@ const UnitManagement = ({
                 text: dataPayload,
               });
               getUnitList(id);
-              handleClose();
+              handleCloseModalEdit();
             }
             setIsLoading(false);
           });
@@ -765,7 +799,7 @@ const UnitManagement = ({
         console.log(error);
         const response = error.response;
         swalFire(response.data);
-        handleClose();
+        handleCloseModalEdit();
         setIsLoading(false);
       }
     } else {
@@ -788,7 +822,7 @@ const UnitManagement = ({
               text: dataPayload,
             });
             getUnitList(id);
-            handleClose();
+            handleCloseModalEdit();
           }
           setIsLoading(false);
         });
@@ -796,7 +830,7 @@ const UnitManagement = ({
         console.log(error);
         const response = error.response;
         swalFire(response.data);
-        handleClose();
+        handleCloseModalEdit();
         setIsLoading(false);
       }
     }
@@ -913,24 +947,48 @@ const UnitManagement = ({
   //   }
   // };
 
-  const getUnitPointData = async (id) => {
+  const getUnitPointData = async (id, measurementSelect) => {
     // setIsLoading(true);
     let list = [];
     try {
       API.connectTokenAPI(token);
-      await API.getUnitPointData(id).then(async (response) => {
-        let dataPayload = response?.data;
-        dataPayload.forEach(async (item) => {
-          item.device_list = await getDevice(item.gateway_id);
-          item.point_list = await getPointData(item.device_id);
-          // setDeviceData(await getDevice(item.gateway_id));
-          // setPointData(await getPointData(item.device_id));
-        });
-        console.log("dataPayload", response, dataPayload);
-        // setRowsPointEdit(dataPayload);
-        // setIsLoading(false);
-        list = dataPayload;
-      });
+      await API.getUnitPointData(id, measurementSelect).then(
+        async (response) => {
+          let dataPayload = response?.data;
+          dataPayload.forEach(async (item) => {
+            item.device_list = await getDevice(item.gateway_id);
+            item.point_list = await getPointData(item.device_id);
+            // setDeviceData(await getDevice(item.gateway_id));
+            // setPointData(await getPointData(item.device_id));
+          });
+          console.log("dataPayload", response, dataPayload);
+          // setRowsPointEdit(dataPayload);
+          // setIsLoading(false);
+          list = dataPayload;
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      return error.response;
+      // const response = error.response;
+      // swalFire(response?.data);
+      // setIsLoading(false);
+    }
+    return list;
+  };
+
+  const getGeneralExpensesUnitData = async (unitId, measurementId) => {
+    // setIsLoading(true);
+    let list = [];
+    try {
+      API.connectTokenAPI(token);
+      await API.getGeneralExpensesUnitData(unitId, measurementId).then(
+        async (response) => {
+          let dataPayload = response?.data;
+          console.log("#Nan dataPayload", response, dataPayload);
+          list = dataPayload;
+        }
+      );
     } catch (error) {
       console.log(error);
       return error.response;
@@ -946,25 +1004,48 @@ const UnitManagement = ({
     getUnitView(id);
     setIsIdEdit(id);
     setIsValidate(true);
-    const data = await getUnitPointData(id);
+    const data = await getUnitPointData(id, measurementSelect);
     setRowsPointEdit(data);
+
+    const dataGeneralUnit = await getGeneralExpensesUnitData(
+      id,
+      measurementSelect
+    );
+
+    console.log("#Nan dataGeneralUnit", dataGeneralUnit, isIdEdit);
+    setRowsUnitPriceEdit(dataGeneralUnit);
     // setDisabledFild(true);
     // setEditMeasurement(null);
   };
 
   const getUpdateData = async (id) => {
-    const data = await getUnitPointData(id);
-    setRowsPointEdit(data);
+    const data = await getUnitPointData(id, measurementSelect);
+    // setRowsPointEdit(data);
+  };
+
+  const getUpdateDataGeneralExpensesUnit = async (id) => {
+    const data = await getGeneralExpensesUnitData(id, measurementSelect);
+    setRowsUnitPriceEdit(data);
   };
 
   const getUpdateRow = async (id, index, rowId) => {
-    const data = await getUnitPointData(id);
+    const data = await getUnitPointData(id, measurementSelect);
     const foundData = data.find((f) => f.id === rowId);
     const updatedRows = [...rowsPointEdit];
     updatedRows[index] = foundData;
     console.log("foundData", foundData);
     // Update the state with the new array
-    setRowsPointEdit(updatedRows);
+    // setRowsPointEdit(updatedRows);
+  };
+
+  const getUpdateRowGeneralExpensesUnit = async (id, index, rowId) => {
+    const data = await getGeneralExpensesUnitData(id, measurementSelect);
+    const foundData = data.find((f) => f.id === rowId);
+    const updatedRows = [...rowsUnitPriceEdit];
+    updatedRows[index] = foundData;
+    console.log("#Nan ==foundData", foundData, data, id);
+    // Update the state with the new array
+    setRowsUnitPriceEdit(updatedRows);
   };
 
   const handleClose = () => {
@@ -1032,14 +1113,6 @@ const UnitManagement = ({
     [page, rowsPerPage, sortedRows]
   );
 
-  const handleDescriptionUnit = (event) => {
-    setDescriptionUnit(event.target.value);
-  };
-
-  const handlePrice = (event) => {
-    setPrice(event.target.value);
-  };
-
   const handleUnitNumber = (event) => {
     setUnitNumber(event.target.value);
   };
@@ -1081,6 +1154,7 @@ const UnitManagement = ({
   const handleOpenView = (event, id) => {
     setOpenView(true);
     getUnitView(id);
+    setIsIdEdit(id);
   };
 
   const handleUploadFile = (e) => {
@@ -1127,8 +1201,8 @@ const UnitManagement = ({
   const addNewRowUnitPrice = () => {
     const newRow = {
       id: null,
-      descriptionUnit: "",
-      price: "",
+      description: "",
+      cost: "",
       generalSelect: null,
       isEdit: true,
     };
@@ -1171,6 +1245,26 @@ const UnitManagement = ({
     setRowsPointEdit(updatedRows);
     // getDevice(newValue);
     setGatewayMeter(newValue);
+  };
+
+  const handleDescriptionUnit = (event, item, index) => {
+    setDescriptionUnit(event.target.value);
+    const newValue = event.target.value;
+    // Create a copy of the existing rowsPointEdit array
+    const updatedRows = [...rowsUnitPriceEdit];
+    // Update the device_id of the specific row at the given index
+    updatedRows[index].description = newValue;
+    // Update the state with the new array
+    setRowsUnitPriceEdit(updatedRows);
+  };
+
+  const handlePrice = (event, item, index) => {
+    setPrice(event.target.value);
+    const newValue = event.target.value;
+    const updatedRows = [...rowsUnitPriceEdit];
+    updatedRows[index].cost = newValue;
+    // Update the state with the new array
+    setRowsUnitPriceEdit(updatedRows);
   };
 
   const getDevice = async (id) => {
@@ -1264,6 +1358,7 @@ const UnitManagement = ({
               gateway_id: row.gateway_id,
               device_id: row.device_id,
               point_id: row.point_id,
+              measurement_type_id: measurementSelect,
             };
             body.push(data);
           }
@@ -1281,6 +1376,74 @@ const UnitManagement = ({
           }).then((result) => {
             if (result.isConfirmed) {
               getUpdateData(isIdEdit);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
+  // addGeneralExpensesUnit //
+  const addGeneralExpensesUnit = async () => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      let body = [];
+      rowsUnitPriceEdit.length > 0 &&
+        rowsUnitPriceEdit.forEach((row) => {
+          // ตรวจสอบว่า row.new_point_id ไม่ซ้ำกับค่าใน body
+          // const isUnique = !body.some(
+          //   (data) => row.id === null
+          // );
+
+          if (!row.id) {
+            const data = {
+              unit_id: isIdEdit,
+              measurement_type_id: measurementSelect,
+              description: row.description,
+              cost: row.cost,
+            };
+            body.push(data);
+          }
+        });
+      console.log("body====", body);
+      API.connectTokenAPI(token);
+      await API.generalExpensesUnitRegister(body).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload====Point", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getUpdateDataGeneralExpensesUnit(isIdEdit);
               setOpen(true);
             } else if (result.isDismissed) {
               setIsLoading(false);
@@ -1364,6 +1527,98 @@ const UnitManagement = ({
     });
   };
 
+  // delete row generalExpensesUnitDelete //
+  const generalExpensesUnitDelete = async (rowId) => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      await API.connectTokenAPI(token);
+      await API.generalExpensesUnitDelete(rowId).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getUpdateDataGeneralExpensesUnit(isIdEdit);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        // console.log("dataPayload", response);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteGeneralExpensesUnit = (event, id) => {
+    setOpen(false);
+    MySwal.fire({
+      icon: "warning",
+      confirmButtonText: "ตกลง",
+      cancelButtonText: "ยกเลิก",
+      showCancelButton: true,
+      text: "คุณต้องการลบข้อมูลหรือไม่",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        generalExpensesUnitDelete(id);
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
+    });
+  };
+
+  const handleGeneralExpensesUnitUpdate = async (event, row, index) => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      // let body = [];
+      // const idToMatch = row.id; // Replace with the actual ID you want to match
+      // const updatedRow = rowsPointEdit.find((item) => item.id === idToMatch);
+      const data = {
+        description: row.description,
+        cost: row.cost,
+      };
+      // body.push(data);
+      console.log("rowsPointEdit", row);
+      // console.log("body", body);
+      await API.connectTokenAPI(token);
+      await API.generalExpensesUnitUpdate(row.id, data).then((response) => {
+        const dataPayload = response.data;
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getUpdateRowGeneralExpensesUnit(isIdEdit, index, row.id);
+              setOpen(true);
+              handleEditMeasurementUnit(row, index, false);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
   // edit row Edit //
 
   const handleUpdateMeasurement = async (event, row, index) => {
@@ -1417,6 +1672,14 @@ const UnitManagement = ({
     setRowsPointEdit(updatedRows);
   };
 
+  const handleEditMeasurementUnit = async (row, index, isEdit = true) => {
+    const updatedRows = [...rowsUnitPriceEdit];
+    // Update the device_id of the specific row at the given index
+    updatedRows[index].isEdit = isEdit;
+    // Update the state with the new array
+    setRowsUnitPriceEdit(updatedRows);
+  };
+
   const openPageFloorDetail = (event, id) => {
     // navigate("/buildingFloorDetail");
     navigate("/buildingFloorDetail", { state: { buildingId: id } });
@@ -1464,8 +1727,15 @@ const UnitManagement = ({
     }
   };
 
-  const handleBoxIcon = (name) => {
-    setNameBox(name);
+  const handleBoxIcon = async (event, name, index) => {
+    console.log("#Nan 888888888", name, index);
+    setMeasurementSelect(name.id);
+    const data = await getUnitPointData(isIdEdit, measurementSelect);
+    // setRowsPointEdit(data);
+    const dataGeneralUnit = await getGeneralExpensesUnitData(isIdEdit, name.id);
+
+    console.log("#Nan dataGeneralUnit", dataGeneralUnit, isIdEdit);
+    setRowsUnitPriceEdit(dataGeneralUnit);
   };
 
   const handleBillingType = (event) => {
@@ -1474,6 +1744,57 @@ const UnitManagement = ({
 
   const handleUnitPrice = (event) => {
     setUnitPrice(event.target.value);
+  };
+
+  const renderViewBox = (item, index) => {
+    const listImg = [
+      {
+        id: 0,
+        name: "Vector.png",
+      },
+      {
+        id: 1,
+        name: "VectorNum.png",
+      },
+      {
+        id: 2,
+        name: "VectorIcon.png",
+      },
+      {
+        id: 3,
+        name: "VectorCool.png",
+      },
+    ];
+    return (
+      <Grid
+        item
+        className={clsx(
+          item.id == measurementSelect ? classes.borderboxIcon : "",
+          classes.marginBoxIcon
+        )}
+        onClick={(e) => handleBoxIcon(e, item, index)}
+      >
+        {listImg.map((img) => {
+          if (index === img.id) {
+            return (
+              <img
+                src={process.env.PUBLIC_URL + `img/${img.name}`}
+                alt="Icon"
+              />
+            );
+          }
+        })}
+      </Grid>
+    );
+  };
+
+  const handleOpenModalEdit = () => {
+    setOpenModalEdit(true);
+    setOpenView(false);
+  };
+
+  const handleCloseModalEdit = () => {
+    setOpenModalEdit(false);
   };
 
   return (
@@ -1705,79 +2026,19 @@ const UnitManagement = ({
 
       {/* Modal Edit*/}
       <Dialog
-        fullScreen={fullScreenEdit}
+        fullScreen={fullScreen}
         // className={classes.modalWidth}
-        open={open}
-        onClose={handleClose}
+        open={openModalEdit}
+        onClose={handleCloseModalEdit}
         aria-labelledby="responsive-dialog-title"
         classes={{
-          paper: classes.modalEditWidth,
+          paper: classes.modalWidth,
         }}
       >
         <DialogTitle id="responsive-dialog-title" className="mt-3">
           <Grid item md={12} className={clsx(classes.flexRow)}>
             <Grid item md={6}>
               <Typography variant="h3">{t("floor:description")}</Typography>
-            </Grid>
-            <Grid item md={6}>
-              <Typography variant="h3">{t("floor:measurement")}</Typography>
-              <Grid
-                item
-                className={clsx(classes.flexRow, classes.justContentCenter)}
-              >
-                <Grid
-                  item
-                  className={clsx(
-                    nameBox == "normal" ? classes.borderboxIcon : "",
-                    classes.marginBoxIcon
-                  )}
-                  onClick={() => handleBoxIcon("normal")}
-                >
-                  <img
-                    src={process.env.PUBLIC_URL + "/img/Vector.png"}
-                    alt="Icon"
-                  />
-                </Grid>
-                <Grid
-                  item
-                  className={clsx(
-                    nameBox == "rain" ? classes.borderboxIcon : "",
-                    classes.marginBoxIcon
-                  )}
-                  onClick={() => handleBoxIcon("rain")}
-                >
-                  <img
-                    src={process.env.PUBLIC_URL + "/img/VectorNum.png"}
-                    alt="Icon"
-                  />
-                </Grid>
-                <Grid
-                  item
-                  className={clsx(
-                    nameBox == "hot" ? classes.borderboxIcon : "",
-                    classes.marginBoxIcon
-                  )}
-                  onClick={() => handleBoxIcon("hot")}
-                >
-                  <img
-                    src={process.env.PUBLIC_URL + "/img/VectorIcon.png"}
-                    alt="Icon"
-                  />
-                </Grid>
-                <Grid
-                  item
-                  className={clsx(
-                    nameBox == "cool" ? classes.borderboxIcon : "",
-                    classes.marginBoxIcon
-                  )}
-                  onClick={() => handleBoxIcon("cool")}
-                >
-                  <img
-                    src={process.env.PUBLIC_URL + "/img/VectorCool.png"}
-                    alt="Icon"
-                  />
-                </Grid>
-              </Grid>
             </Grid>
           </Grid>
         </DialogTitle>
@@ -1793,7 +2054,7 @@ const UnitManagement = ({
                 md={12}
                 className={clsx(classes.flexRow, classes.modalContent)}
               >
-                <Grid item md={5}>
+                <Grid item md={12}>
                   <Grid
                     item
                     md={12}
@@ -2016,10 +2277,335 @@ const UnitManagement = ({
                     </Grid>
                   </Grid>
                 </Grid>
-                <Grid item className={classes.borderBox}></Grid>
+              </Grid>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Add */}
+
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openAdd}
+        onClose={handleCloseAdd}
+        aria-labelledby="responsive-dialog-title"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle id="responsive-dialog-title" className="mt-3">
+          <Typography variant="h3">{t("floor:addUnit")}</Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("floor:unitLogo")}
+            </Typography>
+            <Grid
+              item
+              md={12}
+              //   className={clsx(classes.flexRow, classes.justContentCenter)}
+            >
+              <input
+                className={classes.input}
+                id={"contained-button-file"}
+                type="file"
+                accept="image/jpeg,image/png,application/pdf,image/tiff"
+                // multiple={isMultiple}
+                onChange={handleUploadFile}
+                onClick={(e) => {
+                  console.log("aaaaa");
+                }}
+              />
+              <label
+                htmlFor={"contained-button-file"}
+                className={clsx(
+                  classes.flexRow,
+                  classes.justContentCenter,
+                  classes.width
+                )}
+              >
+                <Card
+                  variant="outlined"
+                  style={{ width: 200, height: 200 }}
+                  className={clsx(classes.boxUpload)}
+                >
+                  {imagePreviewUrl ? (
+                    <img
+                      src={imagePreviewUrl}
+                      alt="img-upload"
+                      className={classes.imgWidth}
+                    />
+                  ) : (
+                    <CardContent
+                      className={clsx(classes.textCenter, classes.marginTopBox)}
+                    >
+                      <Typography> +</Typography>
+                      <Typography> upload</Typography>
+                    </CardContent>
+                  )}
+                </Card>
+              </label>
+            </Grid>
+            {/* {_.isEmpty(imagePreviewUrl) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )} */}
+          </Grid>
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="pb-3">
+              {t("floor:unitNumber")}
+            </Typography>
+            <TextField
+              // id="input-with-icon-textfield"
+              size="small"
+              placeholder={t("floor:unitNumber")}
+              fullWidth
+              variant="outlined"
+              value={unitNumber}
+              onChange={handleUnitNumber}
+              error={_.isEmpty(unitNumber) && !isValidate}
+            />
+            {_.isEmpty(unitNumber) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
+          </Grid>
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("floor:unitName")}
+            </Typography>
+            <TextField
+              // id="input-with-icon-textfield"
+              size="small"
+              placeholder={t("floor:unitName")}
+              fullWidth
+              variant="outlined"
+              value={unitName}
+              onChange={handleUnitName}
+              error={_.isEmpty(unitName) && !isValidate}
+            />
+            {_.isEmpty(unitName) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
+          </Grid>
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("floor:description")}
+            </Typography>
+            <TextField
+              // id="input-with-icon-textfield"
+              size="small"
+              placeholder={t("floor:description")}
+              fullWidth
+              variant="outlined"
+              value={description}
+              onChange={handleDescription}
+              error={_.isEmpty(unitName) && !isValidate}
+            />
+            {_.isEmpty(unitName) && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
+          </Grid>
+          <Grid item md={12}>
+            <Typography variant="subtitle2" className="mt-3 pb-3">
+              {t("floor:unitType")}
+            </Typography>
+            <FormControl variant="outlined" size="small" fullWidth>
+              <Select
+                labelId="demo-select-small-label"
+                // id="demo-select-small"
+                value={unitType.length > 0 ? unitTypeSelect : "none"}
+                placeholder={t("floor:unitType")}
+                onChange={handleUnitType}
+                error={unitTypeSelect === "none" && !isValidate}
+              >
+                <MenuItem value="none" disabled>
+                  {t("floor:unitType")}
+                </MenuItem>
+                {unitType.length > 0 &&
+                  unitType.map((item) => {
+                    return (
+                      <MenuItem
+                        id={"selectCommunication-" + item.id}
+                        key={item.id}
+                        value={item.id}
+                      >
+                        {item.type}
+                      </MenuItem>
+                    );
+                  })}
+              </Select>
+            </FormControl>
+            {unitTypeSelect === "none" && !isValidate && (
+              <Validate errorText={"กรุณาระบุข้อมูล"} />
+            )}
+          </Grid>
+          <Grid
+            item
+            md={12}
+            className={clsx(classes.flexRowBtnModal, classes.marginRow)}
+          >
+            <Grid item md={3}>
+              <Button
+                onClick={handleCloseAdd}
+                className={clsx(classes.backGroundCancel)}
+                variant="outlined"
+              >
+                {t("building:btnCancel")}
+              </Button>
+            </Grid>
+            <Grid item md={3} className={classes.boxMargin}>
+              <Button
+                className={clsx(classes.backGroundConfrim)}
+                variant="outlined"
+                onClick={handleValidate}
+              >
+                {t("building:btnAddModal")}
+              </Button>
+            </Grid>
+          </Grid>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal View */}
+      <Dialog
+        fullScreen={fullScreen}
+        // className={classes.modalWidth}
+        open={openView}
+        onClose={handleCloseView}
+        aria-labelledby="responsive-dialog-title-view"
+        classes={{
+          paper: classes.modalWidth,
+        }}
+      >
+        <DialogTitle
+          id="responsive-dialog-title-view"
+          className={clsx(
+            classes.flexRow,
+            classes.justContent,
+            classes.borderBottom
+          )}
+        >
+          <Typography variant="h3">{unitName}</Typography>
+          <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
+        </DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(
+                  classes.alignItem,
+                  classes.marginRow,
+                  classes.flexRow
+                )}
+              >
+                <Grid item md={3} className={classes.borderImg}>
+                  <img
+                    src={imagePreviewUrl}
+                    alt="img-test"
+                    className={classes.imgWidth}
+                  />
+                </Grid>
+                <Grid item md={7}>
+                  <Grid
+                    item
+                    className={clsx(classes.boxMargin, classes.marginRow)}
+                  >
+                    <Typography variant="h5">
+                      {unitName ? unitName : "-"}
+                    </Typography>
+                  </Grid>
+                </Grid>
+                <Grid item md={2}>
+                  <img
+                    src={IconEdit}
+                    alt="IconEdit"
+                    className={clsx(classes.cursor)}
+                    onClick={() => handleOpenModalEdit()}
+                  />
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:unitNumber")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {unitNumber ? unitNumber : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:description")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {description ? description : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:unitType")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {unitTypeSelect ? unitTypeSelect : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Edit Measurement*/}
+      <Dialog
+        fullScreen={fullScreenEdit}
+        // className={classes.modalWidth}
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="responsive-dialog-title"
+        classes={{
+          paper: classes.modalEditWidth,
+        }}
+      >
+        <DialogTitle id="responsive-dialog-title" className="mt-3">
+          <Grid item md={12} className={clsx(classes.flexRow)}>
+            <Grid item md={6}>
+              <Typography variant="h3">{t("floor:measurement")}</Typography>
+              <Grid
+                item
+                className={clsx(classes.flexRow, classes.justContentCenter)}
+              >
+                {measurementList.length > 0 &&
+                  measurementList.map((item, index) => {
+                    return renderViewBox(item, index);
+                  })}
+              </Grid>
+            </Grid>
+          </Grid>
+        </DialogTitle>
+        <DialogContent>
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <>
+              <Grid
+                item
+                md={12}
+                className={clsx(classes.flexRow, classes.modalContent)}
+              >
                 <Grid
                   item
-                  md={6}
+                  md={12}
                   className={clsx(classes.boxMargin, classes.borderMeasurement)}
                 >
                   <Grid item md={12}>
@@ -2534,15 +3120,18 @@ const UnitManagement = ({
                           classes.modalContent
                         )}
                       >
-                         {console.log('#Nan 9999999999===', item, index)}
+                        {console.log("#Nan 9999999999===", item, index)}
                         <Grid item md={5}>
                           <TextField
                             // id="input-with-icon-textfield"
                             size="small"
                             fullWidth
                             variant="outlined"
-                            value={descriptionUnit}
-                            onChange={handleDescriptionUnit}
+                            value={item.description}
+                            onChange={(e) =>
+                              handleDescriptionUnit(e, item, index)
+                            }
+                            disabled={item.isEdit ? false : true}
                           />
                         </Grid>
 
@@ -2552,59 +3141,76 @@ const UnitManagement = ({
                             size="small"
                             fullWidth
                             variant="outlined"
-                            value={price}
-                            onChange={handlePrice}
+                            value={item.cost}
+                            onChange={(e) => handlePrice(e, item, index)}
+                            disabled={item.isEdit ? false : true}
                           />
                         </Grid>
                         <Grid item md={2}>
-                          <FormControl
-                            variant="outlined"
+                          <TextField
+                            // id="input-with-icon-textfield"
                             size="small"
                             fullWidth
-                          >
-                            <Select
-                              labelId="demo-select-small-label"
-                              // id="demo-select-small"
-                              value={
-                                bahtType.length > 0 ? generalSelect : "none"
-                              }
-                              placeholder={t("gateway:billingType")}
-                              onChange={handleBathGeneral}
-                              // error={billingTypeSelect === "none" && !isValidate}
-                            >
-                              <MenuItem value="none" disabled>
-                                {t("floor:baht")}
-                              </MenuItem>
-                              {bahtType.length > 0 &&
-                                bahtType.map((item) => {
-                                  return (
-                                    <MenuItem
-                                      id={"selectbathType-" + item.id}
-                                      key={item.id}
-                                      value={item.id}
-                                    >
-                                      {item.name}
-                                    </MenuItem>
-                                  );
-                                })}
-                            </Select>
-                          </FormControl>
+                            variant="outlined"
+                            value={generalSelect}
+                          />
                         </Grid>
                         <Grid item>
-                          <img
-                            src={IconEdit}
-                            alt="IconEdit"
-                            // onClick={(event) => {
-                            //   handleClickDeleteData(event, rowItem.id);
-                            // }}
-                          />
-                          <img
-                            src={IconDelete}
-                            alt="IconDelete"
-                            // onClick={(event) => {
-                            //   handleClickDeleteData(event, rowItem.id);
-                            // }}
-                          />
+                          {item.id ? (
+                            <Grid item>
+                              {item.isEdit && item.id ? (
+                                <>
+                                  <Typography
+                                    className={clsx(
+                                      // classes.fontSixeCell,
+                                      classes.paddingCol,
+                                      classes.cursor
+                                    )}
+                                    onClick={(event) =>
+                                      handleGeneralExpensesUnitUpdate(
+                                        event,
+                                        item,
+                                        index
+                                      )
+                                    }
+                                  >
+                                    {"save"}
+                                  </Typography>
+                                </>
+                              ) : (
+                                <>
+                                  <img
+                                    src={IconEdit}
+                                    alt="IconEdit"
+                                    className={clsx(classes.cursor)}
+                                    onClick={() =>
+                                      handleEditMeasurementUnit(item, index)
+                                    }
+                                  />
+                                  <img
+                                    src={IconDelete}
+                                    alt="IconDelete"
+                                    className={clsx(classes.cursor)}
+                                    onClick={(event) =>
+                                      handleDeleteGeneralExpensesUnit(
+                                        event,
+                                        item.id
+                                      )
+                                    }
+                                  />
+                                </>
+                              )}
+                            </Grid>
+                          ) : (
+                            <img
+                              src={IconDelete}
+                              alt="IconDelete"
+                              className={clsx(classes.cursor)}
+                              onClick={(event) =>
+                                handleDeleteGeneralExpensesUnit(event, item.id)
+                              }
+                            />
+                          )}
                         </Grid>
                       </Grid>
                     ))}
@@ -2636,9 +3242,9 @@ const UnitManagement = ({
                   >
                     <Grid item md={3}>
                       <Button
-                        // onClick={(event) => {
-                        //   handleClickOpen(event, isIdEdit);
-                        // }}
+                        onClick={(event) => {
+                          handleClickOpen(event, isIdEdit);
+                        }}
                         className={clsx(classes.backGroundCancel)}
                         variant="outlined"
                       >
@@ -2649,285 +3255,12 @@ const UnitManagement = ({
                       <Button
                         className={clsx(classes.backGroundConfrim)}
                         variant="outlined"
-                        // onClick={addUnitPoint}
+                        onClick={addGeneralExpensesUnit}
                       >
                         {t("gateway:btnSave")}
                       </Button>
                     </Grid>
                   </Grid>
-                </Grid>
-              </Grid>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Add */}
-
-      <Dialog
-        fullScreen={fullScreen}
-        // className={classes.modalWidth}
-        open={openAdd}
-        onClose={handleCloseAdd}
-        aria-labelledby="responsive-dialog-title"
-        classes={{
-          paper: classes.modalWidth,
-        }}
-      >
-        <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("floor:addUnit")}</Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("floor:unitLogo")}
-            </Typography>
-            <Grid
-              item
-              md={12}
-              //   className={clsx(classes.flexRow, classes.justContentCenter)}
-            >
-              <input
-                className={classes.input}
-                id={"contained-button-file"}
-                type="file"
-                accept="image/jpeg,image/png,application/pdf,image/tiff"
-                // multiple={isMultiple}
-                onChange={handleUploadFile}
-                onClick={(e) => {
-                  console.log("aaaaa");
-                }}
-              />
-              <label
-                htmlFor={"contained-button-file"}
-                className={clsx(
-                  classes.flexRow,
-                  classes.justContentCenter,
-                  classes.width
-                )}
-              >
-                <Card
-                  variant="outlined"
-                  style={{ width: 200, height: 200 }}
-                  className={clsx(classes.boxUpload)}
-                >
-                  {imagePreviewUrl ? (
-                    <img
-                      src={imagePreviewUrl}
-                      alt="img-upload"
-                      className={classes.imgWidth}
-                    />
-                  ) : (
-                    <CardContent
-                      className={clsx(classes.textCenter, classes.marginTopBox)}
-                    >
-                      <Typography> +</Typography>
-                      <Typography> upload</Typography>
-                    </CardContent>
-                  )}
-                </Card>
-              </label>
-            </Grid>
-            {/* {_.isEmpty(imagePreviewUrl) && !isValidate && (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )} */}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="pb-3">
-              {t("floor:unitNumber")}
-            </Typography>
-            <TextField
-              // id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("floor:unitNumber")}
-              fullWidth
-              variant="outlined"
-              value={unitNumber}
-              onChange={handleUnitNumber}
-              error={_.isEmpty(unitNumber) && !isValidate}
-            />
-            {_.isEmpty(unitNumber) && !isValidate && (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("floor:unitName")}
-            </Typography>
-            <TextField
-              // id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("floor:unitName")}
-              fullWidth
-              variant="outlined"
-              value={unitName}
-              onChange={handleUnitName}
-              error={_.isEmpty(unitName) && !isValidate}
-            />
-            {_.isEmpty(unitName) && !isValidate && (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("floor:description")}
-            </Typography>
-            <TextField
-              // id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("floor:description")}
-              fullWidth
-              variant="outlined"
-              value={description}
-              onChange={handleDescription}
-              error={_.isEmpty(unitName) && !isValidate}
-            />
-            {_.isEmpty(unitName) && !isValidate && (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("floor:unitType")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                // id="demo-select-small"
-                value={unitType.length > 0 ? unitTypeSelect : "none"}
-                placeholder={t("floor:unitType")}
-                onChange={handleUnitType}
-                error={unitTypeSelect === "none" && !isValidate}
-              >
-                <MenuItem value="none" disabled>
-                  {t("floor:unitType")}
-                </MenuItem>
-                {unitType.length > 0 &&
-                  unitType.map((item) => {
-                    return (
-                      <MenuItem
-                        id={"selectCommunication-" + item.id}
-                        key={item.id}
-                        value={item.id}
-                      >
-                        {item.type}
-                      </MenuItem>
-                    );
-                  })}
-              </Select>
-            </FormControl>
-            {unitTypeSelect === "none" && !isValidate && (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
-          </Grid>
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-          >
-            <Grid item md={3}>
-              <Button
-                onClick={handleCloseAdd}
-                className={clsx(classes.backGroundCancel)}
-                variant="outlined"
-              >
-                {t("building:btnCancel")}
-              </Button>
-            </Grid>
-            <Grid item md={3} className={classes.boxMargin}>
-              <Button
-                className={clsx(classes.backGroundConfrim)}
-                variant="outlined"
-                onClick={handleValidate}
-              >
-                {t("building:btnAddModal")}
-              </Button>
-            </Grid>
-          </Grid>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal View */}
-      <Dialog
-        fullScreen={fullScreen}
-        // className={classes.modalWidth}
-        open={openView}
-        onClose={handleCloseView}
-        aria-labelledby="responsive-dialog-title-view"
-        classes={{
-          paper: classes.modalWidth,
-        }}
-      >
-        <DialogTitle
-          id="responsive-dialog-title-view"
-          className={clsx(
-            classes.flexRow,
-            classes.justContent,
-            classes.borderBottom
-          )}
-        >
-          <Typography variant="h3">{unitName}</Typography>
-          <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
-        </DialogTitle>
-        <DialogContent>
-          {isLoading ? (
-            <Box mt={4} width={1} display="flex" justifyContent="center">
-              <CircularProgress color="primary" />
-            </Box>
-          ) : (
-            <>
-              <Grid
-                item
-                md={12}
-                className={clsx(
-                  classes.alignItem,
-                  classes.marginRow,
-                  classes.flexRow
-                )}
-              >
-                <Grid item md={3} className={classes.borderImg}>
-                  <img
-                    src={imagePreviewUrl}
-                    alt="img-test"
-                    className={classes.imgWidth}
-                  />
-                </Grid>
-                <Grid item md={9}>
-                  <Grid
-                    item
-                    className={clsx(classes.boxMargin, classes.marginRow)}
-                  >
-                    <Typography variant="h5">
-                      {unitName ? unitName : "-"}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Grid>
-
-              <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5"> {t("floor:unitNumber")}</Typography>
-                <Grid item className="mt-2">
-                  <Typography variant="body1">
-                    {unitNumber ? unitNumber : "-"}
-                  </Typography>
-                </Grid>
-              </Grid>
-
-              <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5"> {t("floor:description")}</Typography>
-                <Grid item className="mt-2">
-                  <Typography variant="body1">
-                    {description ? description : "-"}
-                  </Typography>
-                </Grid>
-              </Grid>
-
-              <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5"> {t("floor:unitType")}</Typography>
-                <Grid item className="mt-2">
-                  <Typography variant="body1">
-                    {unitTypeSelect ? unitTypeSelect : "-"}
-                  </Typography>
                 </Grid>
               </Grid>
             </>

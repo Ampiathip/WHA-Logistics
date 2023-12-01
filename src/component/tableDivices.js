@@ -458,6 +458,12 @@ const DeviceManagement = ({ t, login }) => {
       icon: "error",
       confirmButtonText: "ตกลง",
       text: msg,
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(logout(false));
+      } else if (result.isDismissed) {
+        setIsLoading(false);
+      }
     });
   };
 
@@ -474,7 +480,7 @@ const DeviceManagement = ({ t, login }) => {
     if (openView) {
       const io = require("socket.io-client");
       // Replace with the URL of your Socket.io server
-      const socket = io("http://119.59.105.226:3000/");
+      const socket = io("http://119.59.105.226:3003/");
       // socket.emit("join chat", "hypetex/test01");
       socket.emit("join chat", isIdDevice);
 

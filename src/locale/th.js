@@ -128,6 +128,8 @@ let th = {
       "btnAddModal": "Add",
       "edit": "Edit Building Information",
       "btnSave": "Save",
+      "billingDate": "Bill date",
+      "selectCurrency": "Choose Currency Type",
     },
     floor: {
       "search": "Search by Floor name",

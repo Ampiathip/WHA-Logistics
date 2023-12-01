@@ -164,23 +164,23 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/unit-type/remove/${id}`);
   };
 
-    /* ============== Unit Points API ================ */
+  /* ============== Unit Points API ================ */
 
-    const getUnitPointData = (id = 0) => {
-      return tokenAPI.get(`/api/unit-point/list/${id}`);
-    };
-  
-    const unitPointRegister = (body) => {
-      return tokenAPI.post(`/api/unit-point/add`, body);
-    };
-  
-    const unitPointUpdate = (id, body) => {
-      return tokenAPI.put(`/api/unit-point/update/${id}`, body);
-    };
-  
-    const unitPointDelete = (id = 0) => {
-      return tokenAPI.delete(`/api/unit-point/remove/${id}`);
-    };
+  const getUnitPointData = (unitId = 0, measurementId = 0) => {
+    return tokenAPI.get(`/api/unit-point/list?unit_id=${unitId}&measurement_type_id=${measurementId}`);
+  };
+
+  const unitPointRegister = (body) => {
+    return tokenAPI.post(`/api/unit-point/add`, body);
+  };
+
+  const unitPointUpdate = (id, body) => {
+    return tokenAPI.put(`/api/unit-point/update/${id}`, body);
+  };
+
+  const unitPointDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/unit-point/remove/${id}`);
+  };
 
   /* ============== Gateway API ================ */
 
@@ -380,18 +380,163 @@ const getAPI = () => {
 
   /* ============== Historicaldata API ================ */
 
-  const historicaldata = (dateTimeFormat = '', startTime = '', endTime = '', body) => {
+  const historicaldata = (
+    dateTimeFormat = "",
+    startTime = "",
+    endTime = "",
+    body
+  ) => {
     if (dateTimeFormat) {
-      return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}`, body);
+      return tokenAPI.post(
+        `/api/historicaldata?dateTimeFormat=${dateTimeFormat}`,
+        body
+      );
     } else if (startTime) {
-      return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}&startTime=${startTime}`, body);
+      return tokenAPI.post(
+        `/api/historicaldata?dateTimeFormat=${dateTimeFormat}&startTime=${startTime}`,
+        body
+      );
     } else if (endTime) {
-      return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}&endTime=${endTime}`, body);
+      return tokenAPI.post(
+        `/api/historicaldata?dateTimeFormat=${dateTimeFormat}&endTime=${endTime}`,
+        body
+      );
     } else {
-      return tokenAPI.post(`/api/historicaldata?dateTimeFormat=${dateTimeFormat}&startTime=${startTime}&endTime=${endTime}`, body);
+      return tokenAPI.post(
+        `/api/historicaldata?dateTimeFormat=${dateTimeFormat}&startTime=${startTime}&endTime=${endTime}`,
+        body
+      );
     }
   };
 
+  /* ============== Measurement Type API ================ */
+
+  const getMeasurementTypeData = () => {
+    return tokenAPI.get(`/api/measurement-type/list`);
+  };
+
+  const measurementRegister = (body) => {
+    return tokenAPI.post(`/api/measurement-type/add`, body);
+  };
+
+  const getMeasurementTypeView = (id = 0) => {
+    return tokenAPI.get(`/api/measurement-type/read/${id}`);
+  };
+
+  const measurementTypeUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/measurement-type/update/${id}`, body);
+  };
+
+  const measurementTypeDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/measurement-type/remove/${id}`);
+  };
+
+  /* ============== Invoices API ================ */
+
+  const getInvoiceData = (startTime = "", endTime = "", id = 0) => {
+    return tokenAPI.get(
+      `/api/invoice/list?startTime=${startTime}&endTime=${endTime}&measurement_type_id=${id}`
+    );
+  };
+
+  /* ============== General-expenses Unit API ================ */
+
+  const getGeneralExpensesUnitData = (unitId = 0, measurementId = 0) => {
+    return tokenAPI.get(
+      `/api/general-expenses/unit/list?unit_id=${unitId}&measurement_type_id=${measurementId}`
+    );
+  };
+
+  const generalExpensesUnitRegister = (body) => {
+    return tokenAPI.post(`/api/general-expenses/unit/add`, body);
+  };
+
+  const generalExpensesUnitUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/general-expenses/unit/update/${id}`, body);
+  };
+
+  const generalExpensesUnitDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/general-expenses/unit/remove/${id}`);
+  };
+
+  /* ============== General-expenses Building API ================ */
+
+  const getGeneralExpensesBuildingData = (
+    buildingId = 0,
+    measurementId = 0
+  ) => {
+    return tokenAPI.get(
+      `/api/general-expenses/building/list?building_id=${buildingId}&measurement_type_id=${measurementId}`
+    );
+  };
+
+  const generalExpensesBuildingRegister = (body) => {
+    return tokenAPI.post(`/api/general-expenses/building/add`, body);
+  };
+
+  const generalExpensesBuildingUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/general-expenses/building/update/${id}`, body);
+  };
+
+  const generalExpensesBuildingDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/general-expenses/building/remove/${id}`);
+  };
+
+  /* ============== Currency Type API ================ */
+
+  const getCurrencyTypeData = () => {
+    return tokenAPI.get(`/api/currency-type/list`);
+  };
+
+  const currencyTypeRegister = (body) => {
+    return tokenAPI.post(`/api/currency-type/add`, body);
+  };
+
+  const getCurrencyTypeView = (id = 0) => {
+    return tokenAPI.get(`/api/currency-type/read/${id}`);
+  };
+
+  const currencyTypeUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/currency-type/update/${id}`, body);
+  };
+
+  const currencyTypeDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/currency-type/remove/${id}`);
+  };
+
+  /* ============== Building Params API ================ */
+
+  const getBuildingParamList = (id = 0) => {
+    return tokenAPI.get(`/api/building/params/list/${id}`);
+  };
+
+  const buildingParamUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/building/params/update/${id}`, body);
+  };
+
+  /* ============== Billing Type API ================ */
+
+  const getBillingTypesList = (unitId = 0, measurementId = 0) => {
+    return tokenAPI.get(
+      `/api/billing-type/list?unit_id=${unitId}&measurement_type_id=${measurementId}`
+    );
+  };
+
+  const billingTypesUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/billing-type/update/${id}`, body);
+  };
+
+  /* ============== Billing Billing API ================ */
+
+  const getBillingBillingView = (buildingId = 0, measurementId = 0) => {
+    return tokenAPI.get(
+      `/api/billing-billing/read?buildingID=${buildingId}&measurementTypeID=${measurementId}`
+    );
+  };
+
+  const billingBillingUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/billing-billing/update/${id}`, body);
+  };
 
   return {
     connectTokenAPI,
@@ -483,13 +628,47 @@ const getAPI = () => {
     zoneUnitDelete,
 
     zoneUnitBuilding,
-    
+
     roleTypeList,
 
     realtimeData,
     myDevice,
 
     historicaldata,
+
+    getMeasurementTypeData,
+    measurementRegister,
+    getMeasurementTypeView,
+    measurementTypeUpdate,
+    measurementTypeDelete,
+
+    getInvoiceData,
+
+    getGeneralExpensesUnitData,
+    generalExpensesUnitRegister,
+    generalExpensesUnitUpdate,
+    generalExpensesUnitDelete,
+
+    getGeneralExpensesBuildingData,
+    generalExpensesBuildingRegister,
+    generalExpensesBuildingUpdate,
+    generalExpensesBuildingDelete,
+
+    getCurrencyTypeData,
+    currencyTypeRegister,
+    getCurrencyTypeView,
+    currencyTypeUpdate,
+    currencyTypeDelete,
+
+    getBuildingParamList,
+    buildingParamUpdate,
+
+    getBillingTypesList,
+    billingTypesUpdate,
+
+    getBillingBillingView,
+    billingBillingUpdate,
+
   };
 };
 export default {
