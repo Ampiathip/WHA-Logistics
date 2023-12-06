@@ -167,7 +167,9 @@ const getAPI = () => {
   /* ============== Unit Points API ================ */
 
   const getUnitPointData = (unitId = 0, measurementId = 0) => {
-    return tokenAPI.get(`/api/unit-point/list?unit_id=${unitId}&measurement_type_id=${measurementId}`);
+    return tokenAPI.get(
+      `/api/unit-point/list?unit_id=${unitId}&measurement_type_id=${measurementId}`
+    );
   };
 
   const unitPointRegister = (body) => {
@@ -516,26 +518,48 @@ const getAPI = () => {
 
   /* ============== Billing Type API ================ */
 
-  const getBillingTypesList = (unitId = 0, measurementId = 0) => {
+  const getBillingUnit = (unitId = 0, measurementId = 0) => {
     return tokenAPI.get(
-      `/api/billing-type/list?unit_id=${unitId}&measurement_type_id=${measurementId}`
+      `/api/unit-billing/read?unitID=${unitId}&measurementTypeID=${measurementId}`
     );
   };
 
-  const billingTypesUpdate = (id = 0, body) => {
-    return tokenAPI.put(`/api/billing-type/update/${id}`, body);
+  const billingUnitUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/unit-billing/update/${id}`, body);
   };
 
   /* ============== Billing Billing API ================ */
 
   const getBillingBillingView = (buildingId = 0, measurementId = 0) => {
     return tokenAPI.get(
-      `/api/billing-billing/read?buildingID=${buildingId}&measurementTypeID=${measurementId}`
+      `/api/building-billing/read?buildingID=${buildingId}&measurementTypeID=${measurementId}`
     );
   };
 
   const billingBillingUpdate = (id = 0, body) => {
-    return tokenAPI.put(`/api/billing-billing/update/${id}`, body);
+    return tokenAPI.put(`/api/building-billing/update/${id}`, body);
+  };
+
+  /* ============== Unit Billing-Type API ================ */
+
+  const getUnitBillingTypeData = () => {
+    return tokenAPI.get(`/api/unit-billing-type/list`);
+  };
+
+  const addUnitBillingTypeData = (boy) => {
+    return tokenAPI.post(`/api/unit-billing-type/add`, boy);
+  };
+
+  const unitBillingTypeView = (id = 0, body) => {
+    return tokenAPI.get(`/api/unit-billing-type/read/${id}`, body);
+  };
+
+  const unitBillingTypetUpdate = (id = 0, body) => {
+    return tokenAPI.put(`/api/unit-billing-type/update/${id}`, body);
+  };
+
+  const unitBillingTypetDelete = (id = 0) => {
+    return tokenAPI.delete(`/api/unit-billing-type/remove/${id}`);
   };
 
   return {
@@ -663,11 +687,17 @@ const getAPI = () => {
     getBuildingParamList,
     buildingParamUpdate,
 
-    getBillingTypesList,
-    billingTypesUpdate,
+    getBillingUnit,
+    billingUnitUpdate,
 
     getBillingBillingView,
     billingBillingUpdate,
+
+    getUnitBillingTypeData,
+    addUnitBillingTypeData,
+    unitBillingTypeView,
+    unitBillingTypetUpdate,
+    unitBillingTypetDelete,
 
   };
 };

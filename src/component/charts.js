@@ -14,6 +14,7 @@ import { CircularProgress } from "@material-ui/core";
 import { forEach } from "lodash";
 
 const Charts = ({ isLoading, dataSearch }) => {
+  // Create the echarts instance
   // const [dataCheck, setDataCheck] = useState();
   // const [timestampCheck, setTimestampCheck] = useState();
 
@@ -44,7 +45,7 @@ const Charts = ({ isLoading, dataSearch }) => {
         const filteredData = item[0].data.filter((value) => value !== null);
 
         return {
-          data: filteredData.length > 0 ? filteredData : [0] ,
+          data: filteredData.length > 0 ? filteredData : [0],
           label: item[0]?.point,
           yAxisKey: "leftAxisId",
           valueFormatter: (value) =>

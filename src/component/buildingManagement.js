@@ -214,6 +214,14 @@ const useStyles = makeStyles((theme) => ({
     padding: 10,
     borderRadius: 10,
   },
+  marginBot: {
+    marginBottom: "10px !important",
+  },
+  marginBillBox: {
+    margin: 15,
+  },
+
+
 }));
 
 function descendingComparator(a, b, orderBy) {
@@ -587,6 +595,15 @@ const BuildingManagement = ({ t, login }) => {
   ];
   const [billDate, setBillDate] = useState("none");
   const [billId, setBillId] = useState();
+  const [bllingTypeList, setBllingTypeList] = useState([]);
+  const [bllingTypeSelect, setBllingTypeSelect] = useState("none");
+  const [bllingTypeSelectName, setBllingTypeSelectName] = useState("none");
+  const [bllingCost, setBllingCost] = useState("");
+  const [bllingOnPeak, setBllingOnPeak] = useState("");
+  const [bllingOffPeak, setBllingOffPeak] = useState("");
+  const [bllingServiceCharge, setBllingServiceCharge] = useState("");
+  const [bllingTypeId, setBllingTypeSelectId] = useState("none");
+
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -608,6 +625,7 @@ const BuildingManagement = ({ t, login }) => {
       getBuilding();
       getMeasurementTypeData();
       getCurrencyTypeData();
+      getBillingTypeData();
     }
     console.log("token", token, login);
   }, [token]);
@@ -678,6 +696,25 @@ const BuildingManagement = ({ t, login }) => {
         const dataPayload = response.data;
         // console.log("#Nan vvvvvv", dataPayload);
         setCurrencyTypeList(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  // get getBillingTypeData //
+  const getBillingTypeData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getBillingTypeData().then((response) => {
+        const dataPayload = response.data;
+        console.log("#Nan vvvvvv", dataPayload);
+        setBllingTypeList(dataPayload);
         setIsLoading(false);
       });
     } catch (error) {
@@ -1017,21 +1054,6 @@ const BuildingManagement = ({ t, login }) => {
     }
   };
 
-  const handleClickOpen = async (event, id) => {
-    setOpen(true);
-    getBuildingView(id);
-    setIsIdEdit(id);
-    getBuildingParamList(id);
-
-    const dataGeneralBuiling = await getGeneralExpensesBuildingData(
-      id,
-      measurementSelect
-    );
-
-    console.log("#Nan dataGeneralBuilding", dataGeneralBuiling, isIdEdit);
-    setRowsBuildingPriceEdit(dataGeneralBuiling);
-  };
-
   const getUpdateDataGeneralExpensesBuilding = async (id) => {
     const data = await getGeneralExpensesBuildingData(id, measurementSelect);
     setRowsBuildingPriceEdit(data);
@@ -1197,6 +1219,62 @@ const BuildingManagement = ({ t, login }) => {
     const updatedRows = [...rowsBuildingPriceEdit];
     updatedRows.push(newRow);
     setRowsBuildingPriceEdit(updatedRows);
+  };
+
+  const addBillingBillingUpdate = async (bllingId) => {
+    setIsLoading(true);
+    setOpen(false);
+    try {
+      const body = {
+        billingTypeID: bllingTypeSelect,
+        cost: bllingCost,
+        onPeak: bllingOnPeak,
+        offPeak: bllingOffPeak,
+        serviceCharge: bllingServiceCharge,
+      };
+      console.log("body====", body);
+      API.connectTokenAPI(token);
+      await API.billingBillingUpdate(bllingId, body).then((response) => {
+        const dataPayload = response.data;
+        console.log("dataPayload====Point", dataPayload, response);
+        if (response.status === 200) {
+          MySwal.fire({
+            icon: "success",
+            confirmButtonText: "ตกลง",
+            text: dataPayload,
+          }).then((result) => {
+            if (result.isConfirmed) {
+              getBillingBillingView(isIdEdit, measurementSelect);
+              setOpen(true);
+            } else if (result.isDismissed) {
+              setIsLoading(false);
+            }
+          });
+        }
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
   };
 
   const getGeneralExpensesBuildingData = async (buildingId, measurementId) => {
@@ -1402,6 +1480,51 @@ const BuildingManagement = ({ t, login }) => {
     setOpenView(false);
   };
 
+  const getBillingBillingView = async (buildingId, measurementSelect) => {
+    setIsLoading(true);
+    try {
+      API.connectTokenAPI(token);
+      await API.getBillingBillingView(buildingId, measurementSelect).then((response) => {
+        const dataPayload = response.data;
+        // console.log("#Nan dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("#Nan 9999=======item", item);
+            setBllingTypeSelectId(item.building_billing_id);
+            setBllingTypeSelect(item.billing_type_id);
+            setBllingTypeSelectName(item.billing_type);
+            setBllingOnPeak(item.on_peak);
+            setBllingOffPeak(item.off_peak);
+            setBllingServiceCharge(item.service_charge);
+            setBllingCost(item.cost);
+          });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleClickOpen = async (event, id) => {
+    setOpen(true);
+    getBuildingView(id);
+    setIsIdEdit(id);
+    getBuildingParamList(id);
+
+    getBillingBillingView(id, measurementSelect)
+
+    const dataGeneralBuiling = await getGeneralExpensesBuildingData(
+      id,
+      measurementSelect
+    );
+
+    console.log("#Nan dataGeneralBuilding", dataGeneralBuiling, isIdEdit);
+    setRowsBuildingPriceEdit(dataGeneralBuiling);
+  };
+
   const handleUploadFile = (e) => {
     // setFile(e.target.files[0]);
     // if (e.target.files.length > 0) {
@@ -1494,6 +1617,7 @@ const BuildingManagement = ({ t, login }) => {
   const handleBoxIcon = async (event, name, index) => {
     console.log("#Nan 888888888", name, index);
     setMeasurementSelect(name.id);
+    getBillingBillingView(isIdEdit, name.id);
     const dataGeneralBuilding = await getGeneralExpensesBuildingData(
       isIdEdit,
       name.id
@@ -1543,6 +1667,148 @@ const BuildingManagement = ({ t, login }) => {
         })}
       </Grid>
     );
+  };
+
+  const handleBillingType = (event) => {
+    setBllingTypeSelect(event.target.value);
+    setBllingTypeSelectName(
+      bllingTypeList.find((f) => f.id === event.target.value).billing_type
+    );
+  };
+
+  const handleBillCost = (event) => {
+    setBllingCost(event.target.value);
+  };  
+
+  const handleBllingonPeak = (event) => {
+    setBllingOnPeak(event.target.value);
+  };
+
+  const handleBllingoffPeak = (event) => {
+    setBllingOffPeak(event.target.value);
+  };
+
+  const handleBllingServiceCharge = (event) => {
+    setBllingServiceCharge(event.target.value);
+  };
+
+  const renderBillType = () => {
+    // console.log("bllingTypeSelectName", bllingTypeSelectName);
+    if (bllingTypeSelect !== "none") {
+      if (bllingTypeSelectName.includes("Normal (Flat Rate)")) {
+        return (
+          <Grid
+            item
+            md={12}
+            className={clsx(
+              classes.marginRow,
+              classes.flexRow,
+              classes.modalContent
+            )}
+          >
+            <Grid item>
+              <Typography variant="h5">{t("floor:unitPrice")}</Typography>
+            </Grid>
+
+            <Grid item md={5}>
+              <TextField
+                // id="input-with-icon-textfield"
+                size="small"
+                fullWidth
+                variant="outlined"
+                value={bllingCost}
+                onChange={handleBillCost}
+              />
+            </Grid>
+            {/* <Grid item md={3}>
+              <FormControl variant="outlined" size="small" fullWidth>
+                <Select
+                  labelId="demo-select-small-label"
+                  id="demo-select-small"
+                  value={bahtType.length > 0 ? bahtTypeSelect : "none"}
+                  placeholder={t("gateway:billingType")}
+                  onChange={handleBath}
+                  error={billingTypeSelect === "none" && !isValidate}
+                >
+                  <MenuItem value="none" disabled>
+                    {t("floor:baht")}
+                  </MenuItem>
+                  {bahtType.length > 0 &&
+                  bahtType.map((item) => {
+                    return (
+                      <MenuItem
+                        id={"selectbathType-" + item.id}
+                        key={item.id}
+                        value={item.id}
+                      >
+                        {item.name}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              </FormControl>
+            </Grid> */}
+            <Grid item>
+              <Typography variant="h5">{t("floor:kWh")}</Typography>
+            </Grid>
+          </Grid>
+        );
+      } else {
+        return (
+          <Grid item md={12} className={clsx(classes.marginRow)}>
+            <Grid item md={12} className={clsx(classes.marginRow, classes.flexRow, classes.justContentCenter)}>
+              <Typography variant="h5">{t('billType:priceHead')}</Typography>
+            </Grid>
+            <Grid
+              item
+              md={12}
+              className={clsx(classes.marginRow, classes.flexRow, classes.modalContent)}
+            >
+              <Grid item md={3}>
+                <Typography variant="h6" className={classes.marginBot}>{t('billType:onPeak')}</Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  fullWidth
+                  variant="outlined"
+                  value={bllingOnPeak}
+                  onChange={handleBllingonPeak}
+                />
+              </Grid>
+              <Grid item md={3}>
+                <Typography variant="h6" className={classes.marginBot}>{t('billType:offPeak')}</Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  fullWidth
+                  variant="outlined"
+                  value={bllingOffPeak}
+                  onChange={handleBllingoffPeak}
+                />
+              </Grid>
+              <Grid item md={3}>
+                <Typography variant="h6" className={classes.marginBot}>{t('billType:priceMount')}</Typography>
+                <TextField
+                  // id="input-with-icon-textfield"
+                  size="small"
+                  fullWidth
+                  variant="outlined"
+                  value={bllingServiceCharge}
+                  onChange={handleBllingServiceCharge}
+                />
+              </Grid>
+            </Grid>
+            <Grid item md={12} className={classes.marginBillBox}>
+             <Typography variant="h5">{t('billType:onPeak')}</Typography>
+             <Typography variant="h6">{t('billType:onPeakDate')}</Typography>
+             <Typography variant="h5">{t('billType:offPeak')}</Typography>
+             <Typography variant="h6">{t('billType:offPeakDate')}</Typography>
+             <Typography variant="h6">{t('billType:offPeakDateTwo')}</Typography>
+            </Grid>
+          </Grid>
+        );
+      }
+    }
   };
 
   return (
@@ -2387,89 +2653,35 @@ const BuildingManagement = ({ t, login }) => {
                     <FormControl variant="outlined" size="small" fullWidth>
                       <Select
                         labelId="demo-select-small-label"
-                        // id="demo-select-small"
-                        // value={
-                        //   billingType.length > 0 ? billingTypeSelect : "none"
-                        // }
-                        // placeholder={t("gateway:billingType")}
-                        // onChange={handleBillingType}
+                        id="demo-select-small"
+                        value={
+                          bllingTypeList.length > 0 ? bllingTypeSelect : "none"
+                        }
+                        placeholder={t("gateway:billingType")}
+                        onChange={handleBillingType}
                         // error={billingTypeSelect === "none" && !isValidate}
                       >
                         <MenuItem value="none" disabled>
                           {t("gateway:selectBillingType")}
                         </MenuItem>
-                        {/* {billingType.length > 0 &&
-                          billingType.map((item) => {
+                        {bllingTypeList.length > 0 &&
+                          bllingTypeList.map((item) => {
                             return (
                               <MenuItem
                                 id={"selectbillingType-" + item.id}
                                 key={item.id}
                                 value={item.id}
                               >
-                                {item.type}
+                                {item.billing_type}
                               </MenuItem>
                             );
-                          })} */}
+                          })}
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid
-                    item
-                    md={12}
-                    className={clsx(
-                      classes.marginRow,
-                      classes.flexRow,
-                      classes.modalContent
-                    )}
-                  >
-                    <Grid item>
-                      <Typography variant="h5">
-                        {t("floor:unitPrice")}
-                      </Typography>
-                    </Grid>
 
-                    <Grid item md={5}>
-                      <TextField
-                        // id="input-with-icon-textfield"
-                        size="small"
-                        fullWidth
-                        variant="outlined"
-                        // value={unitPrice}
-                        // onChange={handleUnitPrice}
-                      />
-                    </Grid>
-                    <Grid item md={3}>
-                      <FormControl variant="outlined" size="small" fullWidth>
-                        <Select
-                          labelId="demo-select-small-label"
-                          // id="demo-select-small"
-                          // value={bahtType.length > 0 ? bahtTypeSelect : "none"}
-                          // placeholder={t("gateway:billingType")}
-                          // onChange={handleBath}
-                          // error={billingTypeSelect === "none" && !isValidate}
-                        >
-                          <MenuItem value="none" disabled>
-                            {t("floor:baht")}
-                          </MenuItem>
-                          {/* {bahtType.length > 0 &&
-                            bahtType.map((item) => {
-                              return (
-                                <MenuItem
-                                  id={"selectbathType-" + item.id}
-                                  key={item.id}
-                                  value={item.id}
-                                >
-                                  {item.name}
-                                </MenuItem>
-                              );
-                            })} */}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item>
-                      <Typography variant="h5">{t("floor:kWh")}</Typography>
-                    </Grid>
-                  </Grid>
+                  {renderBillType()}
+
                   <Grid
                     item
                     md={12}
@@ -2477,9 +2689,9 @@ const BuildingManagement = ({ t, login }) => {
                   >
                     <Grid item md={3}>
                       <Button
-                        // onClick={(event) => {
-                        //   handleClickOpen(event, isIdEdit);
-                        // }}
+                        onClick={(event) => {
+                          handleClickOpen(event, isIdEdit);
+                        }}
                         className={clsx(classes.backGroundCancel)}
                         variant="outlined"
                       >
@@ -2490,7 +2702,7 @@ const BuildingManagement = ({ t, login }) => {
                       <Button
                         className={clsx(classes.backGroundConfrim)}
                         variant="outlined"
-                        // onClick={addUnitPoint}
+                        onClick={() => addBillingBillingUpdate(bllingTypeId)}
                       >
                         {t("gateway:btnSave")}
                       </Button>

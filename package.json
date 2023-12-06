@@ -24,6 +24,7 @@
     "clsx": "^2.0.0",
     "crypto-js": "^4.1.1",
     "dayjs": "^1.11.9",
+    "echarts": "^5.4.3",
     "i18next": "^23.2.11",
     "lodash": "^4.17.21",
     "material-ui-thai-datepickers": "^1.1.7",
