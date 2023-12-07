@@ -1,35 +1,39 @@
 import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
 import {
-  Grid,
-  Container,
-  Typography,
   Card,
   CardContent,
   Box,
-  Button,
 } from "@mui/material";
-import { LineChart } from "@mui/x-charts/LineChart";
+// import { LineChart } from "@mui/x-charts/LineChart";
 import { CircularProgress } from "@material-ui/core";
-import { forEach } from "lodash";
+
+import ReactECharts from "echarts-for-react";
+import * as echarts from "echarts/core";
+import {
+  TitleComponent,
+  ToolboxComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+} from "echarts/components";
+import { LineChart } from "echarts/charts";
+import { UniversalTransition } from "echarts/features";
+import { CanvasRenderer } from "echarts/renderers";
+import moment from "moment";
+
+// Use the required components and charts
+echarts.use([
+  TitleComponent,
+  ToolboxComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  LineChart,
+  CanvasRenderer,
+  UniversalTransition,
+]);
 
 const Charts = ({ isLoading, dataSearch }) => {
-  // Create the echarts instance
-  // const [dataCheck, setDataCheck] = useState();
-  // const [timestampCheck, setTimestampCheck] = useState();
-
-  // const uData = [null, 3000, 2000, 2780, 1890, 2390, 3490];
-  // const pData = [2400, 1398, 9800, 3908, 4800, 3800, 4300];
-  // const xLabels = [
-  //   "Page A",
-  //   "Page B",
-  //   "Page C",
-  //   "Page D",
-  //   "Page E",
-  //   "Page F",
-  //   "Page G",
-  // ];
-
   const handleDataSeries = (array) => {
     // return array.map((item) => {
     //   return {
@@ -44,12 +48,18 @@ const Charts = ({ isLoading, dataSearch }) => {
         // Remove null values from the data array
         const filteredData = item[0].data.filter((value) => value !== null);
 
+        // return {
+        //   data: filteredData.length > 0 ? filteredData : [0],
+        //   label: item[0]?.point,
+        //   yAxisKey: "leftAxisId",
+        //   valueFormatter: (value) =>
+        //     Number.isInteger(value) ? value : parseInt(value) ?? 0,
+        // };
         return {
+          name: item[0]?.point,
+          type: "line",
+          stack: "Total",
           data: filteredData.length > 0 ? filteredData : [0],
-          label: item[0]?.point,
-          yAxisKey: "leftAxisId",
-          valueFormatter: (value) =>
-            Number.isInteger(value) ? value : parseInt(value) ?? 0,
         };
       } else {
         return item;
@@ -72,10 +82,27 @@ const Charts = ({ isLoading, dataSearch }) => {
     // const timestamps = item[0]?.timestamp;
     //   if (timestamps) {
     uniqueTimestampArray.forEach((timestamp) => {
-      const [dd, mm, yyyy, HH, mins, ss] = timestamp.match(/\d+/g); // Extract date and time components
+      // console.log("#Nan ===========", timestamp);
+      // const [dd, mm, yyyy, HH, mins, ss] = timestamp.match(/\d+/g); // Extract date and time components
       // Create a Date object
-      const dateObject = new Date(yyyy, mm - 1, dd, HH, mins, ss); // Note: Months are 0-based in JavaScript
-      timestampArray.push(new Date(dateObject));
+      // const dateObject = new Date(yyyy, mm - 1, dd, HH, mins, ss); // Note: Months are 0-based in JavaScript
+
+      // console.log('#Nan ===========dateObject', dateObject);
+      // timestampArray.push(new Date(dateObject));
+
+      // const timePortion = timestamp.split(" ")[0]; // Assuming the format is "YYYY-MM-DD HH:mm:ss"
+      const timePortion = moment(timestamp).format("YYYY/MM/DD/HH:mm");
+
+      // Check if timestampArray already includes the time portion
+      if (!timestampArray.includes(timePortion)) {
+        timestampArray.push(timePortion);
+      }
+
+      // if (!timestampArray.includes(timestamp)) {
+      //   timestampArray.push(timestamp);
+      // }
+
+      // console.log("#Nan ===========timestampArray", timestampArray);
     });
     // }
     return timestampArray;
@@ -105,6 +132,70 @@ const Charts = ({ isLoading, dataSearch }) => {
 
   console.log("dataSeries===", dataSeries, dataSearch, dataXLabels);
 
+  const option = {
+    title: {
+      text: "Stacked Line",
+    },
+    tooltip: {
+      trigger: "axis",
+    },
+    legend: {
+      data: dataSeries,
+    },
+    grid: {
+      left: "3%",
+      right: "4%",
+      bottom: "3%",
+      containLabel: true,
+    },
+    toolbox: {
+      feature: {
+        saveAsImage: {},
+      },
+    },
+    xAxis: {
+      type: "category",
+      boundaryGap: false,
+      data: dataXLabels,
+    },
+    yAxis: {
+      type: "value",
+    },
+    series: dataSeries,
+    // [
+    // {
+    //   name: "Email",
+    //   type: "line",
+    //   stack: "Total",
+    //   data: [120, 132, 101, 134, 90, 230, 210],
+    // },
+    // {
+    //   name: "Union Ads",
+    //   type: "line",
+    //   stack: "Total",
+    //   data: [220, 182, 191, 234, 290, 330, 310],
+    // },
+    // {
+    //   name: "Video Ads",
+    //   type: "line",
+    //   stack: "Total",
+    //   data: [150, 232, 201, 154, 190, 330, 410],
+    // },
+    // {
+    //   name: "Direct",
+    //   type: "line",
+    //   stack: "Total",
+    //   data: [320, 332, 301, 334, 390, 330, 320],
+    // },
+    // {
+    //   name: "Search Engine",
+    //   type: "line",
+    //   stack: "Total",
+    //   data: [820, 932, 901, 934, 1290, 1330, 1320],
+    // },
+    // ],
+  };
+
   return (
     <>
       {isLoading ? (
@@ -117,13 +208,18 @@ const Charts = ({ isLoading, dataSearch }) => {
             <Card>
               <CardContent>
                 <div>
-                  <LineChart
+                  {/* <LineChart
                     width={830}
                     height={300}
                     series={dataSeries}
                     xAxis={[{ scaleType: "time", data: dataXLabels }]}
                     yAxis={[{ id: "leftAxisId" }, { id: "rightAxisId" }]}
                     rightAxis="rightAxisId"
+                  /> */}
+                  <ReactECharts
+                    echarts={echarts}
+                    option={option}
+                    style={{ height: "400px", width: "100%" }}
                   />
                 </div>
               </CardContent>
