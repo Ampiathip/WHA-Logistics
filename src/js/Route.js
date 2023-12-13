@@ -18,6 +18,7 @@ import Zone from "../pages/Zone";
 import ZoneDetail from "../pages/zoneDetail";
 import SystemOverview from "../pages/SystemOverview";
 import Invoice from "../pages/Invoice";
+import Unit from "../pages/Unit";
 
 const Routers = (props) => {
   return (
@@ -42,6 +43,7 @@ const Routers = (props) => {
         <Route path="/zone" element={<Zone />} />
         <Route path="/zoneDetail" element={<ZoneDetail />} />
         <Route path="/invoice" element={<Invoice />} />
+        <Route path="/unitView" element={<Unit />} />
         <Route element={PageNotFound} />
       </Routes>
     </>

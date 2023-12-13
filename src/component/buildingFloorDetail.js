@@ -388,7 +388,7 @@ const FloorManagement = ({ t, pageName, login }) => {
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [floorName, setFloorName] = useState("");
 
   const dispatch = useDispatch();

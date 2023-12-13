@@ -301,15 +301,15 @@ const SideBar = () => {
         </Link>
 
         <Link
-          // to={"/unit"}
+          to={"/unitView"}
           className={`${
-            sideBar == "unit" ? classes.activeIcon : classes.LinkColor
+            sideBar == "Unit" ? classes.activeIcon : classes.LinkColor
           }`}
         >
           <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
-                sideBar == "unit" ? classes.activeIcon : classes.LinkColor
+                sideBar == "Unit" ? classes.activeIcon : classes.LinkColor
               }`}
             >
               <HomeOutlinedIcon />

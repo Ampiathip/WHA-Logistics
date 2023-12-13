@@ -31,10 +31,10 @@ import {
   InputAdornment,
   Card,
   CardContent,
+  CircularProgress,
   FormControl,
   Select,
   MenuItem,
-  CircularProgress,
 } from "@material-ui/core";
 import clsx from "clsx";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -50,7 +50,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
-import _, { set, stubFalse } from "lodash";
+import _, { stubFalse } from "lodash";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import apis from "../js/apis";
@@ -61,12 +61,17 @@ import {
   loading,
   checkToken,
   logout,
-  addZone,
 } from "../js/actions";
 import IconDelete from "../images/icon/Delete.svg";
 import IconDocument from "../images/icon/Document.svg";
 import IconShow from "../images/icon/Show.svg";
 import IconSetting from "../images/icon/Setting.svg";
+import IconEdit from "../images/icon/Edit.svg";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import moment from "moment";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -109,7 +114,12 @@ const useStyles = makeStyles((theme) => ({
   },
   modalWidth: {
     width: "90% !important",
-    // height: "90% !important",
+    height: "90% !important",
+  },
+  modalEditWidth: {
+    width: "65% !important",
+    height: "90% !important",
+    maxWidth: "none !important",
   },
   modalContent: {
     justifyContent: "space-around",
@@ -178,6 +188,38 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "flex-end",
   },
+  displayContents: {
+    display: "contents",
+  },
+  borderBox: {
+    borderRight: "1px solid #8f8a8a",
+    padding: 10,
+  },
+  borderboxIcon: {
+    border: "1px solid #000",
+    // padding: 8,
+    borderRadius: 10,
+  },
+  marginBoxIcon: {
+    marginRight: 15,
+  },
+  backgroundMeasurement: {
+    backgroundColor: "#D9D9D9",
+  },
+  borderBottomMeasurement: {
+    borderBottom: "1px solid #000",
+  },
+  borderMeasurement: {
+    border: "1px solid #000",
+    padding: 10,
+    borderRadius: 10,
+  },
+  marginBot: {
+    marginBottom: "10px !important",
+  },
+  marginBillBox: {
+    margin: 15,
+  },
 }));
 
 function descendingComparator(a, b, orderBy) {
@@ -217,44 +259,44 @@ const headCells = [
     id: "name",
     numeric: false,
     disablePadding: true,
-    label: "Zone ID",
+    label: "Unit Number",
   },
   {
     id: "calories",
     numeric: false,
     disablePadding: false,
-    label: "Zone Name",
+    label: "Unit Name",
   },
   {
     id: "fat",
     numeric: false,
     disablePadding: false,
-    label: "Zone Type",
+    label: "Building Name",
   },
   {
     id: "carbs",
     numeric: false,
     disablePadding: false,
-    label: "Building Name",
+    label: "Billing Type",
   },
   // {
   //   id: "power",
-  //   numeric: true,
+  //   numeric: false,
   //   disablePadding: false,
   //   label: "No of Floor",
   // },
   // {
   //   id: "protein",
-  //   numeric: true,
+  //   numeric: false,
   //   disablePadding: false,
   //   label: "No of Floor",
   // },
-  {
-    id: "unit",
-    numeric: false,
-    disablePadding: false,
-    label: "No of Unit",
-  },
+  // {
+  //   id: "unit",
+  //   numeric: false,
+  //   disablePadding: false,
+  //   label: "No of Unit",
+  // },
   {
     id: "action",
     numeric: false,
@@ -382,39 +424,43 @@ EnhancedTableHead.propTypes = {
 //   numSelected: PropTypes.number.isRequired,
 // };
 
-const ZoneManagement = ({ t }) => {
+const UnitManagementView = ({ t, login }) => {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [buildingName, setBuildingName] = useState("none");
-  const [zoneName, setZoneName] = useState("");
-  const [zoneTypeSelect, setZoneTypeSelect] = useState("none");
-  const [building, setBuilding] = useState([]);
+  const [buildingName, setBuildingName] = useState("");
+  const [lattitude, setLattitude] = useState();
+  const [longtitude, setLongtitude] = useState();
+  const [area, setArea] = useState();
 
+  const dispatch = useDispatch();
   const classes = useStyles();
   const sideBar = useSelector((state) => state.sidebar);
   const token = useSelector((state) => state.token);
-  const user = useSelector((state) => state.user);
   const theme = useTheme();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   // modal //
   const [open, setOpen] = useState(false);
+  const [openModalEdit, setOpenModalEdit] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const fullScreenEdit = useMediaQuery(theme.breakpoints.down("xl"));
   const [openAdd, setOpenAdd] = useState(false);
-  const [zoneType, setZoneType] = useState([]);
-
+  const [file, setFile] = useState("");
   const [openView, setOpenView] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
-  const [rows, setRows] = useState([]);
   const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
+  const [rows, setRows] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   // const [sortedRows, setSortedRows] = useState(rows);
+  const [fitterSelectBuilding, setFitterSelectBuilding] = useState("none");
+  const [fitterSelectFloor, setFitterSelectFloor] = useState("none");
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -431,26 +477,19 @@ const ZoneManagement = ({ t }) => {
   };
 
   useEffect(() => {
-    if (user && user?.building) {
-      setBuilding(user?.building);
-    }
-  }, [user, building]);
-
-  useEffect(() => {
     dispatch(checkToken());
     if (!_.isEmpty(token)) {
-      getZoneData();
-      getZoneTypeData();
+      // getUnitUserList();
     }
+    console.log("token", token, login);
   }, [token]);
 
-  const getZoneData = async (id) => {
+  const getUnitUserList = async () => {
     setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.getZoneData(id).then((response) => {
+      await API.getUnitUserList().then((response) => {
         const dataPayload = response.data;
-        console.log("dataPayload", dataPayload);
         setRows(dataPayload);
         setIsLoading(false);
       });
@@ -476,198 +515,6 @@ const ZoneManagement = ({ t }) => {
       }
       setIsLoading(false);
     }
-  };
-
-  // get getZoneTypeData //
-  const getZoneTypeData = async () => {
-    setIsLoading(true);
-    try {
-      await API.connectTokenAPI(token);
-      await API.getZoneTypeData().then((response) => {
-        const dataPayload = response.data;
-        setZoneType(dataPayload);
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      setIsLoading(false);
-    }
-  };
-
-  const handleValidate = (type) => {
-    let isValidate = true;
-    if (type === "edit") {
-      if (_.isEmpty(zoneName) || !zoneTypeSelect || !buildingName) {
-        isValidate = false;
-      }
-      console.log("isValidateEdit", isValidate);
-      setIsValidate(isValidate);
-    } else {
-      if (_.isEmpty(zoneName) || !zoneTypeSelect || !buildingName) {
-        isValidate = false;
-      }
-      console.log("isValidate", isValidate);
-      setIsValidate(isValidate);
-    }
-    if (isValidate) {
-      if (type === "edit") {
-        zoneUpdate(isIdEdit);
-      } else {
-        zoneRegister();
-      }
-    }
-  };
-
-  const zoneRegister = async () => {
-    setIsLoading(true);
-    try {
-      const body = {
-        zone: zoneName,
-        type_id: zoneTypeSelect,
-        building_id: buildingName,
-      };
-      await API.connectTokenAPI(token);
-      await API.zoneRegister(body).then((response) => {
-        const dataPayload = response.data;
-        if (response.status === 200) {
-          MySwal.fire({
-            icon: "success",
-            confirmButtonText: "ตกลง",
-            text: dataPayload,
-          });
-          getZoneData();
-          handleCloseAdd();
-        }
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleCloseAdd();
-      setIsLoading(false);
-    }
-  };
-
-  const zoneUpdate = async (rowId) => {
-    setIsLoading(true);
-    try {
-      const body = {
-        zone: zoneName,
-        type_id: zoneTypeSelect,
-        building_id: buildingName,
-      };
-      await API.connectTokenAPI(token);
-      await API.zoneUpdate(rowId, body).then((response) => {
-        const dataPayload = response.data;
-        // console.log("dataPayload", dataPayload, response);
-        if (response.status === 200) {
-          MySwal.fire({
-            icon: "success",
-            confirmButtonText: "ตกลง",
-            text: dataPayload,
-          });
-          getZoneData();
-          handleClose();
-        }
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      handleClose();
-      setIsLoading(false);
-    }
-  };
-
-  const zoneView = async (id) => {
-    setIsLoading(true);
-    try {
-      await API.connectTokenAPI(token);
-      await API.getZoneView(id).then((response) => {
-        const dataPayload = response.data;
-        console.log("dataPayload", response, dataPayload);
-        dataPayload.length > 0 &&
-          dataPayload.map((item) => {
-            setZoneName(item.zone);
-            setBuildingName(
-              item.building_name
-                ? building.find((f) => f.name === item.building_name).id
-                : "none"
-            );
-            setZoneTypeSelect(
-              item.type ? zoneType.find((f) => f.type === item.type).id : "none"
-            );
-          });
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      setIsLoading(false);
-    }
-  };
-
-  const zoneDelete = async (rowId) => {
-    setIsLoading(true);
-    try {
-      await API.connectTokenAPI(token);
-      await API.zoneDelete(rowId).then((response) => {
-        const dataPayload = response.data;
-        if (response.status === 200) {
-          getZoneData();
-          MySwal.fire({
-            icon: "success",
-            confirmButtonText: "ตกลง",
-            text: dataPayload,
-          });
-        }
-        // console.log("dataPayload", response);
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      swalFire(response.data);
-      setIsLoading(false);
-    }
-  };
-
-  // delete Data //
-  const handleClickDeleteData = (event, id) => {
-    MySwal.fire({
-      icon: "warning",
-      confirmButtonText: "ตกลง",
-      cancelButtonText: "ยกเลิก",
-      showCancelButton: true,
-      text: "คุณต้องการลบข้อมูลหรือไม่",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        zoneDelete(id);
-      } else if (result.isDismissed) {
-        setIsLoading(false);
-      }
-    });
-  };
-
-  const handleClickOpen = (event, id) => {
-    setOpen(true);
-    setIsIdEdit(id);
-    zoneView(id);
-    setIsValidate(true);
-  };
-
-  const handleClickOpenView = (event, id) => {
-    setOpenView(true);
-    zoneView(id);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
   };
 
   const handleRequestSort = (event, property) => {
@@ -735,41 +582,44 @@ const ZoneManagement = ({ t }) => {
     [page, rowsPerPage, sortedRows]
   );
 
-  const handleZoneType = (event) => {
-    setZoneTypeSelect(event.target.value);
-  };
-
-  const handleBuildingName = (event) => {
-    setBuildingName(event.target.value);
-  };
-
-  const handleZoneName = (event) => {
-    setZoneName(event.target.value);
-  };
-
-  const handleClickOpenAdd = () => {
-    setOpenAdd(true);
-    setIsValidate(true);
-    setZoneName("");
-    setZoneTypeSelect("none");
-    setBuildingName("none");
-  };
-
-  const handleCloseAdd = () => {
-    setOpenAdd(false);
-  };
-
-  const openPageZoneDetail = (event, id) => {
-    // navigate(`/zoneDetail`);
-    navigate("/zoneDetail", { state: { id: id } });
-  };
-
-  const handleDetailZone = (event, row) => {
-    dispatch(addZone(row));
+  const handleOpenView = (event, id) => {
+    setOpenView(true);
+    // getBuildingView(id);
+    setIsIdEdit(id);
   };
 
   const handleCloseView = () => {
     setOpenView(false);
+  };
+
+  const getBillingBillingView = async (buildingId, measurementSelect) => {
+    setIsLoading(true);
+    try {
+      API.connectTokenAPI(token);
+      await API.getBillingBillingView(buildingId, measurementSelect).then(
+        (response) => {
+          const dataPayload = response.data;
+          // console.log("#Nan dataPayload", response, dataPayload);
+          dataPayload.length > 0 &&
+            dataPayload.map((item) => {
+              console.log("#Nan 9999=======item", item);
+              // setBllingTypeSelectId(item.building_billing_id);
+              // setBllingTypeSelect(item.billing_type_id);
+              // setBllingTypeSelectName(item.billing_type);
+              // setBllingOnPeak(item.on_peak);
+              // setBllingOffPeak(item.off_peak);
+              // setBllingServiceCharge(item.service_charge);
+              // setBllingCost(item.cost);
+            });
+          setIsLoading(false);
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
   };
 
   // Update visibleRows based on the searchQuery
@@ -785,14 +635,22 @@ const ZoneManagement = ({ t }) => {
       console.log("filteredRows", filteredRows);
       setRows(filteredRows);
     } else {
-      getZoneData();
+      // getUnitUserList();
     }
+    // const filteredAndSortedRows = rows
+    //   .filter((row) => row.name.toLowerCase().includes(query.toLowerCase()))
+    //   .sort((a, b) => {
+    //     // Use the current sorting configuration
+    //     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    //   });
+    // console.log("filteredRows", filteredRows);
   };
 
   const handleSearchChange = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
     // updateVisibleRows(query);
+
     if (query) {
       // Use the filter method to find items based on the search condition
       const filteredResults = rows.filter((item) =>
@@ -806,8 +664,17 @@ const ZoneManagement = ({ t }) => {
       console.log("filteredRows", filteredResults);
       setRows(filteredResults);
     } else {
-      getZoneData();
+      // getUnitUserList();
     }
+  };
+
+  // modal add //
+  const handleFitterSelectBuilding = (event) => {
+    setFitterSelectBuilding(event.target.value);
+  };
+
+  const handleFitterSelectFloor = (event) => {
+    setFitterSelectFloor(event.target.value);
   };
 
   return (
@@ -818,10 +685,6 @@ const ZoneManagement = ({ t }) => {
         </Box>
       ) : (
         <>
-          <Grid item className={classes.flexRow}>
-            <HomeOutlinedIcon className={classes.alignSelf} />
-            <Typography variant="h6"> / {sideBar}</Typography>
-          </Grid>
           <Grid
             item
             md={12}
@@ -831,7 +694,7 @@ const ZoneManagement = ({ t }) => {
               <TextField
                 // id="input-with-icon-textfield"
                 size="small"
-                placeholder={t("zone:search")}
+                placeholder={t("building:search")}
                 fullWidth
                 InputProps={{
                   startAdornment: (
@@ -845,16 +708,41 @@ const ZoneManagement = ({ t }) => {
                 onChange={handleSearchChange}
               />
             </Grid>
-            <Grid item md={2} className={clsx(classes.marginRow)}>
-              <Button
-                onClick={handleClickOpenAdd}
-                autoFocus
-                // fullWidth
-                className={clsx(classes.backGroundConfrim, classes.width)}
-                variant="outlined"
-              >
-                {t("zone:btnAdd")}
-              </Button>
+            <Grid item md={3} className={clsx(classes.marginRow)}>
+              <FormControl variant="outlined" size="small" fullWidth>
+                <Select
+                  labelId="demo-select-small-label"
+                  id="demo-select-small"
+                  value={fitterSelectBuilding}
+                  placeholder={t("floor:filterBuild")}
+                  onChange={handleFitterSelectBuilding}
+                >
+                  <MenuItem value="none" disabled>
+                    {t("floor:filterBuild")}
+                  </MenuItem>
+                  {/* <MenuItem value={10}>Ten</MenuItem>
+              <MenuItem value={20}>Twenty</MenuItem>
+              <MenuItem value={30}>Thirty</MenuItem> */}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item md={3} className={clsx(classes.marginRow)}>
+              <FormControl variant="outlined" size="small" fullWidth>
+                <Select
+                  labelId="demo-select-small-label"
+                  id="demo-select-small"
+                  value={fitterSelectFloor}
+                  placeholder={t("floor:filter")}
+                  onChange={handleFitterSelectFloor}
+                >
+                  <MenuItem value="none" disabled>
+                    {t("floor:filterFloor")}
+                  </MenuItem>
+                  {/* <MenuItem value={10}>Ten</MenuItem>
+              <MenuItem value={20}>Twenty</MenuItem>
+              <MenuItem value={30}>Thirty</MenuItem> */}
+                </Select>
+              </FormControl>
             </Grid>
           </Grid>
 
@@ -871,7 +759,7 @@ const ZoneManagement = ({ t }) => {
                     numSelected={selected.length}
                     order={order}
                     orderBy={orderBy}
-                    //   onSelectAllClick={handleSelectAllClick}
+                    onSelectAllClick={handleSelectAllClick}
                     onRequestSort={handleRequestSort}
                     rowCount={rows.length}
                     classes={classes}
@@ -888,7 +776,7 @@ const ZoneManagement = ({ t }) => {
                           role="checkbox"
                           // aria-checked={isItemSelected}
                           tabIndex={-1}
-                          key={row.id}
+                          key={row.name}
                           // selected={isItemSelected}
                           sx={{ cursor: "pointer" }}
                         >
@@ -915,19 +803,31 @@ const ZoneManagement = ({ t }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.zone}
+                            {row.name}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.type}
+                            {row.latitude}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.building_name}
+                            {row.longitude}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.no_of_floor}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.fontSixeCell}
+                          >
+                            {row.no_of_floor}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -940,49 +840,16 @@ const ZoneManagement = ({ t }) => {
                             className={classes.fontSixeCell}
                           >
                             <img
-                              src={IconDocument}
-                              alt="IconDocument"
-                              onClick={(event) => {
-                                openPageZoneDetail(event, row.id);
-                                handleDetailZone(event, row);
-                              }}
-                            />
-
-                            <img
                               src={IconShow}
                               alt="IconShow"
-                              onClick={(event) => {
-                                handleClickOpenView(event, row.id);
-                              }}
-                            />
-
-                            <img
-                              src={IconSetting}
-                              alt="IconSetting"
-                              onClick={(event) => {
-                                handleClickOpen(event, row.id);
-                              }}
-                            />
-                            <img
-                              src={IconDelete}
-                              alt="IconDelete"
-                              onClick={(event) => {
-                                handleClickDeleteData(event, row.id);
-                              }}
+                              // onClick={(event) => {
+                              //   handleOpenView(event, row.id);
+                              // }}
                             />
                           </TableCell>
                         </TableRow>
                       );
                     })}
-                    {emptyRows > 0 && (
-                      <TableRow
-                        style={{
-                          height: (dense ? 33 : 53) * emptyRows,
-                        }}
-                      >
-                        <TableCell colSpan={6} />
-                      </TableRow>
-                    )}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -996,278 +863,9 @@ const ZoneManagement = ({ t }) => {
                 onRowsPerPageChange={handleChangeRowsPerPage}
               />
             </Paper>
-            {/* <FormControlLabel
-        control={<Switch checked={dense} onChange={handleChangeDense} />}
-        label="Dense padding"
-      /> */}
           </Box>
         </>
       )}
-
-      {/* Modal Edit*/}
-      <Dialog
-        fullScreen={fullScreen}
-        // className={classes.modalWidth}
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="responsive-dialog-title"
-        classes={{
-          paper: classes.modalWidth,
-        }}
-      >
-        <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("zone:editZone")}</Typography>
-        </DialogTitle>
-        <DialogContent>
-          {isLoading ? (
-            <Box mt={4} width={1} display="flex" justifyContent="center">
-              <CircularProgress color="primary" />
-            </Box>
-          ) : (
-            <>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="pb-3">
-                  {t("zone:zoneName")}
-                </Typography>
-                <TextField
-                  id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("building:buildingName")}
-                  fullWidth
-                  variant="outlined"
-                  value={zoneName}
-                  onChange={handleZoneName}
-                  error={_.isEmpty(zoneName) && !isValidate}
-                />
-                {_.isEmpty(zoneName) && !isValidate && (
-                  <Validate errorText={"กรุณาระบุข้อมูล"} />
-                )}
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("zone:zoneType")}
-                </Typography>
-                <FormControl variant="outlined" size="small" fullWidth>
-                  <Select
-                    labelId="demo-select-small-label"
-                    id="demo-select-small"
-                    value={zoneType.length > 0 ? zoneTypeSelect : "none"}
-                    placeholder={t("gateway:selectCommunication")}
-                    onChange={handleZoneType}
-                    error={zoneTypeSelect === "none" && !isValidate}
-                  >
-                    <MenuItem value="none" disabled>
-                      {t("zone:selectZoneType")}
-                    </MenuItem>
-                    {zoneType.length > 0 &&
-                      zoneType.map((item) => {
-                        return (
-                          <MenuItem
-                            id={"selectZoneType-" + item.id}
-                            key={item.id}
-                            value={item.id}
-                          >
-                            {item.type}
-                          </MenuItem>
-                        );
-                      })}
-                  </Select>
-                </FormControl>
-                {zoneTypeSelect === "none" && !isValidate && (
-                  <Validate errorText={"กรุณาระบุข้อมูล"} />
-                )}
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("building:buildingName")}
-                </Typography>
-                <FormControl variant="outlined" size="small" fullWidth>
-                  <Select
-                    labelId="demo-select-small-label"
-                    id="demo-select-small"
-                    value={building.length > 0 ? buildingName : "none"}
-                    placeholder={t("gateway:selectCommunication")}
-                    onChange={handleBuildingName}
-                    error={buildingName === "none" && !isValidate}
-                  >
-                    <MenuItem value="none" disabled>
-                      {t("building:buildingName")}
-                    </MenuItem>
-                    {building.length > 0 &&
-                      building.map((item) => {
-                        return (
-                          <MenuItem
-                            id={"buildingNameSelect-" + item.id}
-                            key={item.id}
-                            value={item.id}
-                          >
-                            {item.name}
-                          </MenuItem>
-                        );
-                      })}
-                  </Select>
-                </FormControl>
-                {buildingName === "none" && !isValidate && (
-                  <Validate errorText={"กรุณาระบุข้อมูล"} />
-                )}
-              </Grid>
-              <Grid
-                item
-                md={12}
-                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-              >
-                <Grid item md={3}>
-                  <Button
-                    onClick={handleClose}
-                    className={clsx(classes.backGroundCancel)}
-                    variant="outlined"
-                  >
-                    {t("building:btnCancel")}
-                  </Button>
-                </Grid>
-                <Grid item md={3} className={classes.boxMargin}>
-                  <Button
-                    className={clsx(classes.backGroundConfrim)}
-                    variant="outlined"
-                    onClick={() => handleValidate("edit")}
-                  >
-                    {t("building:btnSave")}
-                  </Button>
-                </Grid>
-              </Grid>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Add */}
-
-      <Dialog
-        fullScreen={fullScreen}
-        // className={classes.modalWidth}
-        open={openAdd}
-        onClose={handleCloseAdd}
-        aria-labelledby="responsive-dialog-title"
-        classes={{
-          paper: classes.modalWidth,
-        }}
-      >
-        <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("zone:add")}</Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="pb-3">
-              {t("zone:zoneName")}
-            </Typography>
-            <TextField
-              // id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:buildingName")}
-              fullWidth
-              variant="outlined"
-              value={zoneName}
-              onChange={handleZoneName}
-              error={_.isEmpty(zoneName) && !isValidate}
-            />
-            {_.isEmpty(zoneName) && !isValidate && (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("zone:zoneType")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={zoneType.length > 0 ? zoneTypeSelect : "none"}
-                placeholder={t("gateway:selectCommunication")}
-                onChange={handleZoneType}
-                error={zoneTypeSelect === "none" && !isValidate}
-              >
-                <MenuItem value="none" disabled>
-                  {t("zone:selectZoneType")}
-                </MenuItem>
-                {zoneType.length > 0 &&
-                  zoneType.map((item) => {
-                    return (
-                      <MenuItem
-                        id={"selectZoneType-" + item.id}
-                        key={item.id}
-                        value={item.id}
-                      >
-                        {item.type}
-                      </MenuItem>
-                    );
-                  })}
-              </Select>
-            </FormControl>
-            {zoneTypeSelect === "none" && !isValidate && (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:buildingName")}
-            </Typography>
-            <FormControl variant="outlined" size="small" fullWidth>
-              <Select
-                labelId="demo-select-small-label"
-                id="demo-select-small"
-                value={building.length > 0 ? buildingName : "none"}
-                placeholder={t("gateway:selectCommunication")}
-                onChange={handleBuildingName}
-                error={buildingName === "none" && !isValidate}
-              >
-                <MenuItem value="none" disabled>
-                  {t("building:buildingName")}
-                </MenuItem>
-                {building.length > 0 &&
-                  building.map((item) => {
-                    return (
-                      <MenuItem
-                        id={"buildingNameSelect-" + item.id}
-                        key={item.id}
-                        value={item.id}
-                      >
-                        {item.name}
-                      </MenuItem>
-                    );
-                  })}
-              </Select>
-            </FormControl>
-            {buildingName === "none" && !isValidate && (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            )}
-          </Grid>
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-          >
-            <Grid item md={3}>
-              <Button
-                onClick={handleCloseAdd}
-                className={clsx(classes.backGroundCancel)}
-                variant="outlined"
-              >
-                {t("building:btnCancel")}
-              </Button>
-            </Grid>
-            <Grid item md={3} className={classes.boxMargin}>
-              <Button
-                className={clsx(classes.backGroundConfrim)}
-                variant="outlined"
-                onClick={handleValidate}
-              >
-                {t("building:btnAddModal")}
-              </Button>
-            </Grid>
-          </Grid>
-        </DialogContent>
-      </Dialog>
 
       {/* Modal View */}
       <Dialog
@@ -1288,7 +886,7 @@ const ZoneManagement = ({ t }) => {
             classes.borderBottom
           )}
         >
-          <Typography variant="h3">{zoneName}</Typography>
+          <Typography variant="h3">{buildingName}</Typography>
           <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
         </DialogTitle>
         <DialogContent>
@@ -1298,20 +896,39 @@ const ZoneManagement = ({ t }) => {
             </Box>
           ) : (
             <>
-              <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5"> {t("zone:zoneName")}</Typography>
-                <Grid item className="mt-2">
-                  <Typography variant="body1">
-                    {zoneName ? zoneName : "-"}
-                  </Typography>
+              <Grid
+                item
+                md={12}
+                className={clsx(
+                  classes.alignItem,
+                  classes.marginRow,
+                  classes.flexRow
+                )}
+              >
+                <Grid item md={3} className={classes.borderImg}>
+                  <img
+                    src={imagePreviewUrl}
+                    alt="img-test"
+                    className={classes.imgWidth}
+                  />
+                </Grid>
+                <Grid item md={7}>
+                  <Grid
+                    item
+                    className={clsx(classes.boxMargin, classes.marginRow)}
+                  >
+                    <Typography variant="h5">
+                      {buildingName ? buildingName : "-"}
+                    </Typography>
+                  </Grid>
                 </Grid>
               </Grid>
 
               <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5"> {t("zone:zoneType")}</Typography>
+                <Typography variant="h5"> {t("building:lattitude")}</Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
-                    {zoneTypeSelect ? zoneTypeSelect : "-"}
+                    {lattitude ? lattitude : "-"}
                   </Typography>
                 </Grid>
               </Grid>
@@ -1319,12 +936,19 @@ const ZoneManagement = ({ t }) => {
               <Grid item md={12} className={clsx(classes.marginRow)}>
                 <Typography variant="h5">
                   {" "}
-                  {t("building:buildingName")}
+                  {t("building:longtitude")}
                 </Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
-                    {buildingName ? buildingName : "-"}
+                    {longtitude ? longtitude : "-"}
                   </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("building:area")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">{area ? area : "-"}</Typography>
                 </Grid>
               </Grid>
             </>
@@ -1351,4 +975,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ZoneManagement);
+export default connect(mapStateToProps, mapDispatchToProps)(UnitManagementView);

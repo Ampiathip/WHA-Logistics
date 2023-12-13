@@ -562,6 +562,11 @@ const getAPI = () => {
     return tokenAPI.delete(`/api/unit-billing-type/remove/${id}`);
   };
 
+  /* ============== Unit User List API ================ */
+  const getUnitUserList = (id = 0) => {
+    return tokenAPI.get(`/api/unit-user/list`);
+  };
+
   return {
     connectTokenAPI,
 
@@ -699,6 +704,8 @@ const getAPI = () => {
     unitBillingTypetUpdate,
     unitBillingTypetDelete,
 
+    getUnitUserList,
+    
   };
 };
 export default {

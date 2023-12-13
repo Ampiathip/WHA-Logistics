@@ -531,7 +531,7 @@ const InvoiceManagement = ({ t, login }) => {
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [buildingName, setBuildingName] = useState("");
   const [lattitude, setLattitude] = useState();
   const [longtitude, setLongtitude] = useState();

@@ -412,7 +412,7 @@ const DeviceManagement = ({ t, login }) => {
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [deviceId, setDeviceId] = useState("");
   const [model, setModel] = useState("");
   const [installation, setInstallation] = useState(null);

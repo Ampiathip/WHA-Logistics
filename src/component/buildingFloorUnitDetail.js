@@ -114,7 +114,7 @@ const useStyles = makeStyles((theme) => ({
     height: "90% !important",
   },
   modalEditWidth: {
-    width: "80% !important",
+    width: "65% !important",
     height: "90% !important",
     maxWidth: "none !important",
   },
@@ -439,7 +439,7 @@ const UnitManagement = ({
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [floorName, setFloorName] = useState("");
   const [descriptionUnit, setDescriptionUnit] = useState("");
   const [price, setPrice] = useState("");

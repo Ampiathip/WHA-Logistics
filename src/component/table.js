@@ -143,6 +143,7 @@ function EnhancedTableHead(props) {
     numSelected,
     rowCount,
     onRequestSort,
+    poinName,
   } = props;
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
@@ -162,14 +163,14 @@ function EnhancedTableHead(props) {
             }}
           />
         </TableCell> */}
-        {headCells.map((headCell) => (
+        {poinName.map((headCell) => (
           <TableCell
             key={headCell.id}
             align={"center"}
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
           >
-            {headCell.label}
+            {headCell.pointName}
             {/* <TableSortLabel
               active={orderBy === headCell.id}
               direction={orderBy === headCell.id ? order : "asc"}
@@ -262,7 +263,7 @@ export default function EnhancedTable({ isLoading, dataSearch }) {
   // const [selected, setSelected] = useState([]);
   // const [page, setPage] = useState(0);
   // const [dense, setDense] = useState(false);
-  // const [rowsPerPage, setRowsPerPage] = useState(5);
+  // const [rowsPerPage, setRowsPerPage] = useState(10);
   // const [rowsData, setRowsData] = useState([]);
   // const [rowsTimestamp, setRowsTimestamp] = useState([]);
   const classes = useStyles();
@@ -361,6 +362,19 @@ export default function EnhancedTable({ isLoading, dataSearch }) {
     }
   };
 
+  const renderPoinName = (name) => {
+    if (name.length > 0) {
+      return name.map((item) => {
+        return (
+          <div key={item.id} id={item.id}>
+            <TableCell align={"center"}>{item.timestamp}</TableCell>
+            <TableCell align={"center"}> {item.pointName}</TableCell>
+          </div>
+        );
+      });
+    }
+  };
+
   return (
     <>
       {isLoading ? (
@@ -378,11 +392,14 @@ export default function EnhancedTable({ isLoading, dataSearch }) {
                   const labelId = `enhanced-table-checkbox-${index}`;
                   let timestamp = [];
                   let dataSearch = [];
+                  let poinName = [];
+
+                  console.log("# row", row);
 
                   return (
                     row.length > 0 &&
                     row.map((item, rowIndex) => {
-                      // console.log("item===", item);
+                      console.log("item===", item, rowIndex, labelId);
                       item.timestamp.length > 0 &&
                         item.timestamp.map((data) => {
                           timestamp.push(data);
@@ -391,6 +408,16 @@ export default function EnhancedTable({ isLoading, dataSearch }) {
                         item.data.map((dataItem) => {
                           dataSearch.push(dataItem);
                         });
+                      poinName.push(
+                        {
+                          id: labelId,
+                          pointName: "Timestamp"+index ,
+                        },
+                        {
+                          id: labelId,
+                          pointName: item.point,
+                        }
+                      );
 
                       return (
                         <Table>
@@ -402,7 +429,16 @@ export default function EnhancedTable({ isLoading, dataSearch }) {
                             // onRequestSort={handleRequestSort}
                             // rowCount={rows.length}
                             classes={classes}
+                            poinName={poinName}
                           />
+                          {/* <TableHead>
+                            <TableRow>
+                              <TableCell align={"center"}>
+                                <Typography variant="h5">Timestamp</Typography>
+                              </TableCell>
+                              {renderPoinName(poinName)}
+                            </TableRow>
+                          </TableHead> */}
                           <TableBody>
                             <TableRow
                               hover

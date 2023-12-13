@@ -165,6 +165,8 @@ let en = {
       "kWh": "/kWh",
       "descriptionUnit": "Description",
       "addRecord": "+ Add Record",
+      "filterBuild": "Select Building",
+      "filterFloor": "Select Floor",
     },
     gateway: {
       "search": "Search by Gateway name",

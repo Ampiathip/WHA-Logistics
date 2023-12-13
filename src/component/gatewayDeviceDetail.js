@@ -455,7 +455,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [gatewayName, setGatewayName] = useState("");
   const [deviceBrand, setDeviceBrand] = useState("");
   const [deviceName, setDeviceName] = useState("");
@@ -525,20 +525,20 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
   const [rowsPointEdit, setRowsPointEdit] = useState([]);
 
   const columnsPointEdit = [
-    { id: "name", label: "Device ID", minWidth: 120 },
+    // { id: "name", label: "Device ID", minWidth: 120 },
     { id: "code", label: "Point name" },
     {
       id: "",
       label: "",
       align: "center",
     },
-    {
-      id: "population",
-      label: "Topic",
-      // minWidth: 170,
-      align: "center",
-      // format: (value) => value.toLocaleString('en-US'),
-    },
+    // {
+    //   id: "population",
+    //   label: "Topic",
+    //   minWidth: 170,
+    //   align: "center",
+    //   format: (value) => value.toLocaleString('en-US'),
+    // },
     // {
     //   id: "size",
     //   label: "Data",
@@ -1962,7 +1962,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                     tabIndex={-1}
                                     key={row.id}
                                   >
-                                    <TableCell
+                                    {/* <TableCell
                                       component="th"
                                       id={row.id}
                                       scope="row"
@@ -1979,21 +1979,12 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                             row.id ? row.id : deviceIdPoint
                                           }
                                           variant="outlined"
-                                          // disabled={
-                                          //   !disabledFild &&
-                                          //   editPoint === row.id
-                                          //     ? false
-                                          //     : true
-                                          // }
                                           disabled={true}
                                           size="small"
                                           fullWidth
-                                          // onChange={(e) =>
-                                          //   handleDeviceId(e, row, index)
-                                          // }
                                         />
                                       </Grid>
-                                    </TableCell>
+                                    </TableCell> */}
                                     <TableCell
                                       component="th"
                                       id={row.name}
@@ -2050,7 +2041,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                         </Typography>
                                       </Grid>
                                     </TableCell>
-                                    <TableCell
+                                    {/* <TableCell
                                       component="th"
                                       id={row.topic}
                                       scope="row"
@@ -2065,7 +2056,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                           // classes.flexRow
                                         )}
                                       >
-                                        {/* <Grid item>
+                                        <Grid item>
                                           <Typography
                                             style={{
                                               fontSize: 14,
@@ -2074,7 +2065,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                           >
                                             {deviceName && deviceName + "/ "}
                                           </Typography>
-                                        </Grid> */}
+                                        </Grid>
                                         <Grid item>
                                           <TextField
                                             value={
@@ -2099,7 +2090,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                                           />
                                         </Grid>
                                       </Grid>
-                                    </TableCell>
+                                    </TableCell> */}
                                     {/* <TableCell
                                       component="th"
                                       id={row.name}
