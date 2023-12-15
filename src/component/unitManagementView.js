@@ -279,12 +279,12 @@ const headCells = [
     disablePadding: false,
     label: "Billing Type",
   },
-  // {
-  //   id: "power",
-  //   numeric: false,
-  //   disablePadding: false,
-  //   label: "No of Floor",
-  // },
+  {
+    id: "power",
+    numeric: false,
+    disablePadding: false,
+    label: "Floor Name",
+  },
   // {
   //   id: "protein",
   //   numeric: false,
@@ -431,10 +431,6 @@ const UnitManagementView = ({ t, login }) => {
   const [page, setPage] = useState(0);
   const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [buildingName, setBuildingName] = useState("");
-  const [lattitude, setLattitude] = useState();
-  const [longtitude, setLongtitude] = useState();
-  const [area, setArea] = useState();
 
   const dispatch = useDispatch();
   const classes = useStyles();
@@ -443,16 +439,10 @@ const UnitManagementView = ({ t, login }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   // modal //
-  const [open, setOpen] = useState(false);
-  const [openModalEdit, setOpenModalEdit] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
-  const fullScreenEdit = useMediaQuery(theme.breakpoints.down("xl"));
-  const [openAdd, setOpenAdd] = useState(false);
-  const [file, setFile] = useState("");
   const [openView, setOpenView] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
@@ -461,6 +451,16 @@ const UnitManagementView = ({ t, login }) => {
   // const [sortedRows, setSortedRows] = useState(rows);
   const [fitterSelectBuilding, setFitterSelectBuilding] = useState("none");
   const [fitterSelectFloor, setFitterSelectFloor] = useState("none");
+  const [unitNumber, setUnitNumber] = useState("");
+  const [unitName, setUnitName] = useState("");
+  const [unitTypeSelect, setUnitTypeSelect] = useState("none");
+  const [description, setDescription] = useState("");
+  const [building, setBuilding] = useState("");
+  const [zone, setZone] = useState("");
+  const [unitType, setUnitType] = useState([]);
+  const [floorName, setFloorName] = useState("");
+  const [buildingList, setBuildingList] = useState([]);
+  const [floorList, setFloorList] = useState([]);
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -479,7 +479,15 @@ const UnitManagementView = ({ t, login }) => {
   useEffect(() => {
     dispatch(checkToken());
     if (!_.isEmpty(token)) {
-      // getUnitUserList();
+      getUnitTypeList();
+      getBuilding();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token)) {
+      getUnitUserList();
     }
     console.log("token", token, login);
   }, [token]);
@@ -513,6 +521,58 @@ const UnitManagementView = ({ t, login }) => {
           }
         });
       }
+      setIsLoading(false);
+    }
+  };
+
+  // get Unit Type //
+  const getUnitTypeList = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getUnitTypeList().then((response) => {
+        const dataPayload = response.data;
+        setUnitType(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const getBuilding = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getBuildingData().then((response) => {
+        const dataPayload = response.data;
+        setBuildingList(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const getFloorList = async (id) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getFloorList(id).then((response) => {
+        const dataPayload = response.data;
+        setFloorList(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
       setIsLoading(false);
     }
   };
@@ -571,10 +631,22 @@ const UnitManagementView = ({ t, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const sortedRows = useMemo(
-    () => stableSort(rows, getComparator(order, orderBy)),
-    [order, orderBy, rows]
-  );
+  // const sortedRows = useMemo(
+  //   () => stableSort(rows, getComparator(order, orderBy)),
+  //   [order, orderBy, rows]
+  // );
+
+  const sortedRows = useMemo(() => {
+    if (fitterSelectBuilding !== "none" && fitterSelectFloor !== "none") {
+      const sorted = stableSort(rows, getComparator(order, orderBy));
+      return sorted.filter((item) => item.building_id === fitterSelectBuilding && item.floor_id === fitterSelectFloor);
+    } else if (fitterSelectBuilding !== "none") {
+      const sorted = stableSort(rows, getComparator(order, orderBy));
+      return sorted.filter((item) => item.building_id === fitterSelectBuilding);
+    } else {
+      return stableSort(rows, getComparator(order, orderBy));
+    }
+  }, [order, orderBy, rows, fitterSelectBuilding, fitterSelectFloor]);
 
   const visibleRows = useMemo(
     () =>
@@ -582,9 +654,14 @@ const UnitManagementView = ({ t, login }) => {
     [page, rowsPerPage, sortedRows]
   );
 
+  // const visibleRows = useMemo(() => {
+  //   return sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  //     .filter((item) => item.building_id === fitterSelectBuilding);
+  // }, [page, rowsPerPage, sortedRows, fitterSelectBuilding]);
+
   const handleOpenView = (event, id) => {
     setOpenView(true);
-    // getBuildingView(id);
+    getUnitView(id);
     setIsIdEdit(id);
   };
 
@@ -592,28 +669,29 @@ const UnitManagementView = ({ t, login }) => {
     setOpenView(false);
   };
 
-  const getBillingBillingView = async (buildingId, measurementSelect) => {
+  const getUnitView = async (id) => {
     setIsLoading(true);
     try {
-      API.connectTokenAPI(token);
-      await API.getBillingBillingView(buildingId, measurementSelect).then(
-        (response) => {
-          const dataPayload = response.data;
-          // console.log("#Nan dataPayload", response, dataPayload);
-          dataPayload.length > 0 &&
-            dataPayload.map((item) => {
-              console.log("#Nan 9999=======item", item);
-              // setBllingTypeSelectId(item.building_billing_id);
-              // setBllingTypeSelect(item.billing_type_id);
-              // setBllingTypeSelectName(item.billing_type);
-              // setBllingOnPeak(item.on_peak);
-              // setBllingOffPeak(item.off_peak);
-              // setBllingServiceCharge(item.service_charge);
-              // setBllingCost(item.cost);
-            });
-          setIsLoading(false);
-        }
-      );
+      await API.connectTokenAPI(token);
+      await API.getUnitView(id).then((response) => {
+        const dataPayload = response.data;
+        // console.log("dataPayload", response, dataPayload);
+        dataPayload.length > 0 &&
+          dataPayload.map((item) => {
+            console.log("==========View", item);
+            setUnitName(item.unit);
+            setUnitNumber(item.id);
+            setDescription(item.description);
+            setUnitTypeSelect(
+              item.type_id ? unitType.find((f) => f.id === item.type_id).id : ""
+            );
+            setImagePreviewUrl(item.file);
+            setBuilding(item.name);
+            setZone(item.zone);
+            setFloorName(item.floor);
+          });
+        setIsLoading(false);
+      });
     } catch (error) {
       console.log(error);
       const response = error.response;
@@ -635,7 +713,7 @@ const UnitManagementView = ({ t, login }) => {
       console.log("filteredRows", filteredRows);
       setRows(filteredRows);
     } else {
-      // getUnitUserList();
+      getUnitUserList();
     }
     // const filteredAndSortedRows = rows
     //   .filter((row) => row.name.toLowerCase().includes(query.toLowerCase()))
@@ -664,13 +742,15 @@ const UnitManagementView = ({ t, login }) => {
       console.log("filteredRows", filteredResults);
       setRows(filteredResults);
     } else {
-      // getUnitUserList();
+      getUnitUserList();
     }
   };
 
-  // modal add //
   const handleFitterSelectBuilding = (event) => {
-    setFitterSelectBuilding(event.target.value);
+    const buildingId = event.target.value;
+    setFitterSelectBuilding(buildingId);
+    getFloorList(buildingId);
+    setFitterSelectFloor("none");
   };
 
   const handleFitterSelectFloor = (event) => {
@@ -720,9 +800,18 @@ const UnitManagementView = ({ t, login }) => {
                   <MenuItem value="none" disabled>
                     {t("floor:filterBuild")}
                   </MenuItem>
-                  {/* <MenuItem value={10}>Ten</MenuItem>
-              <MenuItem value={20}>Twenty</MenuItem>
-              <MenuItem value={30}>Thirty</MenuItem> */}
+                  {buildingList.length > 0 &&
+                    buildingList.map((item) => {
+                      return (
+                        <MenuItem
+                          id={"selectbillingType-" + item.id}
+                          key={item.id}
+                          value={item.id}
+                        >
+                          {item.name}
+                        </MenuItem>
+                      );
+                    })}
                 </Select>
               </FormControl>
             </Grid>
@@ -738,9 +827,18 @@ const UnitManagementView = ({ t, login }) => {
                   <MenuItem value="none" disabled>
                     {t("floor:filterFloor")}
                   </MenuItem>
-                  {/* <MenuItem value={10}>Ten</MenuItem>
-              <MenuItem value={20}>Twenty</MenuItem>
-              <MenuItem value={30}>Thirty</MenuItem> */}
+                  {floorList.length > 0 &&
+                    floorList.map((item) => {
+                      return (
+                        <MenuItem
+                          id={"selectbillingType-" + item.id}
+                          key={item.id}
+                          value={item.id}
+                        >
+                          {item.floor}
+                        </MenuItem>
+                      );
+                    })}
                 </Select>
               </FormControl>
             </Grid>
@@ -803,37 +901,25 @@ const UnitManagementView = ({ t, login }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.name}
+                            {row.unit}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.latitude}
+                            {row.building_name}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.longitude}
+                            {row.type}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_floor}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.no_of_floor}
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            className={classes.fontSixeCell}
-                          >
-                            {row.no_of_unit}
+                            {row.floor_name}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -842,9 +928,9 @@ const UnitManagementView = ({ t, login }) => {
                             <img
                               src={IconShow}
                               alt="IconShow"
-                              // onClick={(event) => {
-                              //   handleOpenView(event, row.id);
-                              // }}
+                              onClick={(event) => {
+                                handleOpenView(event, row.id);
+                              }}
                             />
                           </TableCell>
                         </TableRow>
@@ -886,7 +972,7 @@ const UnitManagementView = ({ t, login }) => {
             classes.borderBottom
           )}
         >
-          <Typography variant="h3">{buildingName}</Typography>
+          <Typography variant="h3">{unitName}</Typography>
           <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
         </DialogTitle>
         <DialogContent>
@@ -918,37 +1004,61 @@ const UnitManagementView = ({ t, login }) => {
                     className={clsx(classes.boxMargin, classes.marginRow)}
                   >
                     <Typography variant="h5">
-                      {buildingName ? buildingName : "-"}
+                      {unitName ? unitName : "-"}
                     </Typography>
                   </Grid>
                 </Grid>
               </Grid>
 
               <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5"> {t("building:lattitude")}</Typography>
+                <Typography variant="h5"> {t("floor:unitNumber")}</Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
-                    {lattitude ? lattitude : "-"}
+                    {unitNumber ? unitNumber : "-"}
                   </Typography>
                 </Grid>
               </Grid>
 
               <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5">
-                  {" "}
-                  {t("building:longtitude")}
-                </Typography>
+                <Typography variant="h5"> {t("floor:description")}</Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
-                    {longtitude ? longtitude : "-"}
+                    {description ? description : "-"}
                   </Typography>
                 </Grid>
               </Grid>
 
               <Grid item md={12} className={clsx(classes.marginRow)}>
-                <Typography variant="h5"> {t("building:area")}</Typography>
+                <Typography variant="h5"> {t("floor:unitType")}</Typography>
                 <Grid item className="mt-2">
-                  <Typography variant="body1">{area ? area : "-"}</Typography>
+                  <Typography variant="body1">
+                    {unitTypeSelect ? unitTypeSelect : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:building")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {building ? building : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:floorName")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">
+                    {floorName ? floorName : "-"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Grid item md={12} className={clsx(classes.marginRow)}>
+                <Typography variant="h5"> {t("floor:zone")}</Typography>
+                <Grid item className="mt-2">
+                  <Typography variant="body1">{zone ? zone : "-"}</Typography>
                 </Grid>
               </Grid>
             </>

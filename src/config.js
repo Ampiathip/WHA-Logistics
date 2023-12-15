@@ -23,3 +23,12 @@ module.exports = {
     return config;
   },
 };
+
+// webpack.config.js
+module.exports = {
+  // other configurations...
+
+  node: {
+    fs: 'empty',
+  },
+};

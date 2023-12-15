@@ -36,6 +36,11 @@ import {
   checkToken,
   logout,
 } from "../js/actions";
+import ReactExport from "react-export-excel";
+
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -121,30 +126,34 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
     setIsLoading(true);
     try {
       let body = [];
-      point && point.length > 0 && point.map((item) => {
+      point &&
+        point.length > 0 &&
+        point.map((item) => {
           const data = {
             deviceID: deviceId,
             deviceName: deviceName,
             data: item,
-          }
+          };
           body.push(data);
-      })
-      let startDate = value ? value.format("YYYY-MM-DD HH:mm") : ''
-      let endDate = valueEnd ? valueEnd.format("YYYY-MM-DD HH:mm"): ''
+        });
+      let startDate = value ? value.format("YYYY-MM-DD HH:mm") : "";
+      let endDate = valueEnd ? valueEnd.format("YYYY-MM-DD HH:mm") : "";
       await API.connectTokenAPI(token);
-      await API.historicaldata(clickDate, startDate, endDate, body).then((response) => {
-        const dataPayload = response.data;
-        console.log("dataPayloadmyDevice", dataPayload);
-        setDataSearch(dataPayload);
-        // dataPayload.map((item) => {
-        //   item.map((data) => {
-        //     setDataSearch(data);
-        //     // setTimestamp(data.timestamp);
-        //     console.log('99999999999', data);
-        //   })
-        // })
-        setIsLoading(false);
-      });
+      await API.historicaldata(clickDate, startDate, endDate, body).then(
+        (response) => {
+          const dataPayload = response.data;
+          console.log("dataPayloadmyDevice", dataPayload);
+          setDataSearch(dataPayload);
+          // dataPayload.map((item) => {
+          //   item.map((data) => {
+          //     setDataSearch(data);
+          //     // setTimestamp(data.timestamp);
+          //     console.log('99999999999', data);
+          //   })
+          // })
+          setIsLoading(false);
+        }
+      );
     } catch (error) {
       console.log(error);
       const response = error.response;
@@ -172,6 +181,63 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
   const handleClickNavbar = (text) => {
     setClickDate(text);
   };
+
+  console.log("# ==dataSearch", dataSearch);
+  const handleDataSet = (array) => {
+    return array.map((item) => {
+      if (item[0]?.data instanceof Array) {
+        // Remove null values from the data array
+        const filteredData = item[0].data.filter((value) => value !== null);
+        const filteredTimestamp = item[0].timestamp.filter(
+          (value) => value !== null
+        );
+        return {
+          name: item[0]?.point,
+          data: filteredData.length > 0 ? filteredData : [0],
+          timestamp: filteredTimestamp.length > 0 ? filteredTimestamp : [0],
+          device: item[0]?.device,
+        };
+      } else {
+        return item;
+      }
+    });
+  };
+  const dataSet = handleDataSet(dataSearch);
+  // console.log("# 00000000====", dataSet, deviceId, deviceName, point);
+  // const dataSet1 = [
+  //   dataSet.map((item) => {
+  //     console.log("## 0000000000000item", item);
+  //     return {
+  //       name: item.name,
+  //       device: item.device,
+  //       data: item.data,
+  //       timestamp: item.timestamp,
+  //     };
+  //   }),
+  // ];
+  const dataSet1 = dataSet.map((item) => {
+    console.log("## 0000000000000item", item);
+    return {
+      name: item.name,
+      device: item.device,
+      data: item.data,
+      timestamp: item.timestamp,
+    };
+  });
+
+  console.log("# dataSet1", dataSet1);
+
+  // const handleDataExport = (data) => {
+  //   console.log("# data000---=-=====", data);
+  //   return data.length > 0 && data.map((d) => {
+  //     console.log("# hhhhhhhhh=-=====", d);
+  //     return d.map((ex) => {
+  //       console.log("# exxxxxx=-=====", ex);
+  //       return ex;
+  //     })
+
+  //   })
+  // };
 
   return (
     <>
@@ -257,7 +323,9 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
                     variant="contained"
                     className={classes.activeBtn}
                     onClick={handleClickSearch}
-                    disabled={point && point.length > 0 && deviceName ? false : true}
+                    disabled={
+                      point && point.length > 0 && deviceName ? false : true
+                    }
                     endIcon={<SearchOutlinedIcon />}
                   >
                     <Typography className="frontSizeBtn">
@@ -360,10 +428,22 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
               <Grid item md={2}></Grid>
               <Grid item md={2} className={classes.disPlayFlexRow}>
                 <div>
-                  <img
-                    src={process.env.PUBLIC_URL + "/img/excel.png"}
-                    alt="img-logo-excel"
-                  />
+                  <ExcelFile
+                    element={
+                      <img
+                        src={process.env.PUBLIC_URL + "/img/excel.png"}
+                        alt="img-logo-excel"
+                      />
+                    }
+                  >
+                    <ExcelSheet data={dataSet1} name={deviceName}>
+                      <ExcelColumn label="Name" value="name" />
+                      <ExcelColumn label="Device" value="device" />
+                      <ExcelColumn label="Data" value="data" />
+                      <ExcelColumn label="Timestamp" value="timestamp" />
+                    </ExcelSheet>
+                  </ExcelFile>
+                  ;
                 </div>
                 <div>
                   <img

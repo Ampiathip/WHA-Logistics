@@ -91,18 +91,21 @@ const Charts = ({ isLoading, dataSearch }) => {
       // timestampArray.push(new Date(dateObject));
 
       // const timePortion = timestamp.split(" ")[0]; // Assuming the format is "YYYY-MM-DD HH:mm:ss"
-      const timePortion = moment(timestamp).format("YYYY/MM/DD/HH:mm");
+      // const timePortion = moment(timestamp).format();
+      // const timePortion = moment(timestamp).format("YYYY/MM/DD/HH:mm");
+
+      // console.log('timePortion', timePortion);
 
       // Check if timestampArray already includes the time portion
-      if (!timestampArray.includes(timePortion)) {
-        timestampArray.push(timePortion);
+      if (!timestampArray.includes(timestamp)) {
+        timestampArray.push(timestamp);
       }
 
       // if (!timestampArray.includes(timestamp)) {
       //   timestampArray.push(timestamp);
       // }
 
-      // console.log("#Nan ===========timestampArray", timestampArray);
+      // console.log("#Nan ===========timestampArray", timestampArray, timePortion);
     });
     // }
     return timestampArray;

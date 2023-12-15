@@ -1,3 +1,4 @@
+import React from 'react';
 import { useTranslation } from "react-i18next";
 import Layout from "../component/layout";
 import TableDivices from "../component/tableDivices";
