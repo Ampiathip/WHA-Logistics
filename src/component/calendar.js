@@ -36,11 +36,11 @@ import {
   checkToken,
   logout,
 } from "../js/actions";
-import ReactExport from "react-export-excel";
+// import ReactExport from "react-export-excel";
 
-const ExcelFile = ReactExport.ExcelFile;
-const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
-const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
+// const ExcelFile = ReactExport.ExcelFile;
+// const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+// const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -428,7 +428,7 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
               <Grid item md={2}></Grid>
               <Grid item md={2} className={classes.disPlayFlexRow}>
                 <div>
-                  <ExcelFile
+                  {/* <ExcelFile
                     element={
                       <img
                         src={process.env.PUBLIC_URL + "/img/excel.png"}
@@ -442,8 +442,11 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
                       <ExcelColumn label="Data" value="data" />
                       <ExcelColumn label="Timestamp" value="timestamp" />
                     </ExcelSheet>
-                  </ExcelFile>
-                  ;
+                  </ExcelFile> */}
+                  <img
+                    src={process.env.PUBLIC_URL + "/img/excel.png"}
+                    alt="img-logo-excel"
+                  />
                 </div>
                 <div>
                   <img
