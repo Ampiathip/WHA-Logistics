@@ -203,10 +203,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function descendingComparator(a, b, orderBy) {
-  if (b.id < a.id) {
+  if (b.row_number < a.row_number) {
     return -1;
   }
-  if (b.id > a.id) {
+  if (b.row_number > a.row_number) {
     return 1;
   }
   return 0;

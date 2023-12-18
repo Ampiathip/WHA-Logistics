@@ -530,12 +530,7 @@ const InvoiceManagement = ({ t, login }) => {
   const [orderBy, setOrderBy] = useState("calories");
   const [selected, setSelected] = useState([]);
   const [page, setPage] = useState(0);
-  const [dense, setDense] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [buildingName, setBuildingName] = useState("");
-  const [lattitude, setLattitude] = useState();
-  const [longtitude, setLongtitude] = useState();
-  const [area, setArea] = useState();
 
   const dispatch = useDispatch();
   const classes = useStyles();
@@ -562,6 +557,10 @@ const InvoiceManagement = ({ t, login }) => {
   const [nameBox, setNameBox] = useState("");
   const [value, setValue] = useState(null);
   const [valueEnd, setValueEnd] = useState(null);
+  const [measurementList, setMeasurementList] = useState([]);
+  const [measurementSelect, setMeasurementSelect] = useState("");
+  const [buildingList, setBuildingList] = useState([]);
+  const [buildingSelect, setBuildingSelect] = useState("none");
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -581,9 +580,34 @@ const InvoiceManagement = ({ t, login }) => {
     dispatch(checkToken());
     if (!_.isEmpty(token)) {
       getBuilding();
+      getMeasurementTypeData();
     }
     console.log("token", token, login);
   }, [token]);
+
+  // get getMeasurementTypeData //
+  const getMeasurementTypeData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getMeasurementTypeData().then((response) => {
+        const dataPayload = response.data;
+        // console.log("#Nan vvvvvv", dataPayload);
+        setMeasurementList(dataPayload);
+        dataPayload.map((item, index) => {
+          if (index === 0) {
+            setMeasurementSelect(item.id);
+          }
+        });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
 
   const getBuilding = async () => {
     setIsLoading(true);
@@ -591,226 +615,7 @@ const InvoiceManagement = ({ t, login }) => {
       await API.connectTokenAPI(token);
       await API.getBuildingData().then((response) => {
         const dataPayload = response.data;
-        // setRows(dataPayload);
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.log(error);
-      const response = error.response;
-      if (response.status >= 500) {
-        swalFire(response.data);
-      } else {
-        MySwal.fire({
-          icon: "error",
-          confirmButtonText: "ตกลง",
-          cancelButtonText: "ยกเลิก",
-          showCancelButton: true,
-          text: response.data,
-        }).then((result) => {
-          if (result.isConfirmed) {
-            dispatch(logout(false));
-          } else if (result.isDismissed) {
-            setIsLoading(false);
-          }
-        });
-      }
-      setIsLoading(false);
-    }
-  };
-
-  const handleValidate = (type) => {
-    let isValidate = true;
-
-    if (type === "edit") {
-      if (_.isEmpty(buildingName) || !lattitude || !longtitude || !area) {
-        isValidate = false;
-      }
-      console.log("isValidateEdit", isValidate);
-      setIsValidate(isValidate);
-    } else {
-      if (
-        _.isEmpty(buildingName) ||
-        _.isEmpty(lattitude) ||
-        _.isEmpty(longtitude) ||
-        _.isEmpty(area)
-      ) {
-        isValidate = false;
-      }
-      console.log("isValidate", isValidate);
-      setIsValidate(isValidate);
-    }
-
-    if (isValidate) {
-      if (type === "edit") {
-        buildingUpdate(isIdEdit);
-      } else {
-        buildingRegister();
-      }
-    }
-  };
-
-  const buildingRegister = async () => {
-    setIsLoading(true);
-    let reader = new window.FileReader();
-    if (file) {
-      reader.readAsDataURL(file);
-      try {
-        reader.onload = async () => {
-          const base64File = reader.result; // Extract the base64 data
-          const body = {
-            name: buildingName,
-            latitude: lattitude,
-            longitude: longtitude,
-            area: area,
-            file: base64File, // Include the Base64 encoded file
-          };
-          API.connectTokenAPI(token);
-          await API.BuildingRegister(body).then((response) => {
-            const dataPayload = response.data;
-            console.log("dataPayload", dataPayload, response);
-            if (response.status === 200) {
-              MySwal.fire({
-                icon: "success",
-                confirmButtonText: "ตกลง",
-                text: dataPayload,
-              });
-              getBuilding();
-              handleCloseAdd();
-            }
-            setIsLoading(false);
-          });
-        };
-      } catch (error) {
-        console.log(error);
-        const response = error.response;
-        swalFire(response.data);
-        handleCloseAdd();
-        setIsLoading(false);
-      }
-    } else {
-      try {
-        const body = {
-          name: buildingName,
-          latitude: lattitude,
-          longitude: longtitude,
-          area: area,
-          file: "", // Include the Base64 encoded file
-        };
-        API.connectTokenAPI(token);
-        await API.BuildingRegister(body).then((response) => {
-          const dataPayload = response.data;
-          console.log("dataPayload", dataPayload, response);
-          if (response.status === 200) {
-            MySwal.fire({
-              icon: "success",
-              confirmButtonText: "ตกลง",
-              text: dataPayload,
-            });
-            getBuilding();
-            handleCloseAdd();
-          }
-          setIsLoading(false);
-        });
-      } catch (error) {
-        console.log(error);
-        const response = error.response;
-        swalFire(response.data);
-        handleCloseAdd();
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const buildingUpdate = async (id) => {
-    setIsLoading(true);
-    let reader = new window.FileReader();
-    if (file) {
-      reader.readAsDataURL(file);
-      try {
-        reader.onload = async () => {
-          const base64File = reader.result; // Extract the base64 data
-          const body = {
-            name: buildingName,
-            latitude: lattitude,
-            longitude: longtitude,
-            area: area,
-            file: base64File,
-            fileOld: "",
-          };
-          API.connectTokenAPI(token);
-          await API.buildingUpdate(id, body).then((response) => {
-            const dataPayload = response.data;
-            // console.log("dataPayload", dataPayload, response);
-            if (response.status === 200) {
-              MySwal.fire({
-                icon: "success",
-                confirmButtonText: "ตกลง",
-                text: dataPayload,
-              });
-              getBuilding();
-              handleClose();
-            }
-            setIsLoading(false);
-          });
-        };
-      } catch (error) {
-        console.log(error);
-        const response = error.response;
-        swalFire(response.data);
-        handleClose();
-        setIsLoading(false);
-      }
-    } else {
-      try {
-        const body = {
-          name: buildingName,
-          latitude: lattitude,
-          longitude: longtitude,
-          area: area,
-          file: "",
-          fileOld: "",
-        };
-        API.connectTokenAPI(token);
-        await API.buildingUpdate(id, body).then((response) => {
-          const dataPayload = response.data;
-          // console.log("dataPayload", dataPayload, response);
-          if (response.status === 200) {
-            MySwal.fire({
-              icon: "success",
-              confirmButtonText: "ตกลง",
-              text: dataPayload,
-            });
-            getBuilding();
-            handleClose();
-          }
-          setIsLoading(false);
-        });
-      } catch (error) {
-        console.log(error);
-        const response = error.response;
-        swalFire(response.data);
-        handleClose();
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const getBuildingView = async (id) => {
-    setIsLoading(true);
-    try {
-      await API.connectTokenAPI(token);
-      await API.getBuildingView(id).then((response) => {
-        const dataPayload = response.data;
-        // console.log("dataPayload", response, dataPayload);
-        dataPayload.length > 0 &&
-          dataPayload.map((item) => {
-            console.log("9999=======item", item);
-            setBuildingName(item.name);
-            setLattitude(item.latitude);
-            setLongtitude(item.longitude);
-            setArea(item.area);
-            setImagePreviewUrl(item.file);
-          });
+        setBuildingList(dataPayload);
         setIsLoading(false);
       });
     } catch (error) {
@@ -865,7 +670,7 @@ const InvoiceManagement = ({ t, login }) => {
 
   const handleClickOpen = (event, id) => {
     setOpen(true);
-    getBuildingView(id);
+    // getBuildingView(id);
     setIsIdEdit(id);
   };
 
@@ -917,10 +722,6 @@ const InvoiceManagement = ({ t, login }) => {
     setPage(0);
   };
 
-  const handleChangeDense = (event) => {
-    setDense(event.target.checked);
-  };
-
   const isSelected = (name) => selected.indexOf(name) !== -1;
 
   // Avoid a layout jump when reaching the last page with empty rows.
@@ -940,90 +741,13 @@ const InvoiceManagement = ({ t, login }) => {
 
   console.log("#Nan sortedRows", sortedRows, visibleRows);
 
-  const handleLongtitude = (event) => {
-    setLongtitude(event.target.value);
-    if (_.isEmpty(event.target.value)) {
-      setIsValidate(false);
-    } else {
-      setIsValidate(true);
-    }
-  };
-
-  const handleArea = (event) => {
-    setArea(event.target.value);
-    if (_.isEmpty(event.target.value)) {
-      setIsValidate(false);
-    } else {
-      setIsValidate(true);
-    }
-  };
-
-  const handleBuildingName = (event) => {
-    setBuildingName(event.target.value);
-    if (_.isEmpty(event.target.value)) {
-      setIsValidate(false);
-    } else {
-      setIsValidate(true);
-    }
-  };
-
-  const handleLattitude = (event) => {
-    setLattitude(event.target.value);
-    if (_.isEmpty(event.target.value)) {
-      setIsValidate(false);
-    } else {
-      setIsValidate(true);
-    }
-  };
-
-  const handleClickOpenAdd = () => {
-    setOpenAdd(true);
-    setIsValidate(true);
-    setBuildingName("");
-    setLattitude("");
-    setLongtitude("");
-    setFile("");
-    setArea("");
-    setImagePreviewUrl("");
-  };
-
-  const handleCloseAdd = () => {
-    setOpenAdd(false);
-  };
-
   const handleOpenView = (event, id) => {
     setOpenView(true);
-    getBuildingView(id);
+    // getBuildingView(id);
   };
 
   const handleCloseView = () => {
     setOpenView(false);
-  };
-
-  const handleUploadFile = (e) => {
-    // setFile(e.target.files[0]);
-    // if (e.target.files.length > 0) {
-    //   setFile(URL.createObjectURL(e.target.files[0]));
-    // } else {
-    //   setIsValidate(false);
-    // }
-    e.preventDefault();
-    const fileTypeArray = ["image/png", "image/jpg", "image/jpeg"];
-    let reader = new window.FileReader();
-    let file = e.target.files[0];
-
-    if (fileTypeArray.includes(file.type)) {
-      reader.onloadend = () => {
-        setFile(file);
-        setImagePreviewUrl(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const openPageFlooreDetail = (event, id) => {
-    // navigate("/buildingFloorDetail");
-    navigate("/buildingFloorDetail", { state: { buildingId: id } });
   };
 
   // Update visibleRows based on the searchQuery
@@ -1076,8 +800,51 @@ const InvoiceManagement = ({ t, login }) => {
     setFitterSelect(event.target.value);
   };
 
-  const handleBoxIcon = (name) => {
-    setNameBox(name);
+  const handleBoxIcon = async (event, name, index) => {
+    console.log("#Nan 888888888", name, index);
+    setMeasurementSelect(name.id);
+  };
+
+  const renderViewBox = (item, index) => {
+    const listImg = [
+      {
+        id: 0,
+        name: "Vector.png",
+      },
+      {
+        id: 1,
+        name: "VectorNum.png",
+      },
+      {
+        id: 2,
+        name: "VectorIcon.png",
+      },
+      {
+        id: 3,
+        name: "VectorCool.png",
+      },
+    ];
+    return (
+      <Grid
+        item
+        className={clsx(
+          item.id == measurementSelect ? classes.borderboxIcon : "",
+          classes.marginBoxIcon
+        )}
+        onClick={(e) => handleBoxIcon(e, item, index)}
+      >
+        {listImg.map((img) => {
+          if (index === img.id) {
+            return (
+              <img
+                src={process.env.PUBLIC_URL + `img/${img.name}`}
+                alt="Icon"
+              />
+            );
+          }
+        })}
+      </Grid>
+    );
   };
 
   return (
@@ -1090,58 +857,10 @@ const InvoiceManagement = ({ t, login }) => {
         <>
           <Grid item md={12} className={clsx(classes.flexRow)}>
             <Grid item className={clsx(classes.flexRow)}>
-              <Grid
-                item
-                className={clsx(
-                  nameBox == "normal" ? classes.borderboxIcon : "",
-                  classes.marginBoxIcon
-                )}
-                onClick={() => handleBoxIcon("normal")}
-              >
-                <img
-                  src={process.env.PUBLIC_URL + "/img/Vector.png"}
-                  alt="Icon"
-                />
-              </Grid>
-              <Grid
-                item
-                className={clsx(
-                  nameBox == "rain" ? classes.borderboxIcon : "",
-                  classes.marginBoxIcon
-                )}
-                onClick={() => handleBoxIcon("rain")}
-              >
-                <img
-                  src={process.env.PUBLIC_URL + "/img/VectorNum.png"}
-                  alt="Icon"
-                />
-              </Grid>
-              <Grid
-                item
-                className={clsx(
-                  nameBox == "hot" ? classes.borderboxIcon : "",
-                  classes.marginBoxIcon
-                )}
-                onClick={() => handleBoxIcon("hot")}
-              >
-                <img
-                  src={process.env.PUBLIC_URL + "/img/VectorIcon.png"}
-                  alt="Icon"
-                />
-              </Grid>
-              <Grid
-                item
-                className={clsx(
-                  nameBox == "cool" ? classes.borderboxIcon : "",
-                  classes.marginBoxIcon
-                )}
-                onClick={() => handleBoxIcon("cool")}
-              >
-                <img
-                  src={process.env.PUBLIC_URL + "/img/VectorCool.png"}
-                  alt="Icon"
-                />
-              </Grid>
+              {measurementList.length > 0 &&
+                measurementList.map((item, index) => {
+                  return renderViewBox(item, index);
+                })}
             </Grid>
             <Grid item md={10} className={clsx(classes.flexRowBtnModal)}>
               <Grid item md={4} className={classes.marginBoxIcon}>
@@ -1172,7 +891,7 @@ const InvoiceManagement = ({ t, login }) => {
               <Typography variant="h6"> / {sideBar}</Typography>
             </Grid>
             <Grid item md={11} className={classes.textCenter}>
-                <Typography variant="h5">{t('invoice:period')}</Typography>
+              <Typography variant="h5">{t("invoice:period")}</Typography>
             </Grid>
           </Grid>
           <Grid
@@ -1210,9 +929,18 @@ const InvoiceManagement = ({ t, login }) => {
                   <MenuItem value="none" disabled>
                     {t("invoice:select")}
                   </MenuItem>
-                  {/* <MenuItem value={10}>Ten</MenuItem>
-              <MenuItem value={20}>Twenty</MenuItem>
-              <MenuItem value={30}>Thirty</MenuItem> */}
+                  {buildingList.length > 0 &&
+                    buildingList.map((item) => {
+                      return (
+                        <MenuItem
+                          id={"selectbathType-" + item.id}
+                          key={item.id}
+                          value={item.id}
+                        >
+                          {item.name}
+                        </MenuItem>
+                      );
+                    })}
                 </Select>
               </FormControl>
             </Grid>
@@ -1264,7 +992,7 @@ const InvoiceManagement = ({ t, login }) => {
                 <Table
                   sx={{ minWidth: 750 }}
                   aria-labelledby="tableTitle"
-                  size={dense ? "small" : "medium"}
+                  // size={dense ? "small" : "medium"}
                 >
                   <EnhancedTableHead
                     numSelected={selected.length}
@@ -1308,55 +1036,55 @@ const InvoiceManagement = ({ t, login }) => {
                             className={classes.fontSixeCell}
                             align="center"
                           >
-                            {row.id}
+                            {row.unit_id}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.name}
+                            {row.issue_date}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.latitude}
+                            {row.due_date}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.longitude}
+                            {row.recent}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_floor}
+                            {row.previus}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_floor}
+                            {row.total_use}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_unit}
+                            {row.rate}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_unit}
+                            {row.total_charge}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_unit}
+                            {row.currency}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1388,23 +1116,14 @@ const InvoiceManagement = ({ t, login }) => {
                             <img
                               src={IconDelete}
                               alt="IconDelete"
-                              onClick={(event) => {
-                                handleClickDeleteData(event, row.id);
-                              }}
+                              // onClick={(event) => {
+                              //   handleClickDeleteData(event, row.id);
+                              // }}
                             />
                           </TableCell>
                         </TableRow>
                       );
                     })}
-                    {/* {emptyRows > 0 && (
-                      <TableRow
-                        style={{
-                          height: (dense ? 33 : 53) * emptyRows,
-                        }}
-                      >
-                        <TableCell colSpan={6} />
-                      </TableRow>
-                    )} */}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -1418,381 +1137,9 @@ const InvoiceManagement = ({ t, login }) => {
                 onRowsPerPageChange={handleChangeRowsPerPage}
               />
             </Paper>
-            {/* <FormControlLabel
-        control={<Switch checked={dense} onChange={handleChangeDense} />}
-        label="Dense padding"
-      /> */}
           </Box>
         </>
       )}
-
-      {/* Modal Edit*/}
-      <Dialog
-        fullScreen={fullScreen}
-        // className={classes.modalWidth}
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="responsive-dialog-title"
-        classes={{
-          paper: classes.modalWidth,
-        }}
-      >
-        <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("building:edit")}</Typography>
-        </DialogTitle>
-        <DialogContent>
-          {isLoading ? (
-            <Box mt={4} width={1} display="flex" justifyContent="center">
-              <CircularProgress color="primary" />
-            </Box>
-          ) : (
-            <>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="pb-3">
-                  {t("building:buildingName")}
-                </Typography>
-                <TextField
-                  // id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("building:buildingName")}
-                  fullWidth
-                  variant="outlined"
-                  value={buildingName}
-                  onChange={handleBuildingName}
-                  error={!isValidate && _.isEmpty(buildingName)}
-                />
-                {!isValidate && _.isEmpty(buildingName) ? (
-                  <Validate errorText={"กรุณาระบุข้อมูล"} />
-                ) : null}
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("building:lattitude")}
-                </Typography>
-                <TextField
-                  // id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("building:lattitude")}
-                  fullWidth
-                  variant="outlined"
-                  value={lattitude}
-                  onChange={handleLattitude}
-                  error={lattitude ? false : !isValidate}
-                />
-                {lattitude ? (
-                  false
-                ) : !isValidate ? (
-                  <Validate errorText={"กรุณาระบุข้อมูล"} />
-                ) : null}
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("building:longtitude")}
-                </Typography>
-                <TextField
-                  // id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("building:longtitude")}
-                  fullWidth
-                  variant="outlined"
-                  value={longtitude}
-                  onChange={handleLongtitude}
-                  error={longtitude ? false : !isValidate}
-                />
-                {longtitude ? (
-                  false
-                ) : !isValidate ? (
-                  <Validate errorText={"กรุณาระบุข้อมูล"} />
-                ) : null}
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("building:area")}
-                </Typography>
-                <TextField
-                  // id="input-with-icon-textfield"
-                  size="small"
-                  placeholder={t("building:area")}
-                  fullWidth
-                  variant="outlined"
-                  value={area}
-                  onChange={handleArea}
-                  error={area ? false : !isValidate}
-                />
-                {area ? (
-                  false
-                ) : !isValidate ? (
-                  <Validate errorText={"กรุณาระบุข้อมูล"} />
-                ) : null}
-              </Grid>
-              <Grid item md={12}>
-                <Typography variant="subtitle2" className="mt-3 pb-3">
-                  {t("building:upload")}
-                </Typography>
-                <Grid
-                  item
-                  md={12}
-                  //   className={clsx(classes.flexRow, classes.justContentCenter)}
-                >
-                  <Grid item md={6} className={classes.displayContents}>
-                    <input
-                      className={classes.input}
-                      id={"contained-button-file"}
-                      type="file"
-                      accept="image/jpeg,image/png,application/pdf,image/tiff"
-                      // multiple={isMultiple}
-                      onChange={handleUploadFile}
-                      onClick={(e) => {
-                        console.log("aaaaa");
-                      }}
-                    />
-                    <label
-                      htmlFor={"contained-button-file"}
-                      className={clsx(
-                        classes.flexRow,
-                        classes.justContentCenter,
-                        classes.width
-                      )}
-                    >
-                      <Card
-                        variant="outlined"
-                        style={{ width: 200, height: 200 }}
-                        className={clsx(classes.boxUpload)}
-                      >
-                        {imagePreviewUrl ? (
-                          <img
-                            src={imagePreviewUrl}
-                            alt="img-upload"
-                            className={classes.imgWidth}
-                          />
-                        ) : (
-                          <CardContent
-                            className={clsx(
-                              classes.textCenter,
-                              classes.marginTopBox
-                            )}
-                          >
-                            <Typography> +</Typography>
-                            <Typography> upload</Typography>
-                          </CardContent>
-                        )}
-                      </Card>
-                    </label>
-                  </Grid>
-
-                  {/* {!isValidate && _.isNull(file) ? (
-                    <Validate errorText={"กรุณาระบุข้อมูล"} />
-                  ) : null} */}
-                </Grid>
-              </Grid>
-
-              <Grid
-                item
-                md={12}
-                className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-              >
-                <Grid item md={3}>
-                  <Button
-                    onClick={handleClose}
-                    className={clsx(classes.backGroundCancel)}
-                    variant="outlined"
-                  >
-                    {t("building:btnCancel")}
-                  </Button>
-                </Grid>
-                <Grid item md={3} className={classes.boxMargin}>
-                  <Button
-                    className={clsx(classes.backGroundConfrim)}
-                    variant="outlined"
-                    onClick={() => handleValidate("edit")}
-                  >
-                    {t("building:btnSave")}
-                  </Button>
-                </Grid>
-              </Grid>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Add */}
-
-      <Dialog
-        fullScreen={fullScreen}
-        // className={classes.modalWidth}
-        open={openAdd}
-        onClose={handleCloseAdd}
-        aria-labelledby="responsive-dialog-title"
-        classes={{
-          paper: classes.modalWidth,
-        }}
-      >
-        <DialogTitle id="responsive-dialog-title" className="mt-3">
-          <Typography variant="h3">{t("building:add")}</Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="pb-3">
-              {t("building:buildingName")}
-            </Typography>
-            <TextField
-              // id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:buildingName")}
-              fullWidth
-              variant="outlined"
-              value={buildingName}
-              onChange={handleBuildingName}
-              error={!isValidate && _.isEmpty(buildingName)}
-            />
-            {!isValidate && _.isEmpty(buildingName) ? (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            ) : null}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:lattitude")}
-            </Typography>
-            <TextField
-              // id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:lattitude")}
-              fullWidth
-              variant="outlined"
-              value={lattitude}
-              onChange={handleLattitude}
-              error={!isValidate && _.isEmpty(lattitude)}
-            />
-            {!isValidate && _.isEmpty(lattitude) ? (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            ) : null}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:longtitude")}
-            </Typography>
-            <TextField
-              // id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:longtitude")}
-              fullWidth
-              variant="outlined"
-              value={longtitude}
-              onChange={handleLongtitude}
-              error={!isValidate && _.isEmpty(longtitude)}
-            />
-            {!isValidate && _.isEmpty(longtitude) ? (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            ) : null}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:area")}
-            </Typography>
-            <TextField
-              // id="input-with-icon-textfield"
-              size="small"
-              placeholder={t("building:area")}
-              fullWidth
-              variant="outlined"
-              value={area}
-              onChange={handleArea}
-              error={!isValidate && _.isEmpty(area)}
-            />
-            {!isValidate && _.isEmpty(area) ? (
-              <Validate errorText={"กรุณาระบุข้อมูล"} />
-            ) : null}
-          </Grid>
-          <Grid item md={12}>
-            <Typography variant="subtitle2" className="mt-3 pb-3">
-              {t("building:upload")}
-            </Typography>
-            <Grid
-              item
-              md={12}
-              //   className={clsx(classes.flexRow, classes.justContentCenter)}
-            >
-              <Grid item md={6} className={classes.displayContents}>
-                <input
-                  className={classes.input}
-                  id={"contained-button-file"}
-                  type="file"
-                  accept="image/jpeg,image/png,application/pdf,image/tiff"
-                  // multiple={isMultiple}
-                  onChange={handleUploadFile}
-                  onClick={(e) => {
-                    console.log("aaaaa");
-                  }}
-                />
-                <label
-                  htmlFor={"contained-button-file"}
-                  className={clsx(
-                    classes.flexRow,
-                    classes.justContentCenter,
-                    classes.width
-                  )}
-                >
-                  <Card
-                    variant="outlined"
-                    style={{ width: 200, height: 200 }}
-                    className={clsx(classes.boxUpload)}
-                  >
-                    {imagePreviewUrl ? (
-                      <img
-                        src={imagePreviewUrl}
-                        alt="img-upload"
-                        className={classes.imgWidth}
-                      />
-                    ) : (
-                      <CardContent
-                        className={clsx(
-                          classes.textCenter,
-                          classes.marginTopBox
-                        )}
-                      >
-                        <Typography> +</Typography>
-                        <Typography> upload</Typography>
-                      </CardContent>
-                    )}
-                  </Card>
-                </label>
-              </Grid>
-
-              {/* {!isValidate && _.isNull(imagePreviewUrl) ? (
-                <Validate errorText={"กรุณาระบุข้อมูล"} />
-              ) : null} */}
-            </Grid>
-          </Grid>
-          {/* <DialogContentText>
-            Let Google help apps determine location. This means sending
-            anonymous location data to Google, even when no apps are running.
-          </DialogContentText> */}
-          <Grid
-            item
-            md={12}
-            className={clsx(classes.flexRowBtnModal, classes.marginRow)}
-          >
-            <Grid item md={3}>
-              <Button
-                onClick={handleCloseAdd}
-                className={clsx(classes.backGroundCancel)}
-                variant="outlined"
-              >
-                {t("building:btnCancel")}
-              </Button>
-            </Grid>
-            <Grid item md={3} className={classes.boxMargin}>
-              <Button
-                className={clsx(classes.backGroundConfrim)}
-                variant="outlined"
-                onClick={handleValidate}
-              >
-                {t("building:btnAddModal")}
-              </Button>
-            </Grid>
-          </Grid>
-        </DialogContent>
-      </Dialog>
 
       {/* Modal View */}
       <Dialog
@@ -1813,7 +1160,7 @@ const InvoiceManagement = ({ t, login }) => {
             classes.borderBottom
           )}
         >
-          <Typography variant="h3">{buildingName}</Typography>
+          {/* <Typography variant="h3">{buildingName}</Typography> */}
           <CloseIcon onClick={handleCloseView} className={classes.cuserPoint} />
         </DialogTitle>
         <DialogContent>
@@ -1845,7 +1192,7 @@ const InvoiceManagement = ({ t, login }) => {
                     className={clsx(classes.boxMargin, classes.marginRow)}
                   >
                     <Typography variant="h5">
-                      {buildingName ? buildingName : "-"}
+                      {/* {buildingName ? buildingName : "-"} */}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -1855,7 +1202,7 @@ const InvoiceManagement = ({ t, login }) => {
                 <Typography variant="h5"> {t("building:lattitude")}</Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
-                    {lattitude ? lattitude : "-"}
+                    {/* {lattitude ? lattitude : "-"} */}
                   </Typography>
                 </Grid>
               </Grid>
@@ -1867,7 +1214,7 @@ const InvoiceManagement = ({ t, login }) => {
                 </Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
-                    {longtitude ? longtitude : "-"}
+                    {/* {longtitude ? longtitude : "-"} */}
                   </Typography>
                 </Grid>
               </Grid>
@@ -1875,7 +1222,7 @@ const InvoiceManagement = ({ t, login }) => {
               <Grid item md={12} className={clsx(classes.marginRow)}>
                 <Typography variant="h5"> {t("building:area")}</Typography>
                 <Grid item className="mt-2">
-                  <Typography variant="body1">{area ? area : "-"}</Typography>
+                  {/* <Typography variant="body1">{area ? area : "-"}</Typography> */}
                 </Grid>
               </Grid>
             </>

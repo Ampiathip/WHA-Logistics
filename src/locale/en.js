@@ -1,6 +1,25 @@
 let en = {
     home: {
-      "hello": "Hello"
+      "hello": "Hello",
+      "buildingName": "Building Name",
+      "emergy" : "Emergy Intensity",
+      "consumption": "Monthly Energy Consumption",
+      "kwhM": "(kWh/m2/Year)",
+      "kwhL": "(kWh)",
+      "intelligent": "Intelligent Energy Management",
+      "electric": "ELECTRIC",
+      "cold": "COLD WATER",
+      "hot": "HOT WATER",
+      "cool": "COOLING",
+      "bill": "Monthly Electricity Bill",
+      "monthly": "Monthly",
+      "last": "Last Month",
+      "metric": "Monthly GHGs Equivalent to Metric Tons CO2",
+      "treesPlanted": "Monthly GHGs Equivalent to Trees Planted",
+      "Baht": "Baht",
+      "kwh": "kWh",
+      "metricTon": "metric ton",
+      "trees": "trees",
     },
     footer: {
       "address": "Address"

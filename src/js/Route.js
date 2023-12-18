@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { connect } from "react-redux";
 import PageNotFound from "../pages/PageNotFound";
-import Dashboard from "../pages/Dashboard";
+import Dashboard from "../pages/DashboardNew";
 import HistoricalData from "../pages/HistoricalData";
 import Login from "../pages/Login";
 import Diveices from "../pages/Diveices";
