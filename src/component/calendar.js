@@ -138,6 +138,8 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
         });
       let startDate = value ? value.format("YYYY-MM-DD HH:mm") : "";
       let endDate = valueEnd ? valueEnd.format("YYYY-MM-DD HH:mm") : "";
+
+      console.log('## ===valueEnd', valueEnd);
       await API.connectTokenAPI(token);
       await API.historicaldata(clickDate, startDate, endDate, body).then(
         (response) => {

@@ -1622,7 +1622,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.no_of_device}
+                            {row.no_of_point}
                           </TableCell>
                           <TableCell
                             align="center"

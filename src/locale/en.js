@@ -248,7 +248,28 @@ let en = {
       "offPeakDateTwo": " - เวลา 00.00 - 24.00 น. วันเสาร์ - วันอาทิตย์ วันแรงงานแห่งชาติวันหยุดราชการตามปกติ (ไม่รวมวันพืชมงคลและวันหยุดชดเชย)",
       "priceMount": "ค่าบริการ (บาท/เดือน)",
       "priceHead": 'ค่าพลังงานไฟฟ้า (บาท/หน่วย)',
-    }
+    },
+    floorDiagram: {
+      "sortBy": "Sort By",
+      "roomNumber": "Room Number",
+      "monthly": "Monthly Energy Consumption",
+      "cO2": "CO2 Emissions",
+      "NoData": "No Data",
+      "20kWh": "0-20 kWh",
+      "40kWh": "20-40 kWh",
+      "60kWh": "40-60 kWh",
+      "70kWh": ">60 kWh",
+      "deviceName": "Device Name",
+      "subDevice": "Sub device Device Name",
+      "zone": "Zone",
+      "floor": "Floor",
+      "buildingname": "Building name",
+      "invoice": "Invoice",
+      "device": "Device",
+      "historicalData": "Historical Data",
+      "periodSelection": "Period Selection",
+      "electrical": "Electrical {{name}}",
+    },
   };
   
   export default en;

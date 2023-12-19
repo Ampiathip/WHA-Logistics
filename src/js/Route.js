@@ -8,7 +8,7 @@ import Login from "../pages/Login";
 import Diveices from "../pages/Diveices";
 import Parameter from "../pages/Parameter";
 import User from "../pages/User";
-import FloorDiagram from "../pages/FloorDiagram";
+import FloorDiagram from "../pages/FloorDiagramNew";
 import Building from "../pages/Building";
 import Gateway from "../pages/Gateway";
 import GatewayDeviceDetail from "../pages/GatewayDeviceDetail";

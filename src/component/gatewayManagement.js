@@ -407,6 +407,7 @@ const GatewayManagement = ({ t, login }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   // modal //
+  const [installation, setInstallation] = useState(null);
   const [open, setOpen] = useState(false);
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [openAdd, setOpenAdd] = useState(false);
@@ -424,7 +425,6 @@ const GatewayManagement = ({ t, login }) => {
   const [isValidate, setIsValidate] = useState(true);
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
-  const [installation, setInstallation] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   // const [sortedRows, setSortedRows] = useState(rows);
@@ -703,17 +703,17 @@ const GatewayManagement = ({ t, login }) => {
   const getGatewayView = async (id) => {
     setIsLoading(true);
     try {
-      await API.connectTokenAPI(token);
+      API.connectTokenAPI(token);
       await API.getGatewayView(id).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayload", response, dataPayload);
         dataPayload.length > 0 &&
           dataPayload.map((item) => {
             console.log("9999=======item", item, building);
-            const dateMoment = moment(item.installation_date);
-            console.log("dateMoment", dateMoment);
+            const date = moment(item.installation_date, 'DD-MM-YYYY');
+            // console.log('##### =======', date);
             setGatewayName(item.name);
-            setInstallation(dateMoment);
+            setInstallation(date);
             setBuildingSelect(
               item.building_name &&
                 building.find((f) => f.name === item.building_name).id
