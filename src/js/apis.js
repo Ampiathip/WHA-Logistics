@@ -567,6 +567,11 @@ const getAPI = () => {
     return tokenAPI.get(`/api/unit-user/list`);
   };
 
+  /* ============== Device User List API ================ */
+  const getDeviceUserList = (id = 0) => {
+    return tokenAPI.get(`/api/device-user/list`);
+  };
+
   return {
     connectTokenAPI,
 
@@ -705,7 +710,7 @@ const getAPI = () => {
     unitBillingTypetDelete,
 
     getUnitUserList,
-    
+    getDeviceUserList,
   };
 };
 export default {

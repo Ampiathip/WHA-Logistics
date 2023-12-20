@@ -2692,7 +2692,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           item
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
-                          <Typography variant="h6"> Device name</Typography>
+                          <Typography variant="h6">{t("gateway:deviceName")}</Typography>
                           <Typography variant="caption">
                             {" "}
                             {deviceName ? deviceName : "-"}
@@ -2702,7 +2702,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           item
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
-                          <Typography variant="h6"> Brand</Typography>
+                          <Typography variant="h6">{t("gateway:deviceBrand")}</Typography>
                           <Typography variant="caption">
                             {" "}
                             {deviceBrand ? deviceBrand : "-"}
@@ -2712,7 +2712,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           item
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
-                          <Typography variant="h6"> Model</Typography>
+                          <Typography variant="h6"> {t("gateway:model")}</Typography>
                           <Typography variant="caption">
                             {" "}
                             {model ? model : "-"}
@@ -2722,7 +2722,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                           item
                           className={clsx(classes.flexRow, classes.justContent)}
                         >
-                          <Typography variant="h6"> Type</Typography>
+                          <Typography variant="h6"> {t("gateway:communicationType")}</Typography>
                           <Typography variant="caption">
                             {" "}
                             {communicationTypeSelect
@@ -2736,7 +2736,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                         >
                           <Typography variant="h6">
                             {" "}
-                            Installation Date
+                            {t("gateway:Installation")}
                           </Typography>
                           <Typography variant="caption">
                             {" "}

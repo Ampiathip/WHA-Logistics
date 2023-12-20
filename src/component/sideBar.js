@@ -379,15 +379,15 @@ const SideBar = () => {
         </Link>
 
         <Link
-          // to={"/Devices"}
+          to={"/deviceView"}
           className={`${
-            sideBar == "Devices" ? classes.activeIcon : classes.LinkColor
+            sideBar == "Device" ? classes.activeIcon : classes.LinkColor
           }`}
         >
           <ListItem button className={classes.hoverColor}>
             <ListItemIcon
               className={`${
-                sideBar == "Devices" ? classes.activeIcon : classes.LinkColor
+                sideBar == "Device" ? classes.activeIcon : classes.LinkColor
               }`}
             >
               <BookmarkBorderOutlinedIcon />

@@ -19,6 +19,7 @@ import ZoneDetail from "../pages/zoneDetail";
 import SystemOverview from "../pages/SystemOverview";
 import Invoice from "../pages/Invoice";
 import Unit from "../pages/Unit";
+import Device from "../pages/DeviceView";
 
 const Routers = (props) => {
   return (
@@ -44,6 +45,7 @@ const Routers = (props) => {
         <Route path="/zoneDetail" element={<ZoneDetail />} />
         <Route path="/invoice" element={<Invoice />} />
         <Route path="/unitView" element={<Unit />} />
+        <Route path="/deviceView" element={<Device />} />
         <Route element={PageNotFound} />
       </Routes>
     </>

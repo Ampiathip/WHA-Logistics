@@ -186,6 +186,8 @@ let en = {
       "addRecord": "+ Add Record",
       "filterBuild": "Select Building",
       "filterFloor": "Select Floor",
+      "filterGateway": "Select Gateway",
+      "filterDevice": "Select Device",
     },
     gateway: {
       "search": "Search by Gateway name",
@@ -217,6 +219,7 @@ let en = {
       "btnAddPoint": "Add Point",
       "selectBillingType": "Choose Billing Type",
       "EditDevice": "Edit new Device",
+      "deviceId": "device Id",
     },
     zone: {
       "search": "Search by Zone name",
