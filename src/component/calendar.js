@@ -132,7 +132,8 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
           const data = {
             deviceID: deviceId,
             deviceName: deviceName,
-            data: item,
+            pointName: item.pointName,
+            pointID: item.pointId,
           };
           body.push(data);
         });
@@ -271,7 +272,7 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
                         setValue(newValue);
                         setClickDate("");
                       }}
-                      format="DD-MM-YYYY HH:mm"
+                      format="YYYY-MM-DD HH:mm"
                     />
                   </DemoContainer>
                 </LocalizationProvider>
@@ -290,7 +291,7 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
                     <DateTimePicker
                       value={valueEnd}
                       onChange={(newValue) => setValueEnd(newValue)}
-                      format="DD-MM-YYYY HH:mm"
+                      format="YYYY-MM-DD HH:mm"
                     />
                   </DemoContainer>
                 </LocalizationProvider>

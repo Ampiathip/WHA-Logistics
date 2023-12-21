@@ -715,7 +715,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             deviceBand: deviceBrand,
             model: model,
             serialNumber: serialNumber,
-            installationDate: installation.format("DD-MM-YYYY"),
+            installationDate: installation.format("YYYY-MM-DD"),
             communicationType: communicationTypeSelect,
             // billingType_id: billingTypeSelect,
             description: "",
@@ -752,7 +752,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           deviceBand: deviceBrand,
           model: model,
           serialNumber: serialNumber,
-          installationDate: installation.format("DD-MM-YYYY"),
+          installationDate: installation.format("YYYY-MM-DD"),
           communicationType: communicationTypeSelect,
           // billingType_id: billingTypeSelect,
           description: "",
@@ -797,7 +797,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
             deviceBand: deviceBrand,
             model: model,
             serialNumber: serialNumber,
-            installationDate: installation.format("DD-MM-YYYY"),
+            installationDate: installation.format("YYYY-MM-DD"),
             communicationType: communicationTypeSelect,
             // billingType_id: billingTypeSelect,
             description: "",
@@ -834,7 +834,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
           deviceBand: deviceBrand,
           model: model,
           serialNumber: serialNumber,
-          installationDate: installation.format("DD-MM-YYYY"),
+          installationDate: installation.format("YYYY-MM-DD"),
           communicationType: communicationTypeSelect,
           // billingType_id: billingTypeSelect,
           description: "",
@@ -2405,7 +2405,7 @@ const GatewayDeviceManagement = ({ t, pageName }) => {
                   className={classes.width}
                   value={installation}
                   onChange={(newValue) => handleInstallation(newValue)}
-                  format="DD-MM-YYYY"
+                  format="YYYY-MM-DD"
                   slotProps={{
                     textField: {
                       error: _.isEmpty(installation) && !isValidate,

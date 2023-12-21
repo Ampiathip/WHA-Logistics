@@ -428,6 +428,7 @@ const GatewayManagement = ({ t, login }) => {
 
   const [searchQuery, setSearchQuery] = useState("");
   // const [sortedRows, setSortedRows] = useState(rows);
+  const [communicationTypeName, setCommunicationTypeName] = useState("");
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -558,7 +559,7 @@ const GatewayManagement = ({ t, login }) => {
             name: gatewayName,
             band: deviceBrand,
             communication_id: communicationTypeSelect,
-            installation_date: installation.format("DD-MM-YYYY"),
+            installation_date: installation.format("YYYY-MM-DD"),
             description: "",
             building_id: buildingSelect,
             file: base64File, // Include the Base64 encoded file
@@ -592,7 +593,7 @@ const GatewayManagement = ({ t, login }) => {
           name: gatewayName,
           band: deviceBrand,
           communication_id: communicationTypeSelect,
-          installation_date: installation.format("DD-MM-YYYY"),
+          installation_date: installation.format("YYYY-MM-DD"),
           description: "",
           building_id: buildingSelect,
           file: "", // Include the Base64 encoded file
@@ -634,7 +635,7 @@ const GatewayManagement = ({ t, login }) => {
             name: gatewayName,
             band: deviceBrand,
             communication_id: communicationTypeSelect,
-            installation_date: installation.format("DD-MM-YYYY"),
+            installation_date: installation.format("YYYY-MM-DD"),
             description: "",
             building_id: buildingSelect,
             file: base64File, // Include the Base64 encoded file
@@ -669,7 +670,7 @@ const GatewayManagement = ({ t, login }) => {
           name: gatewayName,
           band: deviceBrand,
           communication_id: communicationTypeSelect,
-          installation_date: installation.format("DD-MM-YYYY"),
+          installation_date: installation.format("YYYY-MM-DD"),
           description: "",
           building_id: buildingSelect,
           file: "", // Include the Base64 encoded file
@@ -710,7 +711,7 @@ const GatewayManagement = ({ t, login }) => {
         dataPayload.length > 0 &&
           dataPayload.map((item) => {
             console.log("9999=======item", item, building);
-            const date = moment(item.installation_date, 'DD-MM-YYYY');
+            const date = moment(item.installation_date, "DD-MM-YYYY");
             // console.log('##### =======', date);
             setGatewayName(item.name);
             setInstallation(date);
@@ -727,6 +728,7 @@ const GatewayManagement = ({ t, login }) => {
             setDeviceBrand(item.band);
             // setFile(item.file);
             setImagePreviewUrl(item.file);
+            setCommunicationTypeName(item.communication);
           });
         setIsLoading(false);
       });
@@ -1278,7 +1280,7 @@ const GatewayManagement = ({ t, login }) => {
                       className={classes.width}
                       value={installation}
                       onChange={(newValue) => handleInstallation(newValue)}
-                      format="DD-MM-YYYY"
+                      format="YYYY-MM-DD"
                       slotProps={{
                         textField: {
                           error: _.isEmpty(installation) && !isValidate,
@@ -1511,7 +1513,7 @@ const GatewayManagement = ({ t, login }) => {
                   className={classes.width}
                   value={installation}
                   onChange={(newValue) => handleInstallation(newValue)}
-                  format="DD-MM-YYYY"
+                  format="YYYY-MM-DD"
                   slotProps={{
                     textField: {
                       error: _.isEmpty(installation) && !isValidate,
@@ -1729,7 +1731,7 @@ const GatewayManagement = ({ t, login }) => {
                 </Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
-                    {communicationTypeSelect ? communicationTypeSelect : "-"}
+                    {communicationTypeName ? communicationTypeName : "-"}
                   </Typography>
                 </Grid>
               </Grid>

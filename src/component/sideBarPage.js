@@ -80,7 +80,7 @@ const SideBarPage = ({ children, t }) => {
     let data = [];
     if (value) {
         value.map((item) => {
-          data.push(item.name);
+          data.push({pointName: item.name, pointId: item.id });
         });
         setPoint(data);
     } else {

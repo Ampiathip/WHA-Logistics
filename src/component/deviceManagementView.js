@@ -685,12 +685,7 @@ const DeviceManagementView = ({ t, login }) => {
             setDeviceName(item.name);
             setDeviceBrand(item.band);
             setSerialNumber(item.serial_number);
-            setCommunicationTypeSelect(
-              item.communication &&
-                communicationType.find(
-                  (f) => f.communication === item.communication
-                ).id
-            );
+            setCommunicationTypeSelect(item.communication);
             setImagePreviewUrl(item.file);
           });
         setIsLoading(false);

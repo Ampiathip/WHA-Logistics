@@ -440,7 +440,7 @@ const FloorDiagram = ({ t, login }) => {
         id: 1,
         name: t("floorDiagram:20kWh"),
         color: "#FFF1F0",
-        data: [2, 2],
+        data: [2, 2, 21, 29],
       },
       {
         id: 2,
@@ -452,13 +452,13 @@ const FloorDiagram = ({ t, login }) => {
         id: 3,
         name: t("floorDiagram:60kWh"),
         color: "#FF7875",
-        data: [51, 67],
+        data: [51,],
       },
       {
         id: 4,
         name: t("floorDiagram:70kWh"),
         color: "#F5222D",
-        data: [61, 71],
+        data: [61, 71, 67],
       },
       {
         id: 5,
@@ -470,121 +470,131 @@ const FloorDiagram = ({ t, login }) => {
 
     return listBox.map((box) => {
       return (
-        <Grid item>
+        <Grid item className={clsx(classes.flexRow)}>
           {box.data.map((card) => {
-            if (card > 0 && card < 20) {
+            // console.log('##### ====', card);
+            if (card > 0) {
               return (
-                <Card
-                  className={clsx(classes.marginRow, classes.cursor)}
-                  onClick={() => handleModalFloor()}
-                >
-                  <CardContent
-                    style={{ backgroundColor: box.color }}
-                  ></CardContent>
-                  <CardActions className={classes.displayNone}>
-                    <Grid item className={clsx(classes.flexRow)}>
-                      <Typography variant="caption">RM10020</Typography>
+                <Grid item md={3}>
+                  <Card
+                    className={clsx(classes.marginRow, classes.cursor)}
+                    onClick={() => handleModalFloor()}
+                  >
+                    <CardContent
+                      style={{ backgroundColor: box.color }}
+                    ></CardContent>
+                    <CardActions className={classes.displayNone}>
+                      <Grid item className={clsx(classes.flexRow)}>
+                        <Typography variant="caption">RM10020</Typography>
+                        <Typography
+                          variant="caption"
+                          className={classes.marginLeft}
+                        >
+                          2 kWh
+                        </Typography>
+                      </Grid>
                       <Typography
                         variant="caption"
-                        className={classes.marginLeft}
+                        className={clsx(classes.textAling)}
                       >
-                        2 kWh
+                        Shop 20
                       </Typography>
-                    </Grid>
-                    <Typography
-                      variant="subtitle1"
-                      className={classes.textAling}
-                    >
-                      Shop 20
-                    </Typography>
-                  </CardActions>
-                </Card>
+                    </CardActions>
+                  </Card>
+                </Grid>
               );
-            } else if (card > 20 && card < 40) {
-              return (
-                <Card
-                  className={clsx(classes.marginRow, classes.cursor)}
-                  onClick={() => handleModalFloor()}
-                >
-                  <CardContent
-                    style={{ backgroundColor: box.color }}
-                  ></CardContent>
-                  <CardActions className={classes.displayNone}>
-                    <Grid item className={clsx(classes.flexRow)}>
-                      <Typography variant="caption">RM10020</Typography>
-                      <Typography
-                        variant="caption"
-                        className={classes.marginLeft}
-                      >
-                        2 kWh
-                      </Typography>
-                    </Grid>
-                    <Typography
-                      variant="subtitle1"
-                      className={classes.textAling}
-                    >
-                      Shop 20
-                    </Typography>
-                  </CardActions>
-                </Card>
-              );
-            } else if (card > 40 && card < 60) {
-              return (
-                <Card
-                  className={clsx(classes.marginRow, classes.cursor)}
-                  onClick={() => handleModalFloor()}
-                >
-                  <CardContent
-                    style={{ backgroundColor: box.color }}
-                  ></CardContent>
-                  <CardActions className={classes.displayNone}>
-                    <Grid item className={clsx(classes.flexRow)}>
-                      <Typography variant="caption">RM10020</Typography>
-                      <Typography
-                        variant="caption"
-                        className={classes.marginLeft}
-                      >
-                        2 kWh
-                      </Typography>
-                    </Grid>
-                    <Typography
-                      variant="subtitle1"
-                      className={classes.textAling}
-                    >
-                      Shop 20
-                    </Typography>
-                  </CardActions>
-                </Card>
-              );
-            } else if (card > 60) {
-              return (
-                <Card
-                  className={clsx(classes.marginRow, classes.cursor)}
-                  onClick={() => handleModalFloor()}
-                >
-                  <CardContent
-                    style={{ backgroundColor: box.color }}
-                  ></CardContent>
-                  <CardActions className={classes.displayNone}>
-                    <Grid item className={clsx(classes.flexRow)}>
-                      <Typography variant="caption">RM10020</Typography>
-                      <Typography
-                        variant="caption"
-                        className={classes.marginLeft}
-                      >
-                        2 kWh
-                      </Typography>
-                    </Grid>
-                    <Typography
-                      variant="subtitle1"
-                      className={classes.textAling}
-                    >
-                      Shop 20
-                    </Typography>
-                  </CardActions>
-                </Card>
-              );
-            }
+            } 
+            // else if (card > 20 && card < 40) {
+            //   return (
+            //     <Grid item md={3}>
+            //       <Card
+            //         className={clsx(classes.marginRow, classes.cursor)}
+            //         onClick={() => handleModalFloor()}
+            //       >
+            //         <CardContent
+            //           style={{ backgroundColor: box.color }}
+            //         ></CardContent>
+            //         <CardActions className={classes.displayNone}>
+            //           <Grid item className={clsx(classes.flexRow)}>
+            //             <Typography variant="caption">RM10020</Typography>
+            //             <Typography
+            //               variant="caption"
+            //               className={classes.marginLeft}
+            //             >
+            //               2 kWh
+            //             </Typography>
+            //           </Grid>
+            //           <Typography
+            //             variant="subtitle1"
+            //             className={classes.textAling}
+            //           >
+            //             Shop 20
+            //           </Typography>
+            //         </CardActions>
+            //       </Card>
+            //     </Grid>
+            //   );
+            // } else if (card > 40 && card < 60) {
+            //   return (
+            //     <Grid item md={3}>
+            //       <Card
+            //         className={clsx(classes.marginRow, classes.cursor)}
+            //         onClick={() => handleModalFloor()}
+            //       >
+            //         <CardContent
+            //           style={{ backgroundColor: box.color }}
+            //         ></CardContent>
+            //         <CardActions className={classes.displayNone}>
+            //           <Grid item className={clsx(classes.flexRow)}>
+            //             <Typography variant="caption">RM10020</Typography>
+            //             <Typography
+            //               variant="caption"
+            //               className={classes.marginLeft}
+            //             >
+            //               2 kWh
+            //             </Typography>
+            //           </Grid>
+            //           <Typography
+            //             variant="subtitle1"
+            //             className={classes.textAling}
+            //           >
+            //             Shop 20
+            //           </Typography>
+            //         </CardActions>
+            //       </Card>
+            //     </Grid>
+            //   );
+            // } else if (card > 60) {
+            //   return (
+            //     <Grid item md={3}>
+            //       <Card
+            //         className={clsx(classes.marginRow, classes.cursor)}
+            //         onClick={() => handleModalFloor()}
+            //       >
+            //         <CardContent
+            //           style={{ backgroundColor: box.color }}
+            //         ></CardContent>
+            //         <CardActions className={classes.displayNone}>
+            //           <Grid item className={clsx(classes.flexRow)}>
+            //             <Typography variant="caption">RM10020</Typography>
+            //             <Typography
+            //               variant="caption"
+            //               className={classes.marginLeft}
+            //             >
+            //               2 kWh
+            //             </Typography>
+            //           </Grid>
+            //           <Typography
+            //             variant="subtitle1"
+            //             className={classes.textAling}
+            //           >
+            //             Shop 20
+            //           </Typography>
+            //         </CardActions>
+            //       </Card>
+            //     </Grid>
+            //   );
+            // }
           })}
         </Grid>
       );
@@ -749,7 +759,7 @@ const FloorDiagram = ({ t, login }) => {
                   </FormControl>
                 </Grid>
               </Grid>
-              <Grid item className={clsx(classes.flexRow)}>
+              <Grid item className={clsx(classes.flexRow, classes.marginRow)}>
                 <Grid item md={6}>
                   <Card>
                     <CardContent className={classes.textAling}>
@@ -775,8 +785,31 @@ const FloorDiagram = ({ t, login }) => {
               <Grid item className={clsx(classes.flexRow, classes.marginRow)}>
                 {renderBoxColor()}
               </Grid>
+            </Grid>
+          </Grid>
 
-              <Grid item className={clsx(classes.marginRow)}>
+          {/* Image */}
+          <Grid
+            item
+            md={12}
+            className={clsx(
+              classes.flexRow,
+              classes.justifyAround,
+              classes.marginRow
+            )}
+          >
+            <Grid item md={4}>
+              <Card>
+                <CardMedia
+                  component="img"
+                  image={process.env.PUBLIC_URL + `img/floor2.png`}
+                  alt="image Floor"
+                  className={clsx(classes.imgWidth, classes.imageBox)}
+                />
+              </Card>
+            </Grid>
+            <Grid item md={7}>
+              <Grid item>
                 <Typography variant="h5">{`Type : ${
                   unitType.find((f) => f.id === unitTypeSelect)?.type
                 } `}</Typography>
@@ -806,32 +839,11 @@ const FloorDiagram = ({ t, login }) => {
 
               <Grid
                 item
-                className={clsx(classes.flexRow, classes.justifyBetween)}
+                md={12}
+                // className={clsx(classes.flexRow, classes.justifyBetween)}
               >
                 {renderCard()}
               </Grid>
-            </Grid>
-          </Grid>
-
-          {/* Image */}
-          <Grid
-            item
-            md={12}
-            className={clsx(
-              classes.flexRow,
-              classes.positonRa,
-              classes.marginRow
-            )}
-          >
-            <Grid item md={4} className={classes.positonAbs}>
-              <Card>
-                <CardMedia
-                  component="img"
-                  image={process.env.PUBLIC_URL + `img/floor2.png`}
-                  alt="image Floor"
-                  className={clsx(classes.imgWidth, classes.imageBox)}
-                />
-              </Card>
             </Grid>
           </Grid>
         </>
@@ -1077,13 +1089,13 @@ const FloorDiagram = ({ t, login }) => {
                         className={classes.width}
                         value={valueDateStart}
                         onChange={(newValue) => setValueDateStart(newValue)}
-                        format="DD-MM-YYYY"
+                        format="YYYY-MM-DD"
                       />
                       <DatePicker
                         className={classes.width}
                         value={valueDateEnd}
                         onChange={(newValue) => setValueDateEnd(newValue)}
-                        format="DD-MM-YYYY"
+                        format="YYYY-MM-DD"
                       />
                     </DemoContainer>
                   </LocalizationProvider>
