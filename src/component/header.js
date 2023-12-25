@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector, connect } from "react-redux";
-import { logout, checkLogin, checkAuthen, loading } from "../js/actions";
+import { logout, checkLogin, checkAuthen, loading, setBuildingAction } from "../js/actions";
 import {
   makeStyles,
   Grid,
@@ -81,7 +81,7 @@ function Header({ type, matches }) {
   const [openViewUser, setOpenViewUser] = useState(false);
   const [building, setBuilding] = useState([]);
 
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
   useEffect(() => {
@@ -99,6 +99,7 @@ function Header({ type, matches }) {
     if (building.length > 0) {
       building.map((item) => {
         setSelectBuilding(item.id);
+        dispatch(setBuildingAction(item.id));
       });
     }
     // console.log('building', building, user);
@@ -114,6 +115,7 @@ function Header({ type, matches }) {
 
   const handleBuilding = (e) => {
     setSelectBuilding(e.target.value);
+    dispatch(setBuildingAction(e.target.value));
   };
 
   // view user //
@@ -420,6 +422,7 @@ function mapDispatchToProps(dispatch) {
     checkAuthen: () => dispatch(checkAuthen()),
     checkLogin: () => dispatch(checkLogin()),
     // checkToken: () => dispatch(checkToken()),
+    setBuildingAction: () => dispatch(setBuildingAction()),
   };
 }
 

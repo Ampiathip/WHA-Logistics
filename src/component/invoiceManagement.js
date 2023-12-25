@@ -73,6 +73,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import StackedLineChartOutlinedIcon from "@mui/icons-material/StackedLineChartOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import moment from "moment";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -550,17 +551,16 @@ const InvoiceManagement = ({ t, login }) => {
   const [isIdEdit, setIsIdEdit] = useState("");
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
 
-  // const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   // const [sortedRows, setSortedRows] = useState(rows);
   const [fitterSelect, setFitterSelect] = useState("none");
   const [nameBox, setNameBox] = useState("");
-  const [value, setValue] = useState(null);
-  const [valueEnd, setValueEnd] = useState(null);
+  const [value, setValue] = useState(moment());
+  const [valueEnd, setValueEnd] = useState(moment().add(30, "days"));
   const [measurementList, setMeasurementList] = useState([]);
   const [measurementSelect, setMeasurementSelect] = useState("");
   const [buildingList, setBuildingList] = useState([]);
-  const [buildingSelect, setBuildingSelect] = useState("none");
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -597,6 +597,7 @@ const InvoiceManagement = ({ t, login }) => {
         dataPayload.map((item, index) => {
           if (index === 0) {
             setMeasurementSelect(item.id);
+            getInvoiceData(value, valueEnd, item.id);
           }
         });
         setIsLoading(false);
@@ -622,6 +623,42 @@ const InvoiceManagement = ({ t, login }) => {
       console.log(error);
       const response = error.response;
       swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const getInvoiceData = async (startTime, endTime, measurementSelect) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getInvoiceData(startTime, endTime, measurementSelect).then(
+        (response) => {
+          const dataPayload = response.data;
+          console.log("###### ", dataPayload);
+          setRows(dataPayload);
+          setIsLoading(false);
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
       setIsLoading(false);
     }
   };
@@ -728,10 +765,14 @@ const InvoiceManagement = ({ t, login }) => {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const sortedRows = useMemo(
-    () => stableSort(rows, getComparator(order, orderBy)),
-    [order, orderBy, rows]
-  );
+  const sortedRows = useMemo(() => {
+    if (fitterSelect !== "none") {
+      const sorted = stableSort(rows, getComparator(order, orderBy));
+      return sorted.filter((item) => item.building_id === fitterSelect);
+    } else {
+      return stableSort(rows, getComparator(order, orderBy));
+    }
+  }, [order, orderBy, rows, fitterSelect]);
 
   const visibleRows = useMemo(
     () =>
@@ -803,6 +844,7 @@ const InvoiceManagement = ({ t, login }) => {
   const handleBoxIcon = async (event, name, index) => {
     console.log("#Nan 888888888", name, index);
     setMeasurementSelect(name.id);
+    getInvoiceData(value, valueEnd, name.id);
   };
 
   const renderViewBox = (item, index) => {
@@ -955,13 +997,13 @@ const InvoiceManagement = ({ t, login }) => {
                 </Typography>
 
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DemoContainer components={["DateTimePicker"]}>
-                    <DateTimePicker
+                  <DemoContainer components={["DatePicker"]}>
+                    <DatePicker
                       value={value}
                       onChange={(newValue) => {
                         setValue(newValue);
                       }}
-                      format="DD-MM-YYYY HH:mm"
+                      format="YYYY-MM-DD"
                     />
                   </DemoContainer>
                 </LocalizationProvider>
@@ -971,13 +1013,18 @@ const InvoiceManagement = ({ t, login }) => {
                   {t("invoice:end")}
                 </Typography>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DemoContainer components={["DateTimePicker"]}>
-                    <DateTimePicker
-                      value={value}
+                  <DemoContainer components={["DatePicker"]}>
+                    <DatePicker
+                      value={valueEnd}
                       onChange={(newValue) => {
-                        setValue(newValue);
+                        setValueEnd(newValue);
                       }}
-                      format="DD-MM-YYYY HH:mm"
+                      format="YYYY-MM-DD"
+                      slotProps={{
+                        textField: {
+                          error: _.isEmpty(valueEnd),
+                        },
+                      }}
                     />
                   </DemoContainer>
                 </LocalizationProvider>
@@ -1005,13 +1052,13 @@ const InvoiceManagement = ({ t, login }) => {
                   />
                   <TableBody>
                     {visibleRows.map((row, index) => {
-                      const isItemSelected = isSelected(row.name);
+                      const isItemSelected = isSelected(row.id);
                       const labelId = `enhanced-table-checkbox-${index}`;
 
                       return (
                         <TableRow
                           hover
-                          onClick={(event) => handleClick(event, row.name)}
+                          onClick={(event) => handleClick(event, row.id)}
                           role="checkbox"
                           aria-checked={isItemSelected}
                           tabIndex={-1}

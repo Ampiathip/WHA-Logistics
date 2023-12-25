@@ -13,6 +13,7 @@ export const actionTypes = {
     TOKEN: 'TOKEN',
     TOKEN_SUCCESS: 'TOKEN_SUCCESS',
     CHECK_TOKEN: 'CHECK_TOKEN',
+    BUILDING: "BUILDING",
 
 }
 
@@ -66,5 +67,9 @@ export function checkAuthen() {
 
 export function loading(payload) {
     return { type: actionTypes.LOADING, payload }
+};
+
+export function setBuildingAction(payload) {
+    return { type: actionTypes.BUILDING, payload }
 };
 

@@ -96,9 +96,13 @@ const Dashboard = ({ t, login }) => {
   const dispatch = useDispatch();
   const sideBar = useSelector((state) => state.sidebar);
   const token = useSelector((state) => state.token);
+  const buildingId = useSelector((state) => state.building);
   const [isLoading, setIsLoading] = useState(false);
   const [measurementList, setMeasurementList] = useState([]);
   const [measurementSelect, setMeasurementSelect] = useState("");
+  const [dashboardList, setDashboardList] = useState([]);
+  const [monthly, setMonthly] = useState("monthly");
+  const [monthlyTwo, setMonthlyTwo] = useState("monthly");
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -119,8 +123,16 @@ const Dashboard = ({ t, login }) => {
     if (!_.isEmpty(token)) {
       getMeasurementTypeData();
     }
+    // console.log("token", token, login);
+  }, [token, buildingId]);
+
+  useEffect(() => {
+    dispatch(checkToken());
+    if (!_.isEmpty(token) && !_.isEmpty(buildingId)) {
+      getDashboardList(buildingId);
+    }
     console.log("token", token, login);
-  }, [token]);
+  }, [token, buildingId]);
 
   // get getMeasurementTypeData //
   const getMeasurementTypeData = async () => {
@@ -146,9 +158,51 @@ const Dashboard = ({ t, login }) => {
     }
   };
 
+  const getDashboardList = async (buildingId) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getDashboardList(buildingId).then((response) => {
+        const dataPayload = response.data;
+        console.log("#### ==== Payyy", dataPayload);
+        setDashboardList(dataPayload);
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      if (response.status >= 500) {
+        swalFire(response.data);
+      } else {
+        MySwal.fire({
+          icon: "error",
+          confirmButtonText: "ตกลง",
+          cancelButtonText: "ยกเลิก",
+          showCancelButton: true,
+          text: response.data,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            dispatch(logout(false));
+          } else if (result.isDismissed) {
+            setIsLoading(false);
+          }
+        });
+      }
+      setIsLoading(false);
+    }
+  };
+
   const handleBoxIcon = async (event, name, index) => {
     console.log("#Nan 888888888", name, index);
     setMeasurementSelect(name.id);
+  };
+
+  const handleNameMonthly = async (event, name) => {
+    setMonthly(name);
+  };
+
+  const handleNameMonthlyTwo = async (event, name) => {
+    setMonthlyTwo(name);
   };
 
   const renderViewBox = (item, index) => {
@@ -231,7 +285,7 @@ const Dashboard = ({ t, login }) => {
                     </Typography>
                   </>
                 )}
-                 {img.id === 1 && (
+                {img.id === 1 && (
                   <>
                     <Typography
                       variant="caption"
@@ -250,7 +304,10 @@ const Dashboard = ({ t, login }) => {
               </Grid>
               <Grid item>
                 {img.id === 0 && (
-                  <Grid item className={clsx(classes.flexRow, classes.justifyEnd)}>
+                  <Grid
+                    item
+                    className={clsx(classes.flexRow, classes.justifyEnd)}
+                  >
                     <Typography variant="h6">20.655</Typography>
                     <Typography variant="h6" className={classes.marginLeft}>
                       {t("home:Baht")}
@@ -260,7 +317,10 @@ const Dashboard = ({ t, login }) => {
               </Grid>
               <Grid item>
                 {img.id === 1 && (
-                  <Grid item className={clsx(classes.flexRow, classes.justifyEnd)}>
+                  <Grid
+                    item
+                    className={clsx(classes.flexRow, classes.justifyEnd)}
+                  >
                     <Typography variant="h6">4,590</Typography>
                     <Typography variant="h6" className={classes.marginLeft}>
                       {t("home:kwh")}
@@ -270,7 +330,10 @@ const Dashboard = ({ t, login }) => {
               </Grid>
               <Grid item>
                 {img.id === 2 && (
-                  <Grid item className={clsx(classes.flexRow, classes.justifyEnd)}>
+                  <Grid
+                    item
+                    className={clsx(classes.flexRow, classes.justifyEnd)}
+                  >
                     <Typography variant="h6">2,295</Typography>
                     <Typography variant="h6" className={classes.marginLeft}>
                       {t("home:metricTon")}
@@ -280,7 +343,10 @@ const Dashboard = ({ t, login }) => {
               </Grid>
               <Grid item>
                 {img.id === 3 && (
-                  <Grid item className={clsx(classes.flexRow, classes.justifyEnd)}>
+                  <Grid
+                    item
+                    className={clsx(classes.flexRow, classes.justifyEnd)}
+                  >
                     <Typography variant="h6">54</Typography>
                     <Typography variant="h6" className={classes.marginLeft}>
                       {t("home:trees")}
@@ -293,6 +359,155 @@ const Dashboard = ({ t, login }) => {
         </Grid>
       );
     });
+  };
+
+  const renderdashboardList = () => {
+    if (dashboardList.length > 0) {
+      return dashboardList.map((item, index) => {
+        // console.log("### item88888888888", item);
+        const measurementID = measurementList.find(
+          (f) => f.measurement_type === item.measurementType
+        )?.id;
+        if (measurementID === measurementSelect) {
+          return (
+            <>
+              <Grid item md={3}>
+                <Card>
+                  <CardContent className={classes.paddingCard}>
+                    <Grid item>
+                      <Typography variant="caption">
+                        {t("home:bill")}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        className={clsx(
+                          monthly === "monthly" ? classes.borderText : "",
+                          classes.marginLeft,
+                          classes.cursor
+                        )}
+                        onClick={(e) => handleNameMonthly(e, "monthly")}
+                      >
+                        {t("home:monthly")}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        className={clsx(
+                          monthly === "last" ? classes.borderText : "",
+                          classes.marginLeft,
+                          classes.cursor
+                        )}
+                        onClick={(e) => handleNameMonthly(e, "last")}
+                      >
+                        {t("home:last")}
+                      </Typography>
+                    </Grid>
+                    <Grid
+                      item
+                      className={clsx(classes.flexRow, classes.justifyEnd)}
+                    >
+                      <Typography variant="h6">
+                        {monthly === "monthly"
+                          ? item.useMonthly
+                          : item.useLastMonth}
+                      </Typography>
+                      <Typography variant="h6" className={classes.marginLeft}>
+                        {t("home:Baht")}
+                      </Typography>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item md={3}>
+                <Card>
+                  <CardContent className={classes.paddingCard}>
+                    <Grid item>
+                      <Typography variant="caption">
+                        {t("home:bill")}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        className={clsx(
+                          monthlyTwo === "monthly" ? classes.borderText : "",
+                          classes.marginLeft,
+                          classes.cursor
+                        )}
+                        onClick={(e) => handleNameMonthlyTwo(e, "monthly")}
+                      >
+                        {t("home:monthly")}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        className={clsx(
+                          monthlyTwo === "last" ? classes.borderText : "",
+                          classes.marginLeft,
+                          classes.cursor
+                        )}
+                        onClick={(e) => handleNameMonthlyTwo(e, "last")}
+                      >
+                        {t("home:last")}
+                      </Typography>
+                    </Grid>
+                    <Grid
+                      item
+                      className={clsx(classes.flexRow, classes.justifyEnd)}
+                    >
+                      <Typography variant="h6">
+                        {monthlyTwo === "monthly"
+                          ? item.useMonthly
+                          : item.useLastMonth}
+                      </Typography>
+                      <Typography variant="h6" className={classes.marginLeft}>
+                        {t("home:Baht")}
+                      </Typography>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item md={3}>
+                <Card>
+                  <CardContent className={classes.paddingCard}>
+                    <Grid item>
+                      <Typography variant="caption">
+                        {t("home:metric")}
+                      </Typography>
+                    </Grid>
+                    <Grid
+                      item
+                      className={clsx(classes.flexRow, classes.justifyEnd)}
+                    >
+                      <Typography variant="h6">{item.CO2}</Typography>
+                      <Typography variant="h6" className={classes.marginLeft}>
+                        {t("home:trees")}
+                      </Typography>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item md={3}>
+                <Card>
+                  <CardContent className={classes.paddingCard}>
+                    <Grid item>
+                      <Typography variant="caption">
+                        {t("home:treesPlanted")}
+                      </Typography>
+                    </Grid>
+                    <Grid
+                      item
+                      className={clsx(classes.flexRow, classes.justifyEnd)}
+                    >
+                      <Typography variant="h6">{item.tree}</Typography>
+                      <Typography variant="h6" className={classes.marginLeft}>
+                        {t("home:trees")}
+                      </Typography>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </>
+          );
+        }
+      });
+    }
   };
 
   return (
@@ -403,7 +618,8 @@ const Dashboard = ({ t, login }) => {
               classes.marginRow
             )}
           >
-            {renderViewCard()}
+            {/* {renderViewCard()} */}
+            {renderdashboardList()}
           </Grid>
         </>
       )}

@@ -8,6 +8,7 @@ const initialState = {
     login: false,
     loading: false,
     token: '',
+    building: '',
 
   };
   
@@ -59,6 +60,12 @@ const initialState = {
     if (action.type === actionTypes.LOADING) {
       return Object.assign({}, state, {
         loading: action.payload
+      });
+    }
+
+    if (action.type === actionTypes.BUILDING) {
+      return Object.assign({}, state, {
+        building: action.payload
       });
     }
 

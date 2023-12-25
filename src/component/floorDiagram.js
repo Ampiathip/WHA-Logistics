@@ -134,6 +134,7 @@ const useStyles = makeStyles((theme) => ({
   modalWidth: {
     width: "90% !important",
     height: "90% !important",
+    maxWidth: "none !important",
   },
   imgWidth: {
     width: "-webkit-fill-available",

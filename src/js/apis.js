@@ -437,7 +437,7 @@ const getAPI = () => {
 
   const getInvoiceData = (startTime = "", endTime = "", id = 0) => {
     return tokenAPI.get(
-      `/api/invoice/list?startTime=${startTime}&endTime=${endTime}&measurement_type_id=${id}`
+      `/api/invoice/list?startTime=${startTime}&endTime=${endTime}&measurementTypeID=${id}`
     );
   };
 
@@ -570,6 +570,11 @@ const getAPI = () => {
   /* ============== Device User List API ================ */
   const getDeviceUserList = (id = 0) => {
     return tokenAPI.get(`/api/device-user/list`);
+  };
+
+  /* ============== Dashboard List API ================ */
+  const getDashboardList = (id = 0) => {
+    return tokenAPI.get(`/api/dashboard?buildingID=${id}`);
   };
 
   return {
@@ -711,6 +716,8 @@ const getAPI = () => {
 
     getUnitUserList,
     getDeviceUserList,
+
+    getDashboardList,
   };
 };
 export default {
