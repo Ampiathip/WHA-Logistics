@@ -62,6 +62,7 @@ const Tags = ({ t, setDataSelectDevice, setDataSelectPoint,}) => {
   const sideBar = useSelector((state) => state.sidebar);
   const token = useSelector((state) => state.token);
   const user = useSelector((state) => state.user);
+  const buildingId = useSelector((state) => state.building);
   const theme = useTheme();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -85,15 +86,15 @@ const Tags = ({ t, setDataSelectDevice, setDataSelectPoint,}) => {
   useEffect(() => {
     dispatch(checkToken());
     if (!_.isEmpty(token)) {
-      getDevice();
+      getDevice(buildingId);
     }
-  }, [token]);
+  }, [token, buildingId]);
 
-  const getDevice = async () => {
+  const getDevice = async (buildingId) => {
     setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.myDevice().then((response) => {
+      await API.myDevice(buildingId).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayloadmyDevice", dataPayload);
         setDeviceList(dataPayload);

@@ -376,8 +376,8 @@ const getAPI = () => {
     return tokenAPI.get(`/api/realtimedata/${id}`);
   };
 
-  const myDevice = () => {
-    return tokenAPI.get(`/api/my-device`);
+  const myDevice = (id = 0) => {
+    return tokenAPI.get(`/api/my-device/${id}`);
   };
 
   /* ============== Historicaldata API ================ */

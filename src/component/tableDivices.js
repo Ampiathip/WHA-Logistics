@@ -434,6 +434,7 @@ const DeviceManagement = ({ t, login }) => {
   const sideBar = useSelector((state) => state.sidebar);
   const token = useSelector((state) => state.token);
   const user = useSelector((state) => state.user);
+  const buildingId = useSelector((state) => state.building);
   const theme = useTheme();
   // modal //
   const [open, setOpen] = useState(false);
@@ -470,11 +471,11 @@ const DeviceManagement = ({ t, login }) => {
   useEffect(() => {
     dispatch(checkToken());
     if (!_.isEmpty(token)) {
-      getDevice();
+      getDevice(buildingId);
       getCommunicationData();
       getBillingTypeData();
     }
-  }, [token]);
+  }, [token, buildingId]);
 
   useEffect(() => {
     if (openView) {
@@ -505,11 +506,11 @@ const DeviceManagement = ({ t, login }) => {
     }
   }, [isIdDevice, openView, open]);
 
-  const getDevice = async () => {
+  const getDevice = async (buildingId) => {
     setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.myDevice().then((response) => {
+      await API.myDevice(buildingId).then((response) => {
         const dataPayload = response.data;
         console.log("dataPayloadmyDevice", dataPayload);
         setRows(dataPayload);
