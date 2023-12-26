@@ -103,6 +103,7 @@ const Dashboard = ({ t, login }) => {
   const [dashboardList, setDashboardList] = useState([]);
   const [monthly, setMonthly] = useState("monthly");
   const [monthlyTwo, setMonthlyTwo] = useState("monthly");
+  const [measurementName, setMeasurementName] = useState("");
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -144,8 +145,9 @@ const Dashboard = ({ t, login }) => {
         // console.log("#Nan vvvvvv", dataPayload);
         setMeasurementList(dataPayload);
         dataPayload.map((item, index) => {
-          if (index === 0) {
+          if (item.measurement_type === "Electrical") {
             setMeasurementSelect(item.id);
+            setMeasurementName(item.measurement_type);
           }
         });
         setIsLoading(false);
@@ -210,18 +212,22 @@ const Dashboard = ({ t, login }) => {
       {
         id: 0,
         name: t("home:electric"),
+        type: "Electrical",
       },
       {
         id: 1,
         name: t("home:cold"),
+        type: "Air",
       },
       {
         id: 2,
         name: t("home:hot"),
+        type: "Hot",
       },
       {
         id: 3,
         name: t("home:cool"),
+        type: "Cold",
       },
     ];
     return (
@@ -234,7 +240,7 @@ const Dashboard = ({ t, login }) => {
         onClick={(e) => handleBoxIcon(e, item, index)}
       >
         {listImg.map((img) => {
-          if (index === img.id) {
+          if (img.type === item.measurement_type) {
             return <Typography variant="h6">{img.name}</Typography>;
           }
         })}
@@ -365,10 +371,10 @@ const Dashboard = ({ t, login }) => {
     if (dashboardList.length > 0) {
       return dashboardList.map((item, index) => {
         // console.log("### item88888888888", item);
-        const measurementID = measurementList.find(
-          (f) => f.measurement_type === item.measurementType
-        )?.id;
-        if (measurementID === measurementSelect) {
+        // const measurementID = measurementList.find(
+        //   (f) => f.measurement_type === item.measurementType
+        // )?.id;
+        if (item.measurementTypeID === measurementSelect) {
           return (
             <>
               <Grid item md={3}>
@@ -420,9 +426,9 @@ const Dashboard = ({ t, login }) => {
               <Grid item md={3}>
                 <Card>
                   <CardContent className={classes.paddingCard}>
-                    <Grid item>
-                      <Typography variant="caption">
-                        {t("home:bill")}
+                    <Grid item className={classes.flexRow}>
+                      <Typography style={{fontSize: 10}}>
+                        {t("home:consumption")}
                       </Typography>
                       <Typography
                         variant="caption"
@@ -431,6 +437,7 @@ const Dashboard = ({ t, login }) => {
                           classes.marginLeft,
                           classes.cursor
                         )}
+                        // style={{fontSize: 10}}
                         onClick={(e) => handleNameMonthlyTwo(e, "monthly")}
                       >
                         {t("home:monthly")}
@@ -453,8 +460,8 @@ const Dashboard = ({ t, login }) => {
                     >
                       <Typography variant="h6">
                         {monthlyTwo === "monthly"
-                          ? item.useMonthly
-                          : item.useLastMonth}
+                          ? item.chargeMonthly
+                          : item.chargeLastMonth}
                       </Typography>
                       <Typography variant="h6" className={classes.marginLeft}>
                         {t("home:Baht")}
@@ -536,49 +543,64 @@ const Dashboard = ({ t, login }) => {
             <Grid item md={3}>
               <Card>
                 <CardContent className={classes.textAling}>
-                  <Grid item>
-                    <Typography variant="h6" className={classes.borderBottom}>
-                      {t("home:buildingName")}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      className={classes.marginTopCol}
-                    >
-                      Thirty Tree 33
-                    </Typography>
-                  </Grid>
-                  <Grid item className={classes.marginRowBox}>
-                    <Typography variant="h6">{t("home:emergy")}</Typography>
-                    <Typography
-                      variant="subtitle1"
-                      className={classes.borderBottom}
-                    >
-                      {t("home:kwhM")}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      className={classes.marginTopCol}
-                    >
-                      73.11
-                    </Typography>
-                  </Grid>
-                  <Grid item className={classes.marginRowBox}>
-                    <Typography variant="h6">
-                      {t("home:consumption")}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      className={classes.borderBottom}
-                    >
-                      {t("home:kwhL")}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      className={classes.marginTopCol}
-                    >
-                      4,590
-                    </Typography>
-                  </Grid>
+                  {dashboardList.length > 0 &&
+                    dashboardList.map((data) => {
+                      // console.log("#### data", data);
+                      if (data.measurementTypeID === measurementSelect) {
+                        return (
+                          <>
+                            <Grid item>
+                              <Typography
+                                variant="h6"
+                                className={classes.borderBottom}
+                              >
+                                {t("home:buildingName")}
+                              </Typography>
+                              <Typography
+                                variant="subtitle1"
+                                className={classes.marginTopCol}
+                              >
+                                {data.buildingName}
+                              </Typography>
+                            </Grid>
+                            <Grid item className={classes.marginRowBox}>
+                              <Typography variant="h6">
+                                {t("home:emergy")}
+                              </Typography>
+                              <Typography
+                                variant="subtitle1"
+                                className={classes.borderBottom}
+                              >
+                                {t("home:kwhM")}
+                              </Typography>
+                              <Typography
+                                variant="subtitle1"
+                                className={classes.marginTopCol}
+                              >
+                                {data.intensity}
+                              </Typography>
+                            </Grid>
+                            <Grid item className={classes.marginRowBox}>
+                              <Typography variant="h6">
+                                {t("home:consumption")}
+                              </Typography>
+                              <Typography
+                                variant="subtitle1"
+                                className={classes.borderBottom}
+                              >
+                                {t("home:kwhL")}
+                              </Typography>
+                              <Typography
+                                variant="subtitle1"
+                                className={classes.marginTopCol}
+                              >
+                                 {data.chargeMonthly}
+                              </Typography>
+                            </Grid>
+                          </>
+                        );
+                      }
+                    })}
                 </CardContent>
               </Card>
             </Grid>

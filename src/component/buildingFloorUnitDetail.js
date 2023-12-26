@@ -521,6 +521,7 @@ const UnitManagement = ({
   const [unitBillingType, setUnitBillingType] = useState("");
   const [unitBillingTypeList, setUnitBillingTypeList] = useState([]);
   const [unitBillingTypeName, setUnitBillingTypeName] = useState("");
+  const [measurementName, setMeasurementName] = useState("");
 
   // console.log("ididid====", state, id);
   const swalFire = (msg) => {
@@ -618,9 +619,17 @@ const UnitManagement = ({
         // console.log("#Nan vvvvvv", dataPayload);
         setMeasurementList(dataPayload);
         dataPayload.map((item, index) => {
-          if (index === 0) {
+          if (item.measurement_type === "Electrical") {
             setMeasurementSelect(item.id);
-          }
+            setMeasurementName(item.measurement_type);
+          } 
+          // else if (item.measurement_type === "Air") {
+          //   setMeasurementName(item.measurement_type);
+          // } else if (item.measurement_type === "Hot") {
+          //   setMeasurementName(item.measurement_type);
+          // } else if (item.measurement_type === "Cold") {
+          //   setMeasurementName(item.measurement_type);
+          // }
         });
         setIsLoading(false);
       });
@@ -1879,18 +1888,22 @@ const UnitManagement = ({
       {
         id: 0,
         name: "Vector.png",
+        type: "Electrical",
       },
       {
         id: 1,
         name: "VectorNum.png",
+        type: "Air",
       },
       {
         id: 2,
         name: "VectorIcon.png",
+        type: "Hot",
       },
       {
         id: 3,
         name: "VectorCool.png",
+        type: "Cold",
       },
     ];
     return (
@@ -1902,8 +1915,8 @@ const UnitManagement = ({
         )}
         onClick={(e) => handleBoxIcon(e, item, index)}
       >
-        {listImg.map((img) => {
-          if (index === img.id) {
+         {listImg.map((img, index) => {
+          if (img.type === item.measurement_type) {
             return (
               <img
                 src={process.env.PUBLIC_URL + `img/${img.name}`}

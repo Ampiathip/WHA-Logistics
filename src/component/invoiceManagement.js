@@ -73,7 +73,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import StackedLineChartOutlinedIcon from "@mui/icons-material/StackedLineChartOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import moment from "moment";
+import dayjs from 'dayjs';
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -556,11 +556,12 @@ const InvoiceManagement = ({ t, login }) => {
   // const [sortedRows, setSortedRows] = useState(rows);
   const [fitterSelect, setFitterSelect] = useState("none");
   const [nameBox, setNameBox] = useState("");
-  const [value, setValue] = useState(moment());
-  const [valueEnd, setValueEnd] = useState(moment().add(30, "days"));
+  const [value, setValue] = useState(dayjs());
+  const [valueEnd, setValueEnd] = useState(dayjs().add(30, "day"));
   const [measurementList, setMeasurementList] = useState([]);
   const [measurementSelect, setMeasurementSelect] = useState("");
   const [buildingList, setBuildingList] = useState([]);
+  const [measurementName, setMeasurementName] = useState("");
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -595,8 +596,9 @@ const InvoiceManagement = ({ t, login }) => {
         // console.log("#Nan vvvvvv", dataPayload);
         setMeasurementList(dataPayload);
         dataPayload.map((item, index) => {
-          if (index === 0) {
+          if (item.measurement_type === "Electrical") {
             setMeasurementSelect(item.id);
+            setMeasurementName(item.measurement_type);
             getInvoiceData(value, valueEnd, item.id);
           }
         });
@@ -847,23 +849,40 @@ const InvoiceManagement = ({ t, login }) => {
     getInvoiceData(value, valueEnd, name.id);
   };
 
+  const handleValue = (newValue) => {
+    console.log('###', newValue);
+    // const dateFormat = newValue.format('YYYY-MM-DD')
+    setValue(newValue);
+    // getInvoiceData(dateFormat, valueEnd, measurementSelect);
+  };
+
+  const handleValueEnd = (newValue) => {
+    // const dateEndFormat = newValue.format('YYYY-MM-DD')
+    setValueEnd(newValue);
+    // getInvoiceData(value, dateEndFormat, measurementSelect);
+  };
+
   const renderViewBox = (item, index) => {
     const listImg = [
       {
         id: 0,
         name: "Vector.png",
+        type: "Electrical",
       },
       {
         id: 1,
         name: "VectorNum.png",
+        type: "Air",
       },
       {
         id: 2,
         name: "VectorIcon.png",
+        type: "Hot",
       },
       {
         id: 3,
         name: "VectorCool.png",
+        type: "Cold",
       },
     ];
     return (
@@ -875,8 +894,8 @@ const InvoiceManagement = ({ t, login }) => {
         )}
         onClick={(e) => handleBoxIcon(e, item, index)}
       >
-        {listImg.map((img) => {
-          if (index === img.id) {
+        {listImg.map((img, index) => {
+          if (img.type === item.measurement_type) {
             return (
               <img
                 src={process.env.PUBLIC_URL + `img/${img.name}`}
@@ -1000,9 +1019,7 @@ const InvoiceManagement = ({ t, login }) => {
                   <DemoContainer components={["DatePicker"]}>
                     <DatePicker
                       value={value}
-                      onChange={(newValue) => {
-                        setValue(newValue);
-                      }}
+                      onChange={(newValue) => handleValue(newValue)}
                       format="YYYY-MM-DD"
                     />
                   </DemoContainer>
@@ -1016,9 +1033,7 @@ const InvoiceManagement = ({ t, login }) => {
                   <DemoContainer components={["DatePicker"]}>
                     <DatePicker
                       value={valueEnd}
-                      onChange={(newValue) => {
-                        setValueEnd(newValue);
-                      }}
+                      onChange={(newValue) => handleValueEnd(newValue)}
                       format="YYYY-MM-DD"
                       slotProps={{
                         textField: {

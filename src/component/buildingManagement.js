@@ -220,8 +220,6 @@ const useStyles = makeStyles((theme) => ({
   marginBillBox: {
     margin: 15,
   },
-
-
 }));
 
 function descendingComparator(a, b, orderBy) {
@@ -603,7 +601,7 @@ const BuildingManagement = ({ t, login }) => {
   const [bllingOffPeak, setBllingOffPeak] = useState("");
   const [bllingServiceCharge, setBllingServiceCharge] = useState("");
   const [bllingTypeId, setBllingTypeSelectId] = useState("none");
-
+  const [measurementName, setMeasurementName] = useState("");
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -670,11 +668,12 @@ const BuildingManagement = ({ t, login }) => {
       await API.connectTokenAPI(token);
       await API.getMeasurementTypeData().then((response) => {
         const dataPayload = response.data;
-        // console.log("#Nan vvvvvv", dataPayload);
+        console.log("#Nan vvvvvv", dataPayload);
         setMeasurementList(dataPayload);
-        dataPayload.map((item, index) => {
-          if (index === 0) {
+        dataPayload.map((item) => {
+          if (item.measurement_type === "Electrical") {
             setMeasurementSelect(item.id);
+            setMeasurementName(item.measurement_type);
           }
         });
         setIsLoading(false);
@@ -686,6 +685,8 @@ const BuildingManagement = ({ t, login }) => {
       setIsLoading(false);
     }
   };
+
+  console.log("# 99999999", measurementSelect, measurementName);
 
   // get getCurrencyTypeData //
   const getCurrencyTypeData = async () => {
@@ -1484,22 +1485,24 @@ const BuildingManagement = ({ t, login }) => {
     setIsLoading(true);
     try {
       API.connectTokenAPI(token);
-      await API.getBillingBillingView(buildingId, measurementSelect).then((response) => {
-        const dataPayload = response.data;
-        // console.log("#Nan dataPayload", response, dataPayload);
-        dataPayload.length > 0 &&
-          dataPayload.map((item) => {
-            console.log("#Nan 9999=======item", item);
-            setBllingTypeSelectId(item.building_billing_id);
-            setBllingTypeSelect(item.billing_type_id);
-            setBllingTypeSelectName(item.billing_type);
-            setBllingOnPeak(item.on_peak);
-            setBllingOffPeak(item.off_peak);
-            setBllingServiceCharge(item.service_charge);
-            setBllingCost(item.cost);
-          });
-        setIsLoading(false);
-      });
+      await API.getBillingBillingView(buildingId, measurementSelect).then(
+        (response) => {
+          const dataPayload = response.data;
+          // console.log("#Nan dataPayload", response, dataPayload);
+          dataPayload.length > 0 &&
+            dataPayload.map((item) => {
+              console.log("#Nan 9999=======item", item);
+              setBllingTypeSelectId(item.building_billing_id);
+              setBllingTypeSelect(item.billing_type_id);
+              setBllingTypeSelectName(item.billing_type);
+              setBllingOnPeak(item.on_peak);
+              setBllingOffPeak(item.off_peak);
+              setBllingServiceCharge(item.service_charge);
+              setBllingCost(item.cost);
+            });
+          setIsLoading(false);
+        }
+      );
     } catch (error) {
       console.log(error);
       const response = error.response;
@@ -1514,7 +1517,7 @@ const BuildingManagement = ({ t, login }) => {
     setIsIdEdit(id);
     getBuildingParamList(id);
 
-    getBillingBillingView(id, measurementSelect)
+    getBillingBillingView(id, measurementSelect);
 
     const dataGeneralBuiling = await getGeneralExpensesBuildingData(
       id,
@@ -1632,20 +1635,25 @@ const BuildingManagement = ({ t, login }) => {
       {
         id: 0,
         name: "Vector.png",
+        type: "Electrical",
       },
       {
         id: 1,
         name: "VectorNum.png",
+        type: "Air",
       },
       {
         id: 2,
         name: "VectorIcon.png",
+        type: "Hot",
       },
       {
         id: 3,
         name: "VectorCool.png",
+        type: "Cold",
       },
     ];
+    // const sortedItems = listImg.sort((a, b) => a.id - b.id);
     return (
       <Grid
         item
@@ -1655,8 +1663,21 @@ const BuildingManagement = ({ t, login }) => {
         )}
         onClick={(e) => handleBoxIcon(e, item, index)}
       >
-        {listImg.map((img) => {
-          if (index === img.id) {
+        {/* {sortedItems.map((img, index) => {
+          if (img.type === item.measurement_type) {
+            return (
+              <img
+                key={index}
+                src={process.env.PUBLIC_URL + `img/${img.name}`}
+                alt="Icon"
+              />
+            );
+          }
+          return null;
+        })} */}
+        {/* {renderImage()} */}
+        {listImg.map((img, index) => {
+          if (img.type === item.measurement_type) {
             return (
               <img
                 src={process.env.PUBLIC_URL + `img/${img.name}`}
@@ -1669,6 +1690,25 @@ const BuildingManagement = ({ t, login }) => {
     );
   };
 
+  const renderImage = () => {
+    console.log("##  gggggggg", measurementName);
+    if (measurementName === "Electrical") {
+      return <img src={process.env.PUBLIC_URL + `img/Vector.png`} alt="Icon" />;
+    } else if (measurementName === "Air") {
+      return (
+        <img src={process.env.PUBLIC_URL + `img/VectorNum.png`} alt="Icon" />
+      );
+    } else if (measurementName === "Hot") {
+      return (
+        <img src={process.env.PUBLIC_URL + `img/VectorIcon.png`} alt="Icon" />
+      );
+    } else if (measurementName === "Cold") {
+      return (
+        <img src={process.env.PUBLIC_URL + `img/VectorCool.png`} alt="Icon" />
+      );
+    }
+  };
+
   const handleBillingType = (event) => {
     setBllingTypeSelect(event.target.value);
     setBllingTypeSelectName(
@@ -1678,7 +1718,7 @@ const BuildingManagement = ({ t, login }) => {
 
   const handleBillCost = (event) => {
     setBllingCost(event.target.value);
-  };  
+  };
 
   const handleBllingonPeak = (event) => {
     setBllingOnPeak(event.target.value);
@@ -1756,16 +1796,30 @@ const BuildingManagement = ({ t, login }) => {
       } else {
         return (
           <Grid item md={12} className={clsx(classes.marginRow)}>
-            <Grid item md={12} className={clsx(classes.marginRow, classes.flexRow, classes.justContentCenter)}>
-              <Typography variant="h5">{t('billType:priceHead')}</Typography>
+            <Grid
+              item
+              md={12}
+              className={clsx(
+                classes.marginRow,
+                classes.flexRow,
+                classes.justContentCenter
+              )}
+            >
+              <Typography variant="h5">{t("billType:priceHead")}</Typography>
             </Grid>
             <Grid
               item
               md={12}
-              className={clsx(classes.marginRow, classes.flexRow, classes.modalContent)}
+              className={clsx(
+                classes.marginRow,
+                classes.flexRow,
+                classes.modalContent
+              )}
             >
               <Grid item md={3}>
-                <Typography variant="h6" className={classes.marginBot}>{t('billType:onPeak')}</Typography>
+                <Typography variant="h6" className={classes.marginBot}>
+                  {t("billType:onPeak")}
+                </Typography>
                 <TextField
                   // id="input-with-icon-textfield"
                   size="small"
@@ -1776,7 +1830,9 @@ const BuildingManagement = ({ t, login }) => {
                 />
               </Grid>
               <Grid item md={3}>
-                <Typography variant="h6" className={classes.marginBot}>{t('billType:offPeak')}</Typography>
+                <Typography variant="h6" className={classes.marginBot}>
+                  {t("billType:offPeak")}
+                </Typography>
                 <TextField
                   // id="input-with-icon-textfield"
                   size="small"
@@ -1787,7 +1843,9 @@ const BuildingManagement = ({ t, login }) => {
                 />
               </Grid>
               <Grid item md={3}>
-                <Typography variant="h6" className={classes.marginBot}>{t('billType:priceMount')}</Typography>
+                <Typography variant="h6" className={classes.marginBot}>
+                  {t("billType:priceMount")}
+                </Typography>
                 <TextField
                   // id="input-with-icon-textfield"
                   size="small"
@@ -1799,11 +1857,13 @@ const BuildingManagement = ({ t, login }) => {
               </Grid>
             </Grid>
             <Grid item md={12} className={classes.marginBillBox}>
-             <Typography variant="h5">{t('billType:onPeak')}</Typography>
-             <Typography variant="h6">{t('billType:onPeakDate')}</Typography>
-             <Typography variant="h5">{t('billType:offPeak')}</Typography>
-             <Typography variant="h6">{t('billType:offPeakDate')}</Typography>
-             <Typography variant="h6">{t('billType:offPeakDateTwo')}</Typography>
+              <Typography variant="h5">{t("billType:onPeak")}</Typography>
+              <Typography variant="h6">{t("billType:onPeakDate")}</Typography>
+              <Typography variant="h5">{t("billType:offPeak")}</Typography>
+              <Typography variant="h6">{t("billType:offPeakDate")}</Typography>
+              <Typography variant="h6">
+                {t("billType:offPeakDateTwo")}
+              </Typography>
             </Grid>
           </Grid>
         );
