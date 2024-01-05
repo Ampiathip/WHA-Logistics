@@ -575,6 +575,16 @@ const getAPI = () => {
   /* ============== Dashboard List API ================ */
   const getDashboardList = (id = 0) => {
     return tokenAPI.get(`/api/dashboard?buildingID=${id}`);
+  }; 
+
+  /* ============== Floor Diagram API ================ */
+  const getFloorDiagramList = (buildingID = 0, floorID = 0, unitTypeID = 0) => {
+    return tokenAPI.get(`/api/floor-diagram?buildingID=${buildingID}&floorID=${floorID}&unitTypeID=${unitTypeID}`);
+  };
+
+  /* ============== Invoice Unit API ================ */
+  const getInvoiceUnitList = (id = 0, startTime = 0, endTime = 0, measurementTypeID = 0) => {
+    return tokenAPI.get(`/api/invoice-unit/list/${id}?startTime=${startTime}&endTime=${endTime}&measurementTypeID=${measurementTypeID}`);
   };
 
   return {
@@ -718,6 +728,9 @@ const getAPI = () => {
     getDeviceUserList,
 
     getDashboardList,
+
+    getFloorDiagramList,
+    getInvoiceUnitList,
   };
 };
 export default {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector, connect } from "react-redux";
 import PropTypes from "prop-types";
 import {
@@ -196,68 +196,68 @@ function createData(
   };
 }
 
-const rows = [
-  createData(
-    "RM10012",
-    "RM10012",
-    "2022-03-10",
-    "2022-03-17",
-    "2022-03-17",
-    2900,
-    1800,
-    1100,
-    6.5,
-    7150
-  ),
-  createData(
-    "RM10012",
-    "RM10012",
-    "2022-03-10",
-    "2022-03-17",
-    "2022-03-17",
-    2900,
-    1800,
-    1100,
-    6.5,
-    7150
-  ),
-  createData(
-    "RM10012",
-    "RM10012",
-    "2022-03-10",
-    "2022-03-17",
-    "2022-03-17",
-    2900,
-    1800,
-    1100,
-    6.5,
-    7150
-  ),
-  createData(
-    "RM10012",
-    "RM10012",
-    "2022-03-10",
-    "2022-03-17",
-    "2022-03-17",
-    2900,
-    1800,
-    1100,
-    6.5,
-    7150
-  ),
-  createData(
-    "RM10012",
-    "RM10012",
-    "2022-03-10",
-    "2022-03-17",
-    "2022-03-17",
-    2900,
-    1800,
-    1100,
-    6.5,
-    7150
-  ),
-];
+// const rows = [
+//   createData(
+//     "RM10012",
+//     "RM10012",
+//     "2022-03-10",
+//     "2022-03-17",
+//     "2022-03-17",
+//     2900,
+//     1800,
+//     1100,
+//     6.5,
+//     7150
+//   ),
+//   createData(
+//     "RM10012",
+//     "RM10012",
+//     "2022-03-10",
+//     "2022-03-17",
+//     "2022-03-17",
+//     2900,
+//     1800,
+//     1100,
+//     6.5,
+//     7150
+//   ),
+//   createData(
+//     "RM10012",
+//     "RM10012",
+//     "2022-03-10",
+//     "2022-03-17",
+//     "2022-03-17",
+//     2900,
+//     1800,
+//     1100,
+//     6.5,
+//     7150
+//   ),
+//   createData(
+//     "RM10012",
+//     "RM10012",
+//     "2022-03-10",
+//     "2022-03-17",
+//     "2022-03-17",
+//     2900,
+//     1800,
+//     1100,
+//     6.5,
+//     7150
+//   ),
+//   createData(
+//     "RM10012",
+//     "RM10012",
+//     "2022-03-10",
+//     "2022-03-17",
+//     "2022-03-17",
+//     2900,
+//     1800,
+//     1100,
+//     6.5,
+//     7150
+//   ),
+// ];
 
 const FloorDiagram = ({ t, login }) => {
   const classes = useStyles();
@@ -277,8 +277,23 @@ const FloorDiagram = ({ t, login }) => {
 
   const fullScreen = useMediaQuery(theme.breakpoints.down("xl"));
   const [valuetab, setValueTab] = useState("Invoice");
-  const [valueDateStart, setValueDateStart] = useState(null);
-  const [valueDateEnd, setValueDateEnd] = useState(null);
+  const [valueDateStart, setValueDateStart] = useState(dayjs());
+  const [valueDateEnd, setValueDateEnd] = useState(dayjs().add(30, "day"));
+
+  const [emissionsFloor, setEmissionsFloor] = useState(0);
+  const [energyConsumtionFloor, setEnergyConsumtionFloor] = useState(0);
+  const [emissionsType, setEmissionsType] = useState(0);
+  const [energyConsumtionType, setEnergyConsumtionType] = useState(0);
+  const [typeName, setTypeName] = useState("");
+  const [unitData, setUnitData] = useState([]);
+  const [floorName, setFloorName] = useState("");
+  const [buildingName, setBuildingName] = useState("");
+  const [measurementList, setMeasurementList] = useState([]);
+  const [measurementSelect, setMeasurementSelect] = useState("");
+  const [measurementName, setMeasurementName] = useState("");
+  const [unitId, setUnitId] = useState("");
+  const [unitName, setUnitName] = useState("");
+  const [rows, setRows] = useState([]);
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -299,9 +314,35 @@ const FloorDiagram = ({ t, login }) => {
     if (!_.isEmpty(token)) {
       getBuilding();
       getUnitTypeList();
+      getMeasurementTypeData();
     }
     console.log("token", token, login);
   }, [token]);
+
+  // get getMeasurementTypeData //
+  const getMeasurementTypeData = async () => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getMeasurementTypeData().then((response) => {
+        const dataPayload = response.data;
+        // console.log("#Nan vvvvvv", dataPayload);
+        setMeasurementList(dataPayload);
+        dataPayload.map((item, index) => {
+          if (item.measurement_type === "Electrical") {
+            setMeasurementSelect(item.id);
+            setMeasurementName(item.measurement_type);
+          }
+        });
+        setIsLoading(false);
+      });
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
 
   // get Unit Type //
   const getUnitTypeList = async () => {
@@ -358,17 +399,25 @@ const FloorDiagram = ({ t, login }) => {
   const handleSelectBuilding = (event) => {
     const buildingId = event.target.value;
     setBuildingSelect(buildingId);
+    setBuildingName(buildingList.find((f) => f.id === buildingId).name);
     getFloorList(buildingId);
   };
 
   const handleSelectFloor = (event) => {
     const floorId = event.target.value;
     setFloorSelect(floorId);
+    setFloorName(floorList.find((f) => f.id === floorId).floor);
+    // if (unitTypeSelect !== "none") {
+    //   handleSearch(buildingSelect, floorId, unitTypeSelect);
+    // } else {
+    //   handleSearch(buildingSelect, floorId);
+    // }
   };
 
   const handleSelectUnitType = (event) => {
     const unitId = event.target.value;
     setUnitTypeSelect(unitId);
+    // handleSearch(buildingSelect, floorSelect, unitId);
   };
 
   const handleSelectNumber = (event) => {
@@ -430,180 +479,65 @@ const FloorDiagram = ({ t, login }) => {
   };
 
   const renderCard = () => {
-    const listBox = [
-      {
-        id: 0,
-        name: t("floorDiagram:NoData"),
-        color: "#C4C4C4",
-        data: [0],
-      },
-      {
-        id: 1,
-        name: t("floorDiagram:20kWh"),
-        color: "#FFF1F0",
-        data: [2, 2, 21, 29],
-      },
-      {
-        id: 2,
-        name: t("floorDiagram:40kWh"),
-        color: "#FFCCC7",
-        data: [21, 29],
-      },
-      {
-        id: 3,
-        name: t("floorDiagram:60kWh"),
-        color: "#FF7875",
-        data: [51,],
-      },
-      {
-        id: 4,
-        name: t("floorDiagram:70kWh"),
-        color: "#F5222D",
-        data: [61, 71, 67],
-      },
-      {
-        id: 5,
-        name: t("floorDiagram:70kWh"),
-        color: "#F5222D",
-        data: [61, 71],
-      },
-    ];
-
-    return listBox.map((box) => {
-      return (
-        <Grid item className={clsx(classes.flexRow)}>
-          {box.data.map((card) => {
-            // console.log('##### ====', card);
-            if (card > 0) {
-              return (
-                <Grid item md={3}>
-                  <Card
-                    className={clsx(classes.marginRow, classes.cursor)}
-                    onClick={() => handleModalFloor()}
-                  >
-                    <CardContent
-                      style={{ backgroundColor: box.color }}
-                    ></CardContent>
-                    <CardActions className={classes.displayNone}>
-                      <Grid item className={clsx(classes.flexRow)}>
-                        <Typography variant="caption">RM10020</Typography>
-                        <Typography
-                          variant="caption"
-                          className={classes.marginLeft}
-                        >
-                          2 kWh
-                        </Typography>
-                      </Grid>
-                      <Typography
-                        variant="caption"
-                        className={clsx(classes.textAling)}
-                      >
-                        Shop 20
-                      </Typography>
-                    </CardActions>
-                  </Card>
+    if (unitData.length > 0) {
+      return unitData.map((item) => {
+        // console.log('####6666666', item);
+        return (
+          <Grid item md={4}>
+            <Card
+              className={clsx(classes.marginRow, classes.cursor)}
+              onClick={() => handleModalFloor(item.unitID, item.unitName)}
+            >
+              <CardContent
+                style={{ backgroundColor: handleChangeColor(item) }}
+              ></CardContent>
+              <CardActions className={classes.displayNone}>
+                <Grid item className={clsx(classes.flexRow)}>
+                  <Typography variant="caption">{item.unitName}</Typography>
+                  <Typography variant="caption" className={classes.marginLeft}>
+                    {item.energyConsumtionUnit.toFixed(2)} kWh
+                  </Typography>
                 </Grid>
-              );
-            } 
-            // else if (card > 20 && card < 40) {
-            //   return (
-            //     <Grid item md={3}>
-            //       <Card
-            //         className={clsx(classes.marginRow, classes.cursor)}
-            //         onClick={() => handleModalFloor()}
-            //       >
-            //         <CardContent
-            //           style={{ backgroundColor: box.color }}
-            //         ></CardContent>
-            //         <CardActions className={classes.displayNone}>
-            //           <Grid item className={clsx(classes.flexRow)}>
-            //             <Typography variant="caption">RM10020</Typography>
-            //             <Typography
-            //               variant="caption"
-            //               className={classes.marginLeft}
-            //             >
-            //               2 kWh
-            //             </Typography>
-            //           </Grid>
-            //           <Typography
-            //             variant="subtitle1"
-            //             className={classes.textAling}
-            //           >
-            //             Shop 20
-            //           </Typography>
-            //         </CardActions>
-            //       </Card>
-            //     </Grid>
-            //   );
-            // } else if (card > 40 && card < 60) {
-            //   return (
-            //     <Grid item md={3}>
-            //       <Card
-            //         className={clsx(classes.marginRow, classes.cursor)}
-            //         onClick={() => handleModalFloor()}
-            //       >
-            //         <CardContent
-            //           style={{ backgroundColor: box.color }}
-            //         ></CardContent>
-            //         <CardActions className={classes.displayNone}>
-            //           <Grid item className={clsx(classes.flexRow)}>
-            //             <Typography variant="caption">RM10020</Typography>
-            //             <Typography
-            //               variant="caption"
-            //               className={classes.marginLeft}
-            //             >
-            //               2 kWh
-            //             </Typography>
-            //           </Grid>
-            //           <Typography
-            //             variant="subtitle1"
-            //             className={classes.textAling}
-            //           >
-            //             Shop 20
-            //           </Typography>
-            //         </CardActions>
-            //       </Card>
-            //     </Grid>
-            //   );
-            // } else if (card > 60) {
-            //   return (
-            //     <Grid item md={3}>
-            //       <Card
-            //         className={clsx(classes.marginRow, classes.cursor)}
-            //         onClick={() => handleModalFloor()}
-            //       >
-            //         <CardContent
-            //           style={{ backgroundColor: box.color }}
-            //         ></CardContent>
-            //         <CardActions className={classes.displayNone}>
-            //           <Grid item className={clsx(classes.flexRow)}>
-            //             <Typography variant="caption">RM10020</Typography>
-            //             <Typography
-            //               variant="caption"
-            //               className={classes.marginLeft}
-            //             >
-            //               2 kWh
-            //             </Typography>
-            //           </Grid>
-            //           <Typography
-            //             variant="subtitle1"
-            //             className={classes.textAling}
-            //           >
-            //             Shop 20
-            //           </Typography>
-            //         </CardActions>
-            //       </Card>
-            //     </Grid>
-            //   );
-            // }
-          })}
-        </Grid>
-      );
-    });
+                {/* <Typography
+                  variant="caption"
+                  className={clsx(classes.textAling)}
+                >
+                  {item.energyConsumtionUnit.toFixed(2)} kWh
+                </Typography> */}
+              </CardActions>
+            </Card>
+          </Grid>
+        );
+      });
+    } else {
+      return <div>No data available</div>;
+    }
   };
 
-  const handleModalFloor = () => {
+  const handleChangeColor = (item) => {
+    let backgroundColor;
+    const formattedNumber = parseInt(item.energyConsumtionUnit.toFixed(0));
+
+    if (formattedNumber === 0) {
+      backgroundColor = "#C4C4C4";
+    } else if (formattedNumber < 20) {
+      backgroundColor = "#FFF1F0";
+    } else if (formattedNumber < 40) {
+      backgroundColor = "#FFCCC7";
+    } else if (formattedNumber < 60) {
+      backgroundColor = "#FF7875";
+    } else if (formattedNumber > 60) {
+      backgroundColor = "#F5222D";
+    }
+
+    return backgroundColor;
+  };
+
+  const handleModalFloor = (item, name) => {
+    // console.log('7###7777777', item, name);
     setModalViewFloor(true);
+    setUnitId(item);
+    setUnitName(name);
   };
 
   const handleCloseView = () => {
@@ -612,6 +546,126 @@ const FloorDiagram = ({ t, login }) => {
 
   const handleChangeValueTab = (event, newValue) => {
     setValueTab(newValue);
+  };
+
+  useEffect(() => {
+    // if (buildingSelect !== "none" && floorSelect !== "none") {
+    //   handleSearch(buildingSelect, floorSelect);
+    // } else if (buildingSelect !== "none" && floorSelect !== "none" && unitTypeSelect !== "none") {
+    //   handleSearch(buildingSelect, floorSelect, unitTypeSelect);
+    // }
+    handleSearch(buildingSelect, floorSelect, unitTypeSelect);
+  }, [buildingSelect, floorSelect, unitTypeSelect]);
+
+  const handleSearch = async (buildingId, floorId, unitId) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getFloorDiagramList(buildingId, floorId, unitId).then(
+        (response) => {
+          const dataPayload = response.data;
+          // console.log("## dataPayload", dataPayload);
+          setEmissionsFloor(dataPayload.CO2EmissionsFloor);
+          setEnergyConsumtionFloor(dataPayload.energyConsumtionFloor);
+          if (dataPayload.unitType.length > 0) {
+            dataPayload.unitType.map((item) => {
+              console.log("## itemmmm====", item);
+              setEmissionsType(item.CO2EmissionsType);
+              setEnergyConsumtionType(item.energyConsumtionType);
+              setTypeName(item.typeName);
+              setUnitData(item.unitData);
+            });
+          } else {
+            setEmissionsType(0);
+            setEnergyConsumtionType(0);
+            setTypeName("");
+            setUnitData([]);
+          }
+
+          setIsLoading(false);
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
+  };
+
+  const handleValue = (newValue) => {
+    console.log("###", newValue);
+    setValueDateStart(newValue);
+  };
+
+  const handleValueEnd = (newValue) => {
+    setValueDateEnd(newValue);
+  };
+
+  const handleBoxIcon = async (event, name, index) => {
+    console.log("#Nan 888888888", name, index);
+    setMeasurementSelect(name.id);
+  };
+
+  const renderViewBox = (item, index) => {
+    const listImg = [
+      {
+        id: 0,
+        name: t("home:electric"),
+        type: "Electrical",
+      },
+      {
+        id: 1,
+        name: t("home:cold"),
+        type: "Air",
+      },
+      {
+        id: 2,
+        name: t("home:hot"),
+        type: "Hot",
+      },
+      {
+        id: 3,
+        name: t("home:cool"),
+        type: "Cold",
+      },
+    ];
+    return (
+      <Grid
+        item
+        className={clsx(
+          item.id == measurementSelect ? classes.borderboxIcon : "",
+          classes.cursor
+        )}
+        onClick={(e) => handleBoxIcon(e, item, index)}
+      >
+        {listImg.map((img) => {
+          if (img.type === item.measurement_type) {
+            return <Typography variant="h6" className={classes.marginLeft}>{img.name}</Typography>;
+          }
+        })}
+      </Grid>
+    );
+  };
+
+  const handleSearchInvoiceUnit = async (unitId, dateStart, dateEnd, measurement) => {
+    setIsLoading(true);
+    try {
+      await API.connectTokenAPI(token);
+      await API.getInvoiceUnitList(unitId, dateStart, dateEnd, measurement).then(
+        (response) => {
+          const dataPayload = response.data;
+          console.log("## dataPayload", response, dataPayload);
+          setRows(dataPayload);
+          setIsLoading(false);
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      const response = error.response;
+      swalFire(response.data);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -767,7 +821,11 @@ const FloorDiagram = ({ t, login }) => {
                       <Typography variant="subtitle1">
                         {t("floorDiagram:monthly")}
                       </Typography>
-                      <Typography variant="h6">2165.39 kWh</Typography>
+                      <Typography variant="h6">
+                        {energyConsumtionFloor &&
+                          energyConsumtionFloor.toFixed(2)}{" "}
+                        kWh
+                      </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -777,7 +835,9 @@ const FloorDiagram = ({ t, login }) => {
                       <Typography variant="subtitle1">
                         {t("floorDiagram:cO2")}
                       </Typography>
-                      <Typography variant="h6">1082.70 kg</Typography>
+                      <Typography variant="h6">
+                        {emissionsFloor && emissionsFloor.toFixed(2)} kg
+                      </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -811,9 +871,12 @@ const FloorDiagram = ({ t, login }) => {
             </Grid>
             <Grid item md={7}>
               <Grid item>
-                <Typography variant="h5">{`Type : ${
+                {/* <Typography variant="h5">{`Type : ${
                   unitType.find((f) => f.id === unitTypeSelect)?.type
-                } `}</Typography>
+                } `}</Typography> */}
+                <Typography variant="h5">
+                  {`Type :`} {typeName}
+                </Typography>
               </Grid>
               <Grid item className={clsx(classes.flexRow, classes.marginRow)}>
                 <Grid item md={6}>
@@ -822,7 +885,11 @@ const FloorDiagram = ({ t, login }) => {
                       <Typography variant="subtitle1">
                         {t("floorDiagram:monthly")}
                       </Typography>
-                      <Typography variant="h6">2165.39 kWh</Typography>
+                      <Typography variant="h6">
+                        {energyConsumtionType &&
+                          energyConsumtionType.toFixed(2)}{" "}
+                        kWh
+                      </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -832,18 +899,48 @@ const FloorDiagram = ({ t, login }) => {
                       <Typography variant="subtitle1">
                         {t("floorDiagram:cO2")}
                       </Typography>
-                      <Typography variant="h6">1082.70 kg</Typography>
+                      <Typography variant="h6">
+                        {emissionsType && emissionsType.toFixed(2)} kg
+                      </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
               </Grid>
-
-              <Grid
-                item
-                md={12}
-                // className={clsx(classes.flexRow, classes.justifyBetween)}
-              >
+              <Grid container className={clsx(classes.marginRow)}>
                 {renderCard()}
+                {/* {unitData.length > 0 &&
+                  unitData.map((data, index) => {
+                    console.log('## 9999999999', data);
+                    return (
+                      <Card
+                        className={clsx(classes.marginRow, classes.cursor)}
+                        onClick={() => handleModalFloor()}
+                      >
+                        <CardContent
+                          style={{ backgroundColor: handleChangeColor(data) }}
+                        ></CardContent>
+                        <CardActions className={classes.displayNone}>
+                          <Grid item className={clsx(classes.flexRow)}>
+                            <Typography variant="caption">
+                              {data.unitName}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              className={classes.marginLeft}
+                            >
+                              2 kWh
+                            </Typography>
+                          </Grid>
+                          <Typography
+                            variant="caption"
+                            className={clsx(classes.textAling)}
+                          >
+                            Shop 20
+                          </Typography>
+                        </CardActions>
+                      </Card>
+                    );
+                  })} */}
               </Grid>
             </Grid>
           </Grid>
@@ -894,7 +991,7 @@ const FloorDiagram = ({ t, login }) => {
                         className={clsx(classes.flexRow, classes.borderBottom)}
                       >
                         <Grid item md={6}>
-                          <Typography variant="h5">Name : A4.1</Typography>
+                          <Typography variant="h5">Name : {unitName}</Typography>
                         </Grid>
                         <Grid
                           item
@@ -925,7 +1022,7 @@ const FloorDiagram = ({ t, login }) => {
                             <Typography variant="subtitle1">
                               {t("floorDiagram:roomNumber")}
                             </Typography>
-                            <Typography variant="h6">: RM10012</Typography>
+                            <Typography variant="h6">: </Typography>
                           </Grid>
                           <Grid
                             item
@@ -963,7 +1060,7 @@ const FloorDiagram = ({ t, login }) => {
                             <Typography variant="subtitle1">
                               {t("floorDiagram:zone")}
                             </Typography>
-                            <Typography variant="h6">: Shop Floor1</Typography>
+                            <Typography variant="h6">: </Typography>
                           </Grid>
                           <Grid
                             item
@@ -975,7 +1072,7 @@ const FloorDiagram = ({ t, login }) => {
                             <Typography variant="subtitle1">
                               {t("floorDiagram:floor")}
                             </Typography>
-                            <Typography variant="h6">: 1st floor</Typography>
+                            <Typography variant="h6">: {floorName}</Typography>
                           </Grid>
                           <Grid
                             item
@@ -987,7 +1084,9 @@ const FloorDiagram = ({ t, login }) => {
                             <Typography variant="subtitle1">
                               {t("floorDiagram:buildingname")}
                             </Typography>
-                            <Typography variant="h6">: JCA BUILDING</Typography>
+                            <Typography variant="h6">
+                              : {buildingName}
+                            </Typography>
                           </Grid>
                         </Grid>
                       </Grid>
@@ -1004,7 +1103,12 @@ const FloorDiagram = ({ t, login }) => {
                           <Typography variant="subtitle1">
                             {t("floorDiagram:monthly")}
                           </Typography>
-                          <Typography variant="h6">2165.39 kWh</Typography>
+                          <Typography variant="h6">
+                            {" "}
+                            {energyConsumtionType &&
+                              energyConsumtionType.toFixed(2)}{" "}
+                            kWh
+                          </Typography>
                         </CardContent>
                       </Card>
                     </Grid>
@@ -1014,7 +1118,9 @@ const FloorDiagram = ({ t, login }) => {
                           <Typography variant="subtitle1">
                             {t("floorDiagram:cO2")}
                           </Typography>
-                          <Typography variant="h6">1082.70 kg</Typography>
+                          <Typography variant="h6">
+                            {emissionsFloor && emissionsFloor.toFixed(2)} kg
+                          </Typography>
                         </CardContent>
                       </Card>
                     </Grid>
@@ -1031,7 +1137,6 @@ const FloorDiagram = ({ t, login }) => {
                   classes.marginRow
                 )}
               >
-                {console.log("### valuetab", valuetab)}
                 <Grid
                   item
                   md={6}
@@ -1089,13 +1194,13 @@ const FloorDiagram = ({ t, login }) => {
                       <DatePicker
                         className={classes.width}
                         value={valueDateStart}
-                        onChange={(newValue) => setValueDateStart(newValue)}
+                        onChange={(newValue) => handleValue(newValue)}
                         format="YYYY-MM-DD"
                       />
                       <DatePicker
                         className={classes.width}
                         value={valueDateEnd}
-                        onChange={(newValue) => setValueDateEnd(newValue)}
+                        onChange={(newValue) => handleValueEnd(newValue)}
                         format="YYYY-MM-DD"
                       />
                     </DemoContainer>
@@ -1118,8 +1223,12 @@ const FloorDiagram = ({ t, login }) => {
                   className={clsx(classes.flexRow, classes.justifyBetween)}
                 >
                   <Grid item>
-                    <Typography variant="h5">
-                      {t("floorDiagram:electrical", { name: valuetab })}
+                    <Typography variant="h5" className={classes.flexRow}>
+                      {/* {t("floorDiagram:electrical", { name: valuetab })} */}
+                      {measurementList.length > 0 &&
+                        measurementList.map((item, index) => {
+                          return renderViewBox(item, index);
+                        })}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -1132,6 +1241,8 @@ const FloorDiagram = ({ t, login }) => {
                     <img
                       src={process.env.PUBLIC_URL + `img/Search.png`}
                       alt="img-upload"
+                      onClick={() => handleSearchInvoiceUnit(unitId, valueDateStart, valueDateEnd, measurementSelect)}
+                      className={classes.cursor}
                     />
                   </Grid>
                   <Grid item className={classes.marginLeft}>
@@ -1237,31 +1348,31 @@ const FloorDiagram = ({ t, login }) => {
                           }}
                         >
                           <TableCell className={classes.fontSizeCol}>
-                            {row.name}
+                            {row.id}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSizeCol}
                           >
-                            {row.calories}
+                            {row.unit_id}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSizeCol}
                           >
-                            {row.fat}
+                            {row.issue_date}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSizeCol}
                           >
-                            {row.carbs}
+                            {row.due_date}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSizeCol}
                           >
-                            {row.protein}
+                            {row.payment_date}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -1273,25 +1384,25 @@ const FloorDiagram = ({ t, login }) => {
                             align="center"
                             className={classes.fontSizeCol}
                           >
-                            {row.previous}
+                            {row.previus}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSizeCol}
                           >
-                            {row.total}
+                            {row.total_use}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSizeCol}
                           >
-                            {row.rate}
+                            {row.currency}
                           </TableCell>
                           <TableCell
                             align="center"
                             className={classes.fontSizeCol}
                           >
-                            {row.totalCharge}
+                            {row.total_charge}
                           </TableCell>
                         </TableRow>
                       ))}
