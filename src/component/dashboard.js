@@ -427,7 +427,7 @@ const Dashboard = ({ t, login }) => {
                 <Card>
                   <CardContent className={classes.paddingCard}>
                     <Grid item className={classes.flexRow}>
-                      <Typography style={{fontSize: 10}}>
+                      <Typography style={{ fontSize: 10 }}>
                         {t("home:consumption")}
                       </Typography>
                       <Typography
@@ -594,7 +594,7 @@ const Dashboard = ({ t, login }) => {
                                 variant="subtitle1"
                                 className={classes.marginTopCol}
                               >
-                                 {data.chargeMonthly}
+                                {data.chargeMonthly}
                               </Typography>
                             </Grid>
                           </>
@@ -625,9 +625,26 @@ const Dashboard = ({ t, login }) => {
               className={clsx(classes.flexRow, classes.justifyAround)}
             >
               {measurementList.length > 0 &&
+                measurementList
+                  .slice()
+                  .sort((a, b) => {
+                    // If the measurement_type is "Electrical", prioritize it by placing it first
+                    if (a.measurement_type === "Electrical") {
+                      return -1;
+                    } else if (b.measurement_type === "Electrical") {
+                      return 1;
+                    }
+                    // For other measurement_types, sort in ascending order
+                    return a.measurement_type - b.measurement_type;
+                  })
+                  .map((item, index) => {
+                    return renderViewBox(item, index);
+                  })}
+
+              {/* {measurementList.length > 0 &&
                 measurementList.map((item, index) => {
                   return renderViewBox(item, index);
-                })}
+                })} */}
             </Grid>
           </Grid>
 

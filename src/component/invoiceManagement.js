@@ -73,7 +73,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import StackedLineChartOutlinedIcon from "@mui/icons-material/StackedLineChartOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -850,7 +850,7 @@ const InvoiceManagement = ({ t, login }) => {
   };
 
   const handleValue = (newValue) => {
-    console.log('###', newValue);
+    console.log("###", newValue);
     // const dateFormat = newValue.format('YYYY-MM-DD')
     setValue(newValue);
     // getInvoiceData(dateFormat, valueEnd, measurementSelect);
@@ -919,9 +919,21 @@ const InvoiceManagement = ({ t, login }) => {
           <Grid item md={12} className={clsx(classes.flexRow)}>
             <Grid item className={clsx(classes.flexRow)}>
               {measurementList.length > 0 &&
-                measurementList.map((item, index) => {
-                  return renderViewBox(item, index);
-                })}
+                measurementList
+                  .slice()
+                  .sort((a, b) => {
+                    // If the measurement_type is "Electrical", prioritize it by placing it first
+                    if (a.measurement_type === "Electrical") {
+                      return -1;
+                    } else if (b.measurement_type === "Electrical") {
+                      return 1;
+                    }
+                    // For other measurement_types, sort in ascending order
+                    return a.measurement_type - b.measurement_type;
+                  })
+                  .map((item, index) => {
+                    return renderViewBox(item, index);
+                  })}
             </Grid>
             <Grid item md={10} className={clsx(classes.flexRowBtnModal)}>
               <Grid item md={4} className={classes.marginBoxIcon}>

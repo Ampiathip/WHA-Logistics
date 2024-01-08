@@ -622,7 +622,7 @@ const UnitManagement = ({
           if (item.measurement_type === "Electrical") {
             setMeasurementSelect(item.id);
             setMeasurementName(item.measurement_type);
-          } 
+          }
           // else if (item.measurement_type === "Air") {
           //   setMeasurementName(item.measurement_type);
           // } else if (item.measurement_type === "Hot") {
@@ -1915,7 +1915,7 @@ const UnitManagement = ({
         )}
         onClick={(e) => handleBoxIcon(e, item, index)}
       >
-         {listImg.map((img, index) => {
+        {listImg.map((img, index) => {
           if (img.type === item.measurement_type) {
             return (
               <img
@@ -2103,7 +2103,8 @@ const UnitManagement = ({
   const handleSelectOptionChange = (event) => {
     setUnitBillingType(event.target.value);
     setUnitBillingTypeName(
-      unitBillingTypeList.find((f) => f.id === event.target.value).unit_billing_type
+      unitBillingTypeList.find((f) => f.id === event.target.value)
+        .unit_billing_type
     );
   };
 
@@ -2894,9 +2895,21 @@ const UnitManagement = ({
                 className={clsx(classes.flexRow, classes.justContentCenter)}
               >
                 {measurementList.length > 0 &&
-                  measurementList.map((item, index) => {
-                    return renderViewBox(item, index);
-                  })}
+                  measurementList
+                    .slice()
+                    .sort((a, b) => {
+                      // If the measurement_type is "Electrical", prioritize it by placing it first
+                      if (a.measurement_type === "Electrical") {
+                        return -1;
+                      } else if (b.measurement_type === "Electrical") {
+                        return 1;
+                      }
+                      // For other measurement_types, sort in ascending order
+                      return a.measurement_type - b.measurement_type;
+                    })
+                    .map((item, index) => {
+                      return renderViewBox(item, index);
+                    })}
               </Grid>
             </Grid>
           </Grid>

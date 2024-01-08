@@ -2561,9 +2561,21 @@ const BuildingManagement = ({ t, login }) => {
                 className={clsx(classes.flexRow, classes.justContentCenter)}
               >
                 {measurementList.length > 0 &&
-                  measurementList.map((item, index) => {
-                    return renderViewBox(item, index);
-                  })}
+                  measurementList
+                    .slice()
+                    .sort((a, b) => {
+                      // If the measurement_type is "Electrical", prioritize it by placing it first
+                      if (a.measurement_type === "Electrical") {
+                        return -1;
+                      } else if (b.measurement_type === "Electrical") {
+                        return 1;
+                      }
+                      // For other measurement_types, sort in ascending order
+                      return a.measurement_type - b.measurement_type;
+                    })
+                    .map((item, index) => {
+                      return renderViewBox(item, index);
+                    })}
               </Grid>
             </Grid>
           </Grid>

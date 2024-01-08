@@ -641,25 +641,37 @@ const FloorDiagram = ({ t, login }) => {
       >
         {listImg.map((img) => {
           if (img.type === item.measurement_type) {
-            return <Typography variant="h6" className={classes.marginLeft}>{img.name}</Typography>;
+            return (
+              <Typography variant="h6" className={classes.marginLeft}>
+                {img.name}
+              </Typography>
+            );
           }
         })}
       </Grid>
     );
   };
 
-  const handleSearchInvoiceUnit = async (unitId, dateStart, dateEnd, measurement) => {
+  const handleSearchInvoiceUnit = async (
+    unitId,
+    dateStart,
+    dateEnd,
+    measurement
+  ) => {
     setIsLoading(true);
     try {
       await API.connectTokenAPI(token);
-      await API.getInvoiceUnitList(unitId, dateStart, dateEnd, measurement).then(
-        (response) => {
-          const dataPayload = response.data;
-          console.log("## dataPayload", response, dataPayload);
-          setRows(dataPayload);
-          setIsLoading(false);
-        }
-      );
+      await API.getInvoiceUnitList(
+        unitId,
+        dateStart,
+        dateEnd,
+        measurement
+      ).then((response) => {
+        const dataPayload = response.data;
+        console.log("## dataPayload", response, dataPayload);
+        setRows(dataPayload);
+        setIsLoading(false);
+      });
     } catch (error) {
       console.log(error);
       const response = error.response;
@@ -991,7 +1003,9 @@ const FloorDiagram = ({ t, login }) => {
                         className={clsx(classes.flexRow, classes.borderBottom)}
                       >
                         <Grid item md={6}>
-                          <Typography variant="h5">Name : {unitName}</Typography>
+                          <Typography variant="h5">
+                            Name : {unitName}
+                          </Typography>
                         </Grid>
                         <Grid
                           item
@@ -1226,9 +1240,21 @@ const FloorDiagram = ({ t, login }) => {
                     <Typography variant="h5" className={classes.flexRow}>
                       {/* {t("floorDiagram:electrical", { name: valuetab })} */}
                       {measurementList.length > 0 &&
-                        measurementList.map((item, index) => {
-                          return renderViewBox(item, index);
-                        })}
+                        measurementList
+                          .slice()
+                          .sort((a, b) => {
+                            // If the measurement_type is "Electrical", prioritize it by placing it first
+                            if (a.measurement_type === "Electrical") {
+                              return -1;
+                            } else if (b.measurement_type === "Electrical") {
+                              return 1;
+                            }
+                            // For other measurement_types, sort in ascending order
+                            return a.measurement_type - b.measurement_type;
+                          })
+                          .map((item, index) => {
+                            return renderViewBox(item, index);
+                          })}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -1241,7 +1267,14 @@ const FloorDiagram = ({ t, login }) => {
                     <img
                       src={process.env.PUBLIC_URL + `img/Search.png`}
                       alt="img-upload"
-                      onClick={() => handleSearchInvoiceUnit(unitId, valueDateStart, valueDateEnd, measurementSelect)}
+                      onClick={() =>
+                        handleSearchInvoiceUnit(
+                          unitId,
+                          valueDateStart,
+                          valueDateEnd,
+                          measurementSelect
+                        )
+                      }
                       className={classes.cursor}
                     />
                   </Grid>
