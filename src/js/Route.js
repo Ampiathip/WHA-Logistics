@@ -20,6 +20,7 @@ import SystemOverview from "../pages/SystemOverview";
 import Invoice from "../pages/Invoice";
 import Unit from "../pages/Unit";
 import Device from "../pages/DeviceView";
+import HistoricalDataUnit from "../pages/HistoricalDataUnit";
 
 const Routers = (props) => {
   return (
@@ -46,6 +47,7 @@ const Routers = (props) => {
         <Route path="/invoice" element={<Invoice />} />
         <Route path="/unitView" element={<Unit />} />
         <Route path="/deviceView" element={<Device />} />
+        <Route path="/historicalDataUnit" element={<HistoricalDataUnit />} />
         <Route element={PageNotFound} />
       </Routes>
     </>

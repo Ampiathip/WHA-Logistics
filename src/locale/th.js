@@ -60,6 +60,7 @@ let th = {
       "invoice": "Invoice",
       "GatewaySettings": "Gateway Settings",
       "Devices": "Devices",
+      "HistoricalDataUnit": "HistoricalDataUnit",
     },
     historicalData: {
       "devicelist": "Device List",

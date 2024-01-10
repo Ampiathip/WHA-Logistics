@@ -556,8 +556,8 @@ const InvoiceManagement = ({ t, login }) => {
   // const [sortedRows, setSortedRows] = useState(rows);
   const [fitterSelect, setFitterSelect] = useState("none");
   const [nameBox, setNameBox] = useState("");
-  const [value, setValue] = useState(dayjs());
-  const [valueEnd, setValueEnd] = useState(dayjs().add(30, "day"));
+  const [value, setValue] = useState(dayjs().subtract(30, 'day'));
+  const [valueEnd, setValueEnd] = useState(dayjs());
   const [measurementList, setMeasurementList] = useState([]);
   const [measurementSelect, setMeasurementSelect] = useState("");
   const [buildingList, setBuildingList] = useState([]);

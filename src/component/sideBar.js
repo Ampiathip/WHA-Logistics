@@ -183,6 +183,27 @@ const SideBar = () => {
             <ListItemText primary={t("sidebar:historicalData")} />
           </ListItem>
         </Link>
+
+        <Link
+          to={"/historicalDataUnit"}
+          className={`${
+            sideBar == "HistoricalDataUnit" ? classes.activeIcon : classes.LinkColor
+          }`}
+        >
+          <ListItem button className={classes.hoverColor}>
+            <ListItemIcon
+              className={`${
+                sideBar == "HistoricalDataUnit"
+                  ? classes.activeIcon
+                  : classes.LinkColor
+              }`}
+            >
+              <CookieOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={t("sidebar:HistoricalDataUnit")} />
+          </ListItem>
+        </Link>
+
         <Grid item className={classes.margigLeft}>
           <Typography variant="h6" className={classes.imageCenter}>
             {t("sidebar:Settings")}

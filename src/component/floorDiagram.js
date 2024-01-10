@@ -277,8 +277,8 @@ const FloorDiagram = ({ t, login }) => {
 
   const fullScreen = useMediaQuery(theme.breakpoints.down("xl"));
   const [valuetab, setValueTab] = useState("Invoice");
-  const [valueDateStart, setValueDateStart] = useState(dayjs());
-  const [valueDateEnd, setValueDateEnd] = useState(dayjs().add(30, "day"));
+  const [valueDateStart, setValueDateStart] = useState(dayjs().subtract(30, 'day'));
+  const [valueDateEnd, setValueDateEnd] = useState(dayjs());
 
   const [emissionsFloor, setEmissionsFloor] = useState(0);
   const [energyConsumtionFloor, setEnergyConsumtionFloor] = useState(0);

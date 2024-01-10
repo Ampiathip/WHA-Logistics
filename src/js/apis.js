@@ -575,16 +575,34 @@ const getAPI = () => {
   /* ============== Dashboard List API ================ */
   const getDashboardList = (id = 0) => {
     return tokenAPI.get(`/api/dashboard?buildingID=${id}`);
-  }; 
+  };
 
   /* ============== Floor Diagram API ================ */
   const getFloorDiagramList = (buildingID = 0, floorID = 0, unitTypeID = 0) => {
-    return tokenAPI.get(`/api/floor-diagram?buildingID=${buildingID}&floorID=${floorID}&unitTypeID=${unitTypeID}`);
+    return tokenAPI.get(
+      `/api/floor-diagram?buildingID=${buildingID}&floorID=${floorID}&unitTypeID=${unitTypeID}`
+    );
   };
 
   /* ============== Invoice Unit API ================ */
-  const getInvoiceUnitList = (id = 0, startTime = 0, endTime = 0, measurementTypeID = 0) => {
-    return tokenAPI.get(`/api/invoice-unit/list/${id}?startTime=${startTime}&endTime=${endTime}&measurementTypeID=${measurementTypeID}`);
+  const getInvoiceUnitList = (
+    id = 0,
+    startTime = 0,
+    endTime = 0,
+    measurementTypeID = 0
+  ) => {
+    return tokenAPI.get(
+      `/api/invoice-unit/list/${id}?startTime=${startTime}&endTime=${endTime}&measurementTypeID=${measurementTypeID}`
+    );
+  };
+
+  /* ============== historicaldata Report API ================ */
+  const getHistoricaldataReport = (id = 0, date = 0, orderBy = "") => {
+    if (orderBy) {
+      return tokenAPI.post(`/api/historicaldata-report/${id}?date=${date}&orderBy=${orderBy}`);
+    } else {
+      return tokenAPI.post(`/api/historicaldata-report/${id}?date=${date}`);
+    }
   };
 
   return {
@@ -731,6 +749,8 @@ const getAPI = () => {
 
     getFloorDiagramList,
     getInvoiceUnitList,
+
+    getHistoricaldataReport,
   };
 };
 export default {
