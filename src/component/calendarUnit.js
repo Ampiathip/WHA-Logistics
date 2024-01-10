@@ -39,6 +39,13 @@ import {
   checkToken,
   logout,
 } from "../js/actions";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
 // import ReactExport from "react-export-excel";
 
 // const ExcelFile = ReactExport.ExcelFile;
@@ -176,7 +183,7 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
         (response) => {
           const dataPayload = response.data;
           console.log("dataPayloadmyDevice", dataPayload);
-          // setDataSearch(dataPayload);
+          setDataSearch(dataPayload);
           // dataPayload.map((item) => {
           //   item.map((data) => {
           //     setDataSearch(data);
@@ -518,7 +525,49 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
               </Grid>
             </CardContent>
           </Card>
-          {clickBtn === "graph" ? (
+
+          {isLoading ? (
+            <Box mt={4} width={1} display="flex" justifyContent="center">
+              <CircularProgress color="primary" />
+            </Box>
+          ) : (
+            <Grid item className={classes.marginTop}>
+              {dataSearch.length > 0 && (
+                <TableContainer component={Paper}>
+                  <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell align="center">Device Name</TableCell>
+                        <TableCell align="center">Data</TableCell>
+                        <TableCell align="center">Timestamp</TableCell>
+                        {/* Other TableHead cells */}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {dataSearch.map(
+                        (item) =>
+                          item.data.length > 0 &&
+                          item.data.map((row) => (
+                            <TableRow key={row.data} /* Other props */>
+                              <TableCell align="center">
+                                {item.deviceName}
+                              </TableCell>
+                              <TableCell align="center">{row.data}</TableCell>
+                              <TableCell align="center">
+                                {row.timestamp}
+                              </TableCell>
+                              {/* Render other TableCell components based on your data */}
+                            </TableRow>
+                          ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </Grid>
+          )}
+
+          {/* {clickBtn === "graph" ? (
           <Grid item className="mt-4">
             <Charts isLoading={isLoading} dataSearch={dataSearch} />
           </Grid>
@@ -526,7 +575,7 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
           <Grid item className="mt-4">
             <DataTable isLoading={isLoading} dataSearch={dataSearch} />
           </Grid>
-        )}
+        )} */}
         </Box>
       </Container>
     </>
