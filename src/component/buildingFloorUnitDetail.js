@@ -455,6 +455,7 @@ const UnitManagement = ({
   const [building, setBuilding] = useState("");
   const [zone, setZone] = useState("");
   const [unitType, setUnitType] = useState([]);
+  const [unitTypeSelectName, setUnitTypeSelectName] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
   const [bahtType, setBahtType] = useState([
     {
@@ -700,6 +701,7 @@ const UnitManagement = ({
       await API.connectTokenAPI(token);
       await API.getUnitTypeList().then((response) => {
         const dataPayload = response.data;
+        console.log("### ====Unit", dataPayload);
         setUnitType(dataPayload);
         setIsLoading(false);
       });
@@ -898,12 +900,15 @@ const UnitManagement = ({
         // console.log("dataPayload", response, dataPayload);
         dataPayload.length > 0 &&
           dataPayload.map((item) => {
-            console.log("==========View", item);
+            console.log("## ==========View", item);
             setUnitName(item.unit);
             setUnitNumber(item.id);
             setDescription(item.description);
-            setUnitTypeSelect(
-              item.type_id ? unitType.find((f) => f.id === item.type_id).id : ""
+            setUnitTypeSelect(item.unit_type_id);
+            setUnitTypeSelectName(
+              item.unit_type_id
+                ? unitType.find((f) => f.id === item.unit_type_id).type
+                : ""
             );
             setImagePreviewUrl(item.file);
             setBuilding(item.name);
@@ -2196,7 +2201,7 @@ const UnitManagement = ({
                       const isItemSelected = isSelected(rowItem.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
 
-                      // console.log('===========rowItem', rowItem);
+                      // console.log('## ===========rowItem', rowItem);
 
                       return (
                         <TableRow
@@ -2247,7 +2252,7 @@ const UnitManagement = ({
                             {/* {row.type_id
                               ? unitType.find((f) => f.id === row.type_id).type
                               : ""} */}
-                            {rowItem.type}
+                            {rowItem.unit_type}
                           </TableCell>
                           <TableCell
                             align="center"
@@ -2866,7 +2871,7 @@ const UnitManagement = ({
                 <Typography variant="h5"> {t("floor:unitType")}</Typography>
                 <Grid item className="mt-2">
                   <Typography variant="body1">
-                    {unitTypeSelect ? unitTypeSelect : "-"}
+                    {unitTypeSelectName ? unitTypeSelectName : "-"}
                   </Typography>
                 </Grid>
               </Grid>

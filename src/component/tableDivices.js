@@ -1120,7 +1120,7 @@ const DeviceManagement = ({ t, login }) => {
                       const isItemSelected = isSelected(row.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
 
-                      console.log("=======row", row);
+                      console.log("## =======row", row);
 
                       return (
                         <TableRow

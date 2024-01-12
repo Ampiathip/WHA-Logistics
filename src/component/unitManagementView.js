@@ -867,6 +867,8 @@ const UnitManagementView = ({ t, login }) => {
                       const isItemSelected = isSelected(row.name);
                       const labelId = `enhanced-table-checkbox-${index}`;
 
+                      // console.log('## ====', row);
+
                       return (
                         <TableRow
                           hover
@@ -913,7 +915,7 @@ const UnitManagementView = ({ t, login }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.type}
+                            {row.unit_type}
                           </TableCell>
                           <TableCell
                             align="center"

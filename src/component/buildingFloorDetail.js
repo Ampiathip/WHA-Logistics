@@ -888,7 +888,7 @@ const FloorManagement = ({ t, pageName, login }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.fat}
+                            {row.building_name}
                           </TableCell>
                           {/* <TableCell
                         align="center"
@@ -912,7 +912,7 @@ const FloorManagement = ({ t, pageName, login }) => {
                             align="center"
                             className={classes.fontSixeCell}
                           >
-                            {row.unit}
+                            {row.no_of_unit}
                           </TableCell>
                           <TableCell
                             align="center"
