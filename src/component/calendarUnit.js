@@ -46,6 +46,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
+import * as ExcelJS from "exceljs";
 // import ReactExport from "react-export-excel";
 
 // const ExcelFile = ReactExport.ExcelFile;
@@ -96,6 +97,9 @@ const useStyles = makeStyles((theme) => ({
   },
   marginRight: {
     marginRight: 15,
+  },
+  fontSizeData: {
+    fontSize: '16px !important',
   },
 }));
 
@@ -221,10 +225,9 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
   // const handleClickNavbar = (text) => {
   //   setClickDate(text);
   // };
-
-  console.log("# ==dataSearch", dataSearch);
   const handleDataSet = (array) => {
     return array.map((item) => {
+      console.log();
       if (item[0]?.data instanceof Array) {
         // Remove null values from the data array
         const filteredData = item[0].data.filter((value) => value !== null);
@@ -242,7 +245,7 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
       }
     });
   };
-  const dataSet = handleDataSet(dataSearch);
+  // const dataSet = handleDataSet(dataSearch);
   // console.log("# 00000000====", dataSet, deviceId, deviceName, point);
   // const dataSet1 = [
   //   dataSet.map((item) => {
@@ -255,29 +258,50 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
   //     };
   //   }),
   // ];
-  const dataSet1 = dataSet.map((item) => {
+  const dataSet1 = dataSearch.map((item) => {
     console.log("## 0000000000000item", item);
     return {
-      name: item.name,
-      device: item.device,
-      data: item.data,
-      timestamp: item.timestamp,
+      name: item.deviceName,
+      data: item.data.map((item) => item.data !== null && item.data),
+      timestamp: item.data.map((item) => item.timestamp !== null && item.timestamp),
     };
   });
 
   console.log("# dataSet1", dataSet1);
 
-  // const handleDataExport = (data) => {
-  //   console.log("# data000---=-=====", data);
-  //   return data.length > 0 && data.map((d) => {
-  //     console.log("# hhhhhhhhh=-=====", d);
-  //     return d.map((ex) => {
-  //       console.log("# exxxxxx=-=====", ex);
-  //       return ex;
-  //     })
+  const dataToExport = [
+    ["Device", "Data", "Timestamp"],
+    ...dataSet1.map((item) => [
+      item.name,
+      item.data ? (item.data.length > 0 ? item.data.join(", ") : "") : "",
+      item.timestamp ? item.timestamp.join(", ") : "",
+    ]),
+  ];
 
-  //   })
-  // };
+  const exportToExcel = async (data) => {
+    console.log("# 3333333333", data);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sheet1");
+
+    // Add data to the worksheet
+    data.forEach((row) => {
+      worksheet.addRow(row);
+    });
+
+    // Create a buffer with the Excel file
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Create a Blob from the buffer
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    // Create a download link and trigger a click event to download the file
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "exportedData.xlsx";
+    link.click();
+  };
 
   return (
     <>
@@ -512,7 +536,8 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
                     <img
                       src={process.env.PUBLIC_URL + "/img/excel.png"}
                       alt="img-logo-excel"
-                      className={classes.marginRight}
+                      className={clsx(classes.marginRight, classes.cursorPointer)}
+                      onClick={() => exportToExcel(dataToExport)}
                     />
                   </div>
                   <div>
@@ -535,31 +560,38 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
               {dataSearch.length > 0 && (
                 <TableContainer component={Paper}>
                   <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                    <TableHead>
+                    <TableHead className={classes.FlexIconHead}>
                       <TableRow>
-                        <TableCell align="center">Device Name</TableCell>
-                        <TableCell align="center">Data</TableCell>
                         <TableCell align="center">Timestamp</TableCell>
-                        {/* Other TableHead cells */}
+                        {dataSearch.map((device, index) => (
+                          <TableCell key={index} align="center">
+                            {device.deviceName}
+                          </TableCell>
+                        ))}
                       </TableRow>
                     </TableHead>
+
                     <TableBody>
-                      {dataSearch.map(
-                        (item) =>
-                          item.data.length > 0 &&
-                          item.data.map((row) => (
-                            <TableRow key={row.data} /* Other props */>
-                              <TableCell align="center">
-                                {item.deviceName}
-                              </TableCell>
-                              <TableCell align="center">{row.data}</TableCell>
-                              <TableCell align="center">
-                                {row.timestamp}
-                              </TableCell>
-                              {/* Render other TableCell components based on your data */}
-                            </TableRow>
-                          ))
-                      )}
+                      {dataSearch.length > 0 &&
+                        // dataSearch?.data.length > 0 &&
+                        dataSearch.map((item, dataSearchIndex) => {
+                          return item.data.map((time, timestampIndex) => {
+                            return (
+                              <TableRow key={timestampIndex}>
+                                <TableCell className={classes.fontSizeData} align="center">
+                                  {time.timestamp}
+                                </TableCell>
+                                {dataSearch.map((device, deviceIndex) => (
+                                  <TableCell className={classes.fontSizeData} key={deviceIndex} align="center">
+                                    {/* Assuming data is an array of objects with a 'timestamp' and 'data' property */}
+                                    {device.data[timestampIndex] &&
+                                      device.data[timestampIndex].data}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            );
+                          });
+                        })}
                     </TableBody>
                   </Table>
                 </TableContainer>

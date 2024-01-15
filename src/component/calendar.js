@@ -36,6 +36,7 @@ import {
   checkToken,
   logout,
 } from "../js/actions";
+import * as ExcelJS from "exceljs";
 // import ReactExport from "react-export-excel";
 
 // const ExcelFile = ReactExport.ExcelFile;
@@ -140,7 +141,7 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
       let startDate = value ? value.format("YYYY-MM-DD HH:mm") : "";
       let endDate = valueEnd ? valueEnd.format("YYYY-MM-DD HH:mm") : "";
 
-      console.log('## ===valueEnd', valueEnd);
+      console.log("## ===valueEnd", valueEnd);
       await API.connectTokenAPI(token);
       await API.historicaldata(clickDate, startDate, endDate, body).then(
         (response) => {
@@ -218,29 +219,67 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
   //     };
   //   }),
   // ];
-  const dataSet1 = dataSet.map((item) => {
-    console.log("## 0000000000000item", item);
-    return {
-      name: item.name,
-      device: item.device,
-      data: item.data,
-      timestamp: item.timestamp,
-    };
-  });
+  // const dataSet1 = dataSet.map((item) => {
+  //   console.log("## 0000000000000item", item);
+  //   return {
+  //     name: [item.name],
+  //     device: [item.device],
+  //     data: item.data,
+  //     timestamp: item.timestamp,
+  //   };
+  // });
 
-  console.log("# dataSet1", dataSet1);
+  const dataToExport = [
+    ["Name", "Device", "Data", "Timestamp"],
+    ...dataSet.map((item) => {
+      console.log("## Original item:", item);
 
-  // const handleDataExport = (data) => {
-  //   console.log("# data000---=-=====", data);
-  //   return data.length > 0 && data.map((d) => {
-  //     console.log("# hhhhhhhhh=-=====", d);
-  //     return d.map((ex) => {
-  //       console.log("# exxxxxx=-=====", ex);
-  //       return ex;
-  //     })
+      const dataString = item.data
+        ? item.data.length > 0
+          ? item.data.join(", ")
+          : ""
+        : "";
+      const timestampString = item.timestamp ? item.timestamp.join(", ") : "";
 
-  //   })
-  // };
+      console.log("## Processed item:", [
+        item.name,
+        item.device,
+        dataString,
+        timestampString,
+      ]);
+
+      return [item.name, item.device, dataString, timestampString];
+    }),
+  ];
+
+  console.log("## Final dataToExport:", dataToExport);
+
+  // console.log("# dataSet1", dataToExport, dataSet);
+
+  const exportToExcel = async (data) => {
+    console.log("# 3333333333", data);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sheet1");
+
+    // Add data to the worksheet
+    data.forEach((row) => {
+      worksheet.addRow(row);
+    });
+
+    // Create a buffer with the Excel file
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Create a Blob from the buffer
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    // Create a download link and trigger a click event to download the file
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "exportedData.xlsx";
+    link.click();
+  };
 
   return (
     <>
@@ -449,6 +488,8 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
                   <img
                     src={process.env.PUBLIC_URL + "/img/excel.png"}
                     alt="img-logo-excel"
+                    onClick={() => exportToExcel(dataToExport)}
+                    className={classes.cursorPointer}
                   />
                 </div>
                 <div>
