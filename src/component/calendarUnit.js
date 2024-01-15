@@ -47,6 +47,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import * as ExcelJS from "exceljs";
+import { saveAs } from 'file-saver';
 // import ReactExport from "react-export-excel";
 
 // const ExcelFile = ReactExport.ExcelFile;
@@ -99,7 +100,7 @@ const useStyles = makeStyles((theme) => ({
     marginRight: 15,
   },
   fontSizeData: {
-    fontSize: '16px !important',
+    fontSize: "16px !important",
   },
 }));
 
@@ -225,67 +226,25 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
   // const handleClickNavbar = (text) => {
   //   setClickDate(text);
   // };
-  const handleDataSet = (array) => {
-    return array.map((item) => {
-      console.log();
-      if (item[0]?.data instanceof Array) {
-        // Remove null values from the data array
-        const filteredData = item[0].data.filter((value) => value !== null);
-        const filteredTimestamp = item[0].timestamp.filter(
-          (value) => value !== null
-        );
-        return {
-          name: item[0]?.point,
-          data: filteredData.length > 0 ? filteredData : [0],
-          timestamp: filteredTimestamp.length > 0 ? filteredTimestamp : [0],
-          device: item[0]?.device,
-        };
-      } else {
-        return item;
-      }
-    });
-  };
-  // const dataSet = handleDataSet(dataSearch);
-  // console.log("# 00000000====", dataSet, deviceId, deviceName, point);
-  // const dataSet1 = [
-  //   dataSet.map((item) => {
-  //     console.log("## 0000000000000item", item);
-  //     return {
-  //       name: item.name,
-  //       device: item.device,
-  //       data: item.data,
-  //       timestamp: item.timestamp,
-  //     };
-  //   }),
-  // ];
-  const dataSet1 = dataSearch.map((item) => {
-    console.log("## 0000000000000item", item);
-    return {
-      name: item.deviceName,
-      data: item.data.map((item) => item.data !== null && item.data),
-      timestamp: item.data.map((item) => item.timestamp !== null && item.timestamp),
-    };
-  });
 
-  console.log("# dataSet1", dataSet1);
-
-  const dataToExport = [
-    ["Device", "Data", "Timestamp"],
-    ...dataSet1.map((item) => [
-      item.name,
-      item.data ? (item.data.length > 0 ? item.data.join(", ") : "") : "",
-      item.timestamp ? item.timestamp.join(", ") : "",
-    ]),
-  ];
-
-  const exportToExcel = async (data) => {
-    console.log("# 3333333333", data);
+  const exportToExcel = async (groupedData, dataSearch) => {
+    // console.log("# 3333333333", groupedData, dataSearch);
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sheet1");
 
-    // Add data to the worksheet
-    data.forEach((row) => {
-      worksheet.addRow(row);
+    // เพิ่มหัวข้อตาราง
+    worksheet.addRow(['Timestamp', '', ...dataSearch.map(device => device.deviceName)]);
+  
+    // เพิ่มข้อมูลจาก groupedData
+    groupedData.forEach((group, timestampIndex) => {
+      const rowValues = [group.timestamp, '']; // ใส่ค่าว่างใน column 2
+      
+      dataSearch.forEach(device => {
+        const dataValue = device.data[timestampIndex]?.data || '';
+        rowValues.push(dataValue);
+      });
+  
+      worksheet.addRow(rowValues);
     });
 
     // Create a buffer with the Excel file
@@ -302,6 +261,21 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
     link.download = "exportedData.xlsx";
     link.click();
   };
+
+  const groupedData = dataSearch.reduce((result, item) => {
+    item.data.forEach((time, timestampIndex) => {
+      if (!result[timestampIndex]) {
+        result[timestampIndex] = {
+          timestamp: time.timestamp,
+          devices: [],
+        };
+      }
+      result[timestampIndex].devices.push(item.data[timestampIndex]?.data);
+    });
+    return result;
+  }, []);
+
+  // console.log("##### ======>>>groupedData", groupedData);
 
   return (
     <>
@@ -518,26 +492,14 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
                 {/* <Grid item md={2}></Grid> */}
                 <Grid item md={12} className={classes.disPlayFlexRowEnd}>
                   <div>
-                    {/* <ExcelFile
-                    element={
-                      <img
-                        src={process.env.PUBLIC_URL + "/img/excel.png"}
-                        alt="img-logo-excel"
-                      />
-                    }
-                  >
-                    <ExcelSheet data={dataSet1} name={deviceName}>
-                      <ExcelColumn label="Name" value="name" />
-                      <ExcelColumn label="Device" value="device" />
-                      <ExcelColumn label="Data" value="data" />
-                      <ExcelColumn label="Timestamp" value="timestamp" />
-                    </ExcelSheet>
-                  </ExcelFile> */}
                     <img
                       src={process.env.PUBLIC_URL + "/img/excel.png"}
                       alt="img-logo-excel"
-                      className={clsx(classes.marginRight, classes.cursorPointer)}
-                      onClick={() => exportToExcel(dataToExport)}
+                      className={clsx(
+                        classes.marginRight,
+                        classes.cursorPointer
+                      )}
+                      onClick={() => exportToExcel(groupedData, dataSearch)}
                     />
                   </div>
                   <div>
@@ -572,18 +534,42 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
                     </TableHead>
 
                     <TableBody>
-                      {dataSearch.length > 0 &&
-                        // dataSearch?.data.length > 0 &&
+                      {groupedData.map((group, timestampIndex) => (
+                        <TableRow key={timestampIndex}>
+                          <TableCell
+                            className={classes.fontSizeData}
+                            align="center"
+                          >
+                            {group.timestamp}
+                          </TableCell>
+                          {dataSearch.map((device, deviceIndex) => (
+                            <TableCell
+                              className={classes.fontSizeData}
+                              key={deviceIndex}
+                              align="center"
+                            >
+                              {device.data[timestampIndex] &&
+                                device.data[timestampIndex].data}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                      {/* {dataSearch.length > 0 &&
+                        dataSearch?.data.length > 0 &&
                         dataSearch.map((item, dataSearchIndex) => {
                           return item.data.map((time, timestampIndex) => {
                             return (
-                              <TableRow key={timestampIndex}>
+                              <TableRow key={dataSearchIndex}>
                                 <TableCell className={classes.fontSizeData} align="center">
                                   {time.timestamp}
                                 </TableCell>
                                 {dataSearch.map((device, deviceIndex) => (
-                                  <TableCell className={classes.fontSizeData} key={deviceIndex} align="center">
-                                    {/* Assuming data is an array of objects with a 'timestamp' and 'data' property */}
+                                  <TableCell
+                                    className={classes.fontSizeData}
+                                    key={deviceIndex}
+                                    align="center"
+                                  >
+                                    Assuming data is an array of objects with a 'timestamp' and 'data' property
                                     {device.data[timestampIndex] &&
                                       device.data[timestampIndex].data}
                                   </TableCell>
@@ -591,7 +577,7 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
                               </TableRow>
                             );
                           });
-                        })}
+                        })} */}
                     </TableBody>
                   </Table>
                 </TableContainer>

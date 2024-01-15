@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector, connect } from "react-redux";
-import PropTypes from "prop-types";
+import PropTypes, { array } from "prop-types";
 import {
   makeStyles,
   Grid,
@@ -37,6 +37,7 @@ import {
   logout,
 } from "../js/actions";
 import * as ExcelJS from "exceljs";
+import testData from "../component/dataTest.json";
 // import ReactExport from "react-export-excel";
 
 // const ExcelFile = ReactExport.ExcelFile;
@@ -207,78 +208,133 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
     });
   };
   const dataSet = handleDataSet(dataSearch);
-  // console.log("# 00000000====", dataSet, deviceId, deviceName, point);
-  // const dataSet1 = [
-  //   dataSet.map((item) => {
-  //     console.log("## 0000000000000item", item);
-  //     return {
-  //       name: item.name,
-  //       device: item.device,
-  //       data: item.data,
-  //       timestamp: item.timestamp,
-  //     };
-  //   }),
-  // ];
-  // const dataSet1 = dataSet.map((item) => {
-  //   console.log("## 0000000000000item", item);
-  //   return {
-  //     name: [item.name],
-  //     device: [item.device],
-  //     data: item.data,
-  //     timestamp: item.timestamp,
-  //   };
+
+  // const exportToExcel = async () => {
+  //   const workbook = new ExcelJS.Workbook();
+  //   const worksheet = workbook.addWorksheet("Sheet1");
+
+  //   const uniqePoint = Array.from(new Set(testData.flatMap((arr) => arr.map((obj) => obj.point))));
+  //   // let timestamp = [];
+  //   // let dataSearchArray = [];
+  //   // let poinName = [];
+
+  //   worksheet.columns = uniqePoint.map((item) => ({header: item, key: item}));
+  //   testData.forEach((data) => {
+  //     const obj = {};
+  //     data.forEach((a) => {
+  //       obj[a.point] = a.point;
+  //     })
+  //     worksheet.addRow(obj);
+  //   })
+  // worksheet.addRows([{id: 1, name: 'John Doe', dob: '2023-01-01'}]);
+
+  // Add data to the worksheet
+  // dataSearch.forEach((row, index) => {
+  //   const labelId = `enhanced-table-checkbox-${index}`;
+
+  //   row.length > 0 &&
+  //     row.forEach((item, rowIndex) => {
+  //       // Handle Timestamp
+  //       item.timestamp.length > 0 &&
+  //         item.timestamp.forEach((data) => {
+  //           timestamp.push(data);
+  //         });
+
+  //       // Handle Data
+  //       item.data.length > 0 &&
+  //         item.data.forEach((dataItem) => {
+  //           dataSearchArray.push(dataItem);
+  //         });
+
+  //       // Handle PointName
+  //       poinName.push({
+  //         id: labelId,
+  //         pointName: item.point,
+  //       });
+  //     });
   // });
 
-  const dataToExport = [
-    ["Name", "Device", "Data", "Timestamp"],
-    ...dataSet.map((item) => {
-      console.log("## Original item:", item);
+  // Add header row
+  // worksheet.addRow([
+  //   "Timestamp",
+  //   "",
+  //   ...poinName.map((point) => point.pointName),
+  // ]);
 
-      const dataString = item.data
-        ? item.data.length > 0
-          ? item.data.join(", ")
-          : ""
-        : "";
-      const timestampString = item.timestamp ? item.timestamp.join(", ") : "";
+  // Add data rows
+  // timestamp.forEach((row, timestampIndex) => {
+  //   const rowValues = [row, ""]; // Add a blank cell for the second column
 
-      console.log("## Processed item:", [
-        item.name,
-        item.device,
-        dataString,
-        timestampString,
+  //   // Add data from dataSearchArray
+  //   dataSearchArray.forEach((data) => {
+  //     const dataValue = data[timestampIndex] || "";
+  //     rowValues.push(dataValue);
+  //   });
+
+  //   // Add the row to the worksheet
+  //   worksheet.addRow(rowValues);
+  // });
+
+  // Create a buffer with the Excel file
+  // const buffer = await workbook.xlsx.writeBuffer();
+
+  // Create a Blob from the buffer
+  // const blob = new Blob([buffer], {
+  //   type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  // });
+
+  // Create a download link and trigger a click event to download the file
+  //   const link = document.createElement("a");
+  //   link.href = URL.createObjectURL(blob);
+  //   link.download = "exportedData.xlsx";
+  //   link.click();
+  // };
+
+  const createTransformedData = () => {
+    return dataSearch.flatMap((entry) => {
+      return entry.flatMap((item) => [
+        { column: `timestamp-${item.point}`, rows: item.timestamp },
+        { column: item.point, rows: item.data },
       ]);
+    });
+  };
 
-      return [item.name, item.device, dataString, timestampString];
-    }),
-  ];
+  const exportToExcel = () => {
+    const transformedData = createTransformedData();
 
-  console.log("## Final dataToExport:", dataToExport);
+    // console.log("### ======,", transformedData);
 
-  // console.log("# dataSet1", dataToExport, dataSet);
-
-  const exportToExcel = async (data) => {
-    console.log("# 3333333333", data);
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Sheet1");
 
-    // Add data to the worksheet
-    data.forEach((row) => {
-      worksheet.addRow(row);
+    const headers = transformedData.map((columnData) => columnData.column);
+    worksheet.addRow(headers);
+
+    // console.log("### ======,headers", headers);
+    const firstColumn = worksheet.getColumn(1);
+    firstColumn.width = 20; // Set the desired width
+
+    const maxRows = Math.max(
+      ...transformedData.map((columnData) => columnData.rows.length)
+    );
+
+    const rowsData = Array.from({ length: maxRows }, (_, i) =>
+      transformedData.map((columnData) => columnData.rows[i] || "")
+    );
+
+    worksheet.addRows(rowsData);
+
+    workbook.xlsx.writeBuffer().then((data) => {
+      const blob = new Blob([data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "exportedData.xls";
+      anchor.click();
+      window.URL.revokeObjectURL(url);
     });
-
-    // Create a buffer with the Excel file
-    const buffer = await workbook.xlsx.writeBuffer();
-
-    // Create a Blob from the buffer
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    // Create a download link and trigger a click event to download the file
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "exportedData.xlsx";
-    link.click();
   };
 
   return (
@@ -488,7 +544,7 @@ const Calendar = ({ t, deviceId, deviceName, point }) => {
                   <img
                     src={process.env.PUBLIC_URL + "/img/excel.png"}
                     alt="img-logo-excel"
-                    onClick={() => exportToExcel(dataToExport)}
+                    onClick={() => exportToExcel()}
                     className={classes.cursorPointer}
                   />
                 </div>
