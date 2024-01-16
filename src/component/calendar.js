@@ -37,7 +37,6 @@ import {
   logout,
 } from "../js/actions";
 import * as ExcelJS from "exceljs";
-import testData from "../component/dataTest.json";
 // import ReactExport from "react-export-excel";
 
 // const ExcelFile = ReactExport.ExcelFile;
