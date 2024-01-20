@@ -523,7 +523,7 @@ const UserManagement = ({ t, login }) => {
       await API.connectTokenAPI(token);
       await API.getUserData().then((response) => {
         const dataPayload = response.data;
-        console.log("dataPayload", dataPayload);
+        console.log("## dataPayload", dataPayload);
         setRows(dataPayload);
         setIsLoading(false);
       });
@@ -1144,6 +1144,8 @@ const UserManagement = ({ t, login }) => {
     const query = event.target.value;
     setSearchQuery(query);
     // updateVisibleRows(query);
+    // if (!query) return setRows(rows);
+
     if (query) {
       // Use the filter method to find items based on the search condition
       const filteredResults = rows.filter((item) =>
@@ -1154,7 +1156,16 @@ const UserManagement = ({ t, login }) => {
         )
       );
 
-      console.log("filteredRows", filteredResults);
+      // const filteredResults = rows.filter(
+      //   (item) =>
+      //     item.first_name.includes(query) ||
+      //     item.last_name.includes(query) ||
+      //     item.username.includes(query) ||
+      //     item.role.includes(query) ||
+      //     item.department.includes(query)
+      // );
+
+      console.log("## filteredRows", filteredResults);
       setRows(filteredResults);
     } else {
       getUser();

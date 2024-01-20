@@ -74,6 +74,7 @@ import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import StackedLineChartOutlinedIcon from "@mui/icons-material/StackedLineChartOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import dayjs from "dayjs";
+import * as ExcelJS from "exceljs";
 
 const API = apis.getAPI();
 const MySwal = withReactContent(Swal);
@@ -556,7 +557,7 @@ const InvoiceManagement = ({ t, login }) => {
   // const [sortedRows, setSortedRows] = useState(rows);
   const [fitterSelect, setFitterSelect] = useState("none");
   const [nameBox, setNameBox] = useState("");
-  const [value, setValue] = useState(dayjs().subtract(30, 'day'));
+  const [value, setValue] = useState(dayjs().subtract(30, "day"));
   const [valueEnd, setValueEnd] = useState(dayjs());
   const [measurementList, setMeasurementList] = useState([]);
   const [measurementSelect, setMeasurementSelect] = useState("");
@@ -593,7 +594,7 @@ const InvoiceManagement = ({ t, login }) => {
       await API.connectTokenAPI(token);
       await API.getMeasurementTypeData().then((response) => {
         const dataPayload = response.data;
-        // console.log("#Nan vvvvvv", dataPayload);
+        console.log("#Nan vvvvvv", dataPayload);
         setMeasurementList(dataPayload);
         dataPayload.map((item, index) => {
           if (item.measurement_type === "Electrical") {
@@ -908,6 +909,48 @@ const InvoiceManagement = ({ t, login }) => {
     );
   };
 
+  const exportToExcel = () => {
+    // console.log("### ======,", rows);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Sheet1");
+
+    // เพิ่มหัวข้อตาราง
+    worksheet.addRow([
+      "Issue Date",
+      "Due Date",
+      "Recent",
+      "Previus",
+      "Total Use",
+      "Total Charge",
+      "Currency",
+    ]);
+
+    rows.map((item, index) => {
+      const rowsData = [
+        item.issue_date,
+        item.due_date,
+        item.recent,
+        item.previus,
+        item.total_use,
+        item.total_charge,
+        item.currency,
+      ];
+      worksheet.addRow(rowsData);
+    });
+
+    workbook.xlsx.writeBuffer().then((data) => {
+      const blob = new Blob([data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "exportedData.xls";
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    });
+  };
+
   return (
     <Box className={classes.marginRow}>
       {isLoading ? (
@@ -927,6 +970,13 @@ const InvoiceManagement = ({ t, login }) => {
                       return -1;
                     } else if (b.measurement_type === "Electrical") {
                       return 1;
+                    }
+
+                    // If the measurement_type is "Cold", prioritize it by placing it last
+                    if (a.measurement_type === "Cold") {
+                      return 1;
+                    } else if (b.measurement_type === "Cold") {
+                      return -1;
                     }
                     // For other measurement_types, sort in ascending order
                     return a.measurement_type - b.measurement_type;
@@ -948,6 +998,7 @@ const InvoiceManagement = ({ t, login }) => {
                 <Button
                   className={clsx(classes.backGroundExcel)}
                   variant="outlined"
+                  onClick={() => exportToExcel()}
                 >
                   {t("invoice:excel")}
                 </Button>

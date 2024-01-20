@@ -2909,6 +2909,13 @@ const UnitManagement = ({
                       } else if (b.measurement_type === "Electrical") {
                         return 1;
                       }
+
+                      // If the measurement_type is "Cold", prioritize it by placing it last
+                      if (a.measurement_type === "Cold") {
+                        return 1;
+                      } else if (b.measurement_type === "Cold") {
+                        return -1;
+                      }
                       // For other measurement_types, sort in ascending order
                       return a.measurement_type - b.measurement_type;
                     })
