@@ -240,7 +240,7 @@ const CalendarUnit = ({ t, deviceId, deviceName, point }) => {
       const rowValues = [group.timestamp, '']; // ใส่ค่าว่างใน column 2
       
       dataSearch.forEach(device => {
-        const dataValue = device.data[timestampIndex]?.data || '';
+        const dataValue = device.data[timestampIndex]?.data || 0;
         rowValues.push(dataValue);
       });
   

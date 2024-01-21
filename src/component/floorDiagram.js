@@ -286,8 +286,8 @@ const FloorDiagram = ({ t, login }) => {
   const [energyConsumtionFloor, setEnergyConsumtionFloor] = useState(0);
   const [emissionsType, setEmissionsType] = useState(0);
   const [energyConsumtionType, setEnergyConsumtionType] = useState(0);
-  const [typeName, setTypeName] = useState("");
-  const [unitData, setUnitData] = useState([]);
+  // const [typeName, setTypeName] = useState("");
+  // const [unitData, setUnitData] = useState([]);
   const [floorName, setFloorName] = useState("");
   const [buildingName, setBuildingName] = useState("");
   const [measurementList, setMeasurementList] = useState([]);
@@ -296,6 +296,7 @@ const FloorDiagram = ({ t, login }) => {
   const [unitId, setUnitId] = useState("");
   const [unitName, setUnitName] = useState("");
   const [rows, setRows] = useState([]);
+  const [unitTypeData, setUnitTypeData] = useState([]);
 
   const swalFire = (msg) => {
     MySwal.fire({
@@ -480,15 +481,17 @@ const FloorDiagram = ({ t, login }) => {
     });
   };
 
-  const renderCard = () => {
+  const renderCard = (unitData, indexRow) => {
     if (unitData.length > 0) {
       return unitData.map((item) => {
-        // console.log('####6666666', item);
+        // console.log('####6666666', item, indexRow);
         return (
           <Grid item md={4}>
             <Card
               className={clsx(classes.marginRow, classes.cursor)}
-              onClick={() => handleModalFloor(item.unitID, item.unitName)}
+              onClick={() =>
+                handleModalFloor(item.unitID, item.unitName, indexRow)
+              }
             >
               <CardContent
                 style={{ backgroundColor: handleChangeColor(item) }}
@@ -535,11 +538,17 @@ const FloorDiagram = ({ t, login }) => {
     return backgroundColor;
   };
 
-  const handleModalFloor = (item, name) => {
-    // console.log('7###7777777', item, name);
+  const handleModalFloor = (item, name, indexRow) => {
+    console.log("7###7777777", item, name, indexRow, unitTypeData);
     setModalViewFloor(true);
     setUnitId(item);
     setUnitName(name);
+    unitTypeData && unitTypeData.length > 0 && unitTypeData.map((view, indexRowview) => {
+      if (indexRow === indexRowview) {
+        setEmissionsType(view.CO2EmissionsType);
+        setEnergyConsumtionType(view.energyConsumtionType);
+      }
+    })
   };
 
   const handleCloseView = () => {
@@ -566,23 +575,33 @@ const FloorDiagram = ({ t, login }) => {
       await API.getFloorDiagramList(buildingId, floorId, unitId).then(
         (response) => {
           const dataPayload = response.data;
-          // console.log("## dataPayload", dataPayload);
+          // console.log("## dataPayloadFloor", dataPayload);
           setEmissionsFloor(dataPayload.CO2EmissionsFloor);
           setEnergyConsumtionFloor(dataPayload.energyConsumtionFloor);
-          if (dataPayload.unitType.length > 0) {
-            dataPayload.unitType.map((item) => {
-              console.log("## itemmmm====", item);
-              setEmissionsType(item.CO2EmissionsType);
-              setEnergyConsumtionType(item.energyConsumtionType);
-              setTypeName(item.typeName);
-              setUnitData(item.unitData);
-            });
-          } else {
-            setEmissionsType(0);
-            setEnergyConsumtionType(0);
-            setTypeName("");
-            setUnitData([]);
-          }
+          setUnitTypeData(dataPayload.unitType);
+          // if (dataPayload.unitType.length > 0) {
+          //   dataPayload.unitType.map((item, indexRow) => {
+          //     console.log("## itemmmm====", item, indexRow);
+              // setEmissionsType((prevState) => ({
+              //   ...prevState,
+              //   [indexRow]: item.CO2EmissionsType,
+              // }));
+
+              // setEnergyConsumtionType((prevState) => ({
+              //   ...prevState,
+              //   [indexRow]: item.energyConsumtionType,
+              // }));
+              // setEmissionsType(item.CO2EmissionsType);
+              // setEnergyConsumtionType(item.energyConsumtionType);
+              // setTypeName(item.typeName);
+              // setUnitData(item.unitData);
+          //   });
+          // } else {
+          //   setEmissionsType(0);
+          //   setEnergyConsumtionType(0);
+            // setTypeName("");
+            // setUnitData([]);
+          // }
 
           setIsLoading(false);
         }
@@ -681,6 +700,8 @@ const FloorDiagram = ({ t, login }) => {
       setIsLoading(false);
     }
   };
+
+  // console.log("#### ====unitTypeData", emissionsType, energyConsumtionType);
 
   return (
     <Box className={classes.marginRow}>
@@ -884,45 +905,53 @@ const FloorDiagram = ({ t, login }) => {
               </Card>
             </Grid>
             <Grid item md={7}>
-              <Grid item>
-                {/* <Typography variant="h5">{`Type : ${
-                  unitType.find((f) => f.id === unitTypeSelect)?.type
-                } `}</Typography> */}
-                <Typography variant="h5">
-                  {`Type :`} {typeName}
-                </Typography>
-              </Grid>
-              <Grid item className={clsx(classes.flexRow, classes.marginRow)}>
-                <Grid item md={6}>
-                  <Card>
-                    <CardContent className={classes.textAling}>
-                      <Typography variant="subtitle1">
-                        {t("floorDiagram:monthly")}
-                      </Typography>
-                      <Typography variant="h6">
-                        {energyConsumtionType &&
-                          energyConsumtionType.toFixed(2)}{" "}
-                        kWh
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item md={6}>
-                  <Card>
-                    <CardContent className={classes.textAling}>
-                      <Typography variant="subtitle1">
-                        {t("floorDiagram:cO2")}
-                      </Typography>
-                      <Typography variant="h6">
-                        {emissionsType && emissionsType.toFixed(2)} kg
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
-              <Grid container className={clsx(classes.marginRow)}>
-                {renderCard()}
-                {/* {unitData.length > 0 &&
+              {unitTypeData &&
+                unitTypeData.length > 0 &&
+                unitTypeData.map((item, indexRow) => {
+                  return (
+                    <Grid item key={indexRow}>
+                      <Grid item className={indexRow > 0 && classes.marginRow}>
+                        <Typography variant="h5">
+                          {`Type :`} {item.typeName}
+                        </Typography>
+                      </Grid>
+
+                      <Grid
+                        item
+                        className={clsx(classes.flexRow, classes.marginRow)}
+                      >
+                        <Grid item md={6}>
+                          <Card>
+                            <CardContent className={classes.textAling}>
+                              <Typography variant="subtitle1">
+                                {t("floorDiagram:monthly")}
+                              </Typography>
+                              <Typography variant="h6">
+                                {item.energyConsumtionType &&
+                                  item.energyConsumtionType.toFixed(2)}{" "}
+                                kWh
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                        <Grid item md={6}>
+                          <Card>
+                            <CardContent className={classes.textAling}>
+                              <Typography variant="subtitle1">
+                                {t("floorDiagram:cO2")}
+                              </Typography>
+                              <Typography variant="h6">
+                                {item.CO2EmissionsType &&
+                                  item.CO2EmissionsType.toFixed(2)}{" "}
+                                kg
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      </Grid>
+                      <Grid container className={clsx(classes.marginRow)}>
+                        {renderCard(item.unitData, indexRow)}
+                        {/* {unitData.length > 0 &&
                   unitData.map((data, index) => {
                     console.log('## 9999999999', data);
                     return (
@@ -955,7 +984,10 @@ const FloorDiagram = ({ t, login }) => {
                       </Card>
                     );
                   })} */}
-              </Grid>
+                      </Grid>
+                    </Grid>
+                  );
+                })}
             </Grid>
           </Grid>
         </>
@@ -1135,7 +1167,7 @@ const FloorDiagram = ({ t, login }) => {
                             {t("floorDiagram:cO2")}
                           </Typography>
                           <Typography variant="h6">
-                            {emissionsFloor && emissionsFloor.toFixed(2)} kg
+                            {emissionsType && emissionsType.toFixed(2)} kg
                           </Typography>
                         </CardContent>
                       </Card>

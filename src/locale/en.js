@@ -189,6 +189,7 @@ let en = {
       "filterFloor": "Select Floor",
       "filterGateway": "Select Gateway",
       "filterDevice": "Select Device",
+      "initialValue": "Initial Value",
     },
     gateway: {
       "search": "Search by Gateway name",

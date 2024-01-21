@@ -1019,7 +1019,7 @@ const UnitManagement = ({
             // setDeviceData(await getDevice(item.gateway_id));
             // setPointData(await getPointData(item.device_id));
           });
-          console.log("dataPayload", response, dataPayload);
+          console.log("## dataPayloadUnitPoint", response, dataPayload);
           // setRowsPointEdit(dataPayload);
           // setIsLoading(false);
           list = dataPayload;
@@ -1275,6 +1275,8 @@ const UnitManagement = ({
       point_id: null,
       device_list: [],
       point_list: [],
+      initial_value: null,
+      initial_list: [],
       isEdit: true,
     };
     // Create a copy of the existing rowsPointEdit array
@@ -2988,6 +2990,15 @@ const UnitManagement = ({
                           </TableCell>
                           <TableCell
                             align="center"
+                            className={clsx(
+                              // classes.colorText,
+                              classes.fontSixeHead
+                            )}
+                          >
+                            {t("floor:initialValue")}
+                          </TableCell>
+                          <TableCell
+                            align="center"
                             className={classes.fontSixeHead}
                           >
                             {t("floor:action")}
@@ -3179,6 +3190,62 @@ const UnitManagement = ({
                                       fullWidth
                                       variant="outlined"
                                       value={row.point_name}
+                                      disabled={true}
+                                    />
+                                  )}
+                                </FormControl>
+                              </Grid>
+                            </TableCell>
+                            {/* initial value */}
+                            <TableCell
+                              align="right"
+                              className={classes.fontSixeCell}
+                            >
+                              <Grid item className={classes.marginDataTable}>
+                                <FormControl
+                                  variant="outlined"
+                                  size="small"
+                                  fullWidth
+                                >
+                                  {row.isEdit ? (
+                                    <Select
+                                      labelId="demo-select-small-label"
+                                      id="demo-select-small"
+                                      // value={row.point_id}
+                                      disabled={true}
+                                      placeholder={"Energy Meter"}
+                                      // disabled={
+                                      //   !disabledFild &&
+                                      //   editMeasurement === row.id
+                                      //     ? false
+                                      //     : true
+                                      // }
+                                      // onChange={(e) =>
+                                      //   handleGatewayMeterThree(e, row, index)
+                                      // }
+                                    >
+                                      {/* <MenuItem value="none" disabled>
+                                        Point
+                                      </MenuItem>
+                                      {row?.point_list.length > 0 &&
+                                        row?.point_list.map((item) => {
+                                          return (
+                                            <MenuItem
+                                              key={item.id}
+                                              value={item.id}
+                                            >
+                                              {item.name}
+                                            </MenuItem>
+                                          );
+                                        })} */}
+                                    </Select>
+                                  ) : (
+                                    <TextField
+                                      // id="input-with-icon-textfield"
+                                      size="small"
+                                      fullWidth
+                                      variant="outlined"
+                                      value={row.initial_value}
                                       disabled={true}
                                     />
                                   )}
